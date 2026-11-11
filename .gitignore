@@ -1,0 +1,23 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+
+# Data and Models
+*.pt
+*.f32
+*.safetensors
+*.gguf
+/steering/*.pt
+/steering/*.f32
+
+# Logs and Experiments
+*.log
+*.json
+/experiments/
+
+# OS/Docker
+.DS_Store
+*.tmp
+.b12x-image
+EOF
