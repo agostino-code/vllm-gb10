@@ -31,3 +31,7 @@ fi
 
 sudo bash -c "$CMD"
 echo "Done. Active now (no restart needed) and persists across reboots."
+
+# ds4-inspired memory governor tuning
+sysctl -w vm.zone_reclaim_mode=0
+echo never > /sys/kernel/mm/transparent_hugepage/enabled
