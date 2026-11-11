@@ -57,6 +57,9 @@ DETACH=0; [ "${1:-}" = "-d" ] && DETACH=1
 KV_BYTES=$(get_kv_cache_bytes)
 echo "KV Cache dinamica calcolata: $KV_BYTES bytes"
 
+# Imposta il path per il submodule locale
+EUGR_DIR="$(cd "$(dirname "$0")"; pwd)/eugr-stack"
+
 if [ "$BACKEND" = v54 ]; then
   RECIPE="${RECIPE:-recipe-az.yaml}"
   echo "Serving with v5.4 stack (vLLM 0.32 + RecoverSSM + Dynamic Draft) using $RECIPE..."
