@@ -1,0 +1,22 @@
+[
+  {"id": "math-01", "prompt": "What is 17 * 23?", "answer": "391"},
+  {"id": "math-02", "prompt": "Compute 144 / 12 + 37.", "answer": "49"},
+  {"id": "math-03", "prompt": "Compute (5^3 - 3^4) / 2.", "answer": "22"},
+  {"id": "math-04", "prompt": "A train travels at 60 km/h for 2.5 hours. How many kilometers does it travel?", "answer": "150"},
+  {"id": "math-05", "prompt": "What is 5/8 of 96?", "answer": "60"},
+  {"id": "math-06", "prompt": "A garden has 12 rows with 15 plants per row. If 24 plants wilt, how many healthy plants remain?", "answer": "156"},
+  {"id": "math-07", "prompt": "What is 6 factorial (6!)?", "answer": "720"},
+  {"id": "math-08", "prompt": "What is the greatest common divisor of 84 and 126?", "answer": "42"},
+  {"id": "math-09", "prompt": "What is the least common multiple of 12 and 18?", "answer": "36"},
+  {"id": "math-10", "prompt": "Increase 250 by 18%. What is the result?", "answer": "295"},
+  {"id": "math-11", "prompt": "What is 15% of 260?", "answer": "39"},
+  {"id": "math-12", "prompt": "What is the sum of all integers from 1 to 100 inclusive?", "answer": "5050"},
+  {"id": "math-13", "prompt": "What is 2^10 - 1?", "answer": "1023"},
+  {"id": "math-14", "prompt": "What is 1000 - 7 * 11?", "answer": "923"},
+  {"id": "math-15", "prompt": "A book has 320 pages. You read 35 pages a day for 6 days. How many pages are left?", "answer": "110"},
+  {"id": "math-16", "prompt": "What is 9^2 + 12^2?", "answer": "225"},
+  {"id": "math-17", "prompt": "What is the square root of 1764?", "answer": "42"},
+  {"id": "math-18", "prompt": "Compute 0.25 * 80 + 0.5 * 40.", "answer": "40"},
+  {"id": "math-19", "prompt": "Three consecutive odd integers sum to 87. What is the middle integer?", "answer": "29"},
+  {"id": "math-20", "prompt": "What is one third of 270?", "answer": "90"}
+]

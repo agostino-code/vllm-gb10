@@ -1,0 +1,315 @@
+{
+  "source": "hand-authored fake model outputs for offline grader tests",
+  "generated_by": "quality/tests/build_canned.py",
+  "categories": {
+    "math": [
+      {
+        "id": "math-01",
+        "content": "17 * 23 = 391.\n\nANSWER: 391"
+      },
+      {
+        "id": "math-02",
+        "content": "144 / 12 = 12, and 12 + 37 = 49.\n\nANSWER: 49"
+      },
+      {
+        "id": "math-03",
+        "content": "5^3 = 125 and 3^4 = 81, so (125 - 81) / 2 = 22.\n\nANSWER: 22"
+      },
+      {
+        "id": "math-04",
+        "content": "60 * 2.5 = 150.\n\nANSWER: 180"
+      },
+      {
+        "id": "math-05",
+        "content": "96 / 8 = 12, and 12 * 5 = 60.\n\nANSWER: 60"
+      },
+      {
+        "id": "math-06",
+        "content": "12 * 15 = 180 plants; 180 - 24 = 156.\n\nANSWER: 156"
+      },
+      {
+        "id": "math-07",
+        "content": "6! = 720.\n\nANSWER: 720"
+      },
+      {
+        "id": "math-08",
+        "content": "84 = 2^2*3*7 and 126 = 2*3^2*7, so gcd = 42.\n\nANSWER: 42"
+      },
+      {
+        "id": "math-09",
+        "content": "lcm(12, 18) = 36.\n\nANSWER: 36"
+      },
+      {
+        "id": "math-10",
+        "content": "250 * 1.18 = 295.\n\nANSWER: 295"
+      },
+      {
+        "id": "math-11",
+        "content": "0.15 * 260 = 39.\n\nANSWER: 39"
+      },
+      {
+        "id": "math-12",
+        "content": "100 * 101 / 2 = 5050.\n\nANSWER: 5,050"
+      },
+      {
+        "id": "math-13",
+        "content": "2^10 = 1024, minus 1 is 1023.\n\nANSWER: 1024"
+      },
+      {
+        "id": "math-14",
+        "content": "7 * 11 = 77, and 1000 - 77 = 923.\n\nANSWER: 923"
+      },
+      {
+        "id": "math-15",
+        "content": "35 * 6 = 210 pages read; 320 - 210 = 110.\n\nANSWER: 110"
+      },
+      {
+        "id": "math-16",
+        "content": "81 + 144 = 225.\n\nANSWER: 225"
+      },
+      {
+        "id": "math-17",
+        "content": "42 * 42 = 1764, so the square root is 42.\n\nANSWER: 42"
+      },
+      {
+        "id": "math-18",
+        "content": "0.25 * 80 = 20 and 0.5 * 40 = 20, total 40.\n\nANSWER: 40"
+      },
+      {
+        "id": "math-19",
+        "content": "The integers are 27, 29 and 31; the middle one is 29.\n\nANSWER: 29"
+      },
+      {
+        "id": "math-20",
+        "content": "270 / 3 = 90.\n\nANSWER: 90"
+      }
+    ],
+    "json": [
+      {
+        "id": "json-01",
+        "content": "[{\"name\": \"Mercury\", \"moons\": 0, \"order\": 1}, {\"name\": \"Venus\", \"moons\": 0, \"order\": 2}, {\"name\": \"Earth\", \"moons\": 1, \"order\": 3}, {\"name\": \"Mars\", \"moons\": 2, \"order\": 4}, {\"name\": \"Jupiter\", \"moons\": 95, \"order\": 5}]"
+      },
+      {
+        "id": "json-02",
+        "content": "```json\n{\"title\": \"The Silent Harbor\", \"author\": \"Iris Vale\", \"year\": 2017, \"genres\": [\"mystery\", \"literary fiction\"]}\n```"
+      },
+      {
+        "id": "json-03",
+        "content": "{\"user\": {\"id\": 42, \"name\": \"Ada Lovelace\", \"active\": true}, \"roles\": [\"admin\", \"editor\", \"viewer\"]}"
+      },
+      {
+        "id": "json-04",
+        "content": "[{\"id\": 1, \"status\": \"warn\"}, {\"id\": 2, \"status\": \"error\"}, {\"id\": 3, \"status\": \"ok\"}, {\"id\": 4, \"status\": \"warn\"}, {\"id\": 5, \"status\": \"error\"}, {\"id\": 6, \"status\": \"ok\"}, {\"id\": 7, \"status\": \"warn\"}, {\"id\": 8, \"status\": \"error\"}, {\"id\": 9, \"status\": \"ok\"}, {\"id\": 10, \"status\": \"warn\"}]"
+      },
+      {
+        "id": "json-05",
+        "content": "{\"summary\": \"A short summary of the thing.\", \"extra\": \"value\"}"
+      },
+      {
+        "id": "json-06",
+        "content": "[[1, 2, 3], [4, 5, 6], [7, 8, 9]]"
+      },
+      {
+        "id": "json-07",
+        "content": "{\"items\": [{\"sku\": \"SKU-0001\", \"qty\": 2, \"price\": 9.99}, {\"sku\": \"SKU-0002\", \"qty\": 1, \"price\": 19.5}, {\"sku\": \"SKU-0003\", \"qty\": 5, \"price\": 0.99}, {\"sku\": \"SKU-0004\", \"qty\": 3, \"price\": 4.25}], \"total\": 84.7}"
+      },
+      {
+        "id": "json-08",
+        "content": "{\"config\": {\"host\": \"localhost\", \"port\": 8080, \"tls\": true, \"retries\": 3}, \"tags\": [\"edge\", \"prod\", \"eu-west\"]}"
+      },
+      {
+        "id": "json-09",
+        "content": "[alpha, beta, gamma, delta, epsilon, zeta]"
+      },
+      {
+        "id": "json-10",
+        "content": "{\"equation\": \"2x + 3 = 17\", \"root\": 7, \"steps\": [\"2x = 14\", \"x = 7\"]}"
+      }
+    ],
+    "code": [
+      {
+        "id": "code-01",
+        "content": "```python\ndef is_prime(n):\n    if n < 2:\n        return False\n    if n % 2 == 0:\n        return n == 2\n    d = 3\n    while d * d <= n:\n        if n % d == 0:\n            return False\n        d += 2\n    return True\n\n```"
+      },
+      {
+        "id": "code-02",
+        "content": "```python\ndef reverse_words(s):\n    if not s:\n        return ''\n    return ' '.join(reversed(s.split(' ')))\n\n```"
+      },
+      {
+        "id": "code-03",
+        "content": "```python\ndef count_vowels(s):\n    return sum(1 for ch in s.lower() if ch in 'aeiou')\n\n```"
+      },
+      {
+        "id": "code-04",
+        "content": "```python\ndef fibonacci(n):\n    a, b = 0, 1\n    for _ in range(n):\n        a, b = b, a + b\n    return b\n\n```"
+      },
+      {
+        "id": "code-05",
+        "content": "```python\ndef flatten(lst):\n    out = []\n    for item in lst:\n        if isinstance(item, list):\n            out.extend(flatten(item))\n        else:\n            out.append(item)\n    return out\n\n```"
+      },
+      {
+        "id": "code-06",
+        "content": "```python\ndef binary_search(arr, target):\n    lo, hi = 0, len(arr) - 1\n    while lo <= hi:\n        mid = (lo + hi) // 2\n        if arr[mid] == target:\n            return mid\n        if arr[mid] < target:\n            lo = mid + 1\n        else:\n            hi = mid - 1\n    return -1\n\n```"
+      },
+      {
+        "id": "code-07",
+        "content": "```python\ndef word_frequencies(text):\n    freq = {}\n    for word in text.lower().split():\n        freq[word] = freq.get(word, 0) + 1\n    return freq\n\n```"
+      },
+      {
+        "id": "code-08",
+        "content": "```python\ndef run_length_encode(s):\n    if not s:\n        return ''\n    out = []\n    prev = s[0]\n    count = 1\n    for ch in s[1:]:\n        if ch == prev:\n            count += 1\n        else:\n            out.append(prev + str(count))\n            prev = ch\n            count = 1\n    out.append(prev + str(count))\n    return ''.join(out)\n\n```"
+      }
+    ],
+    "instruction": [
+      {
+        "id": "instr-01",
+        "content": "The ocean is deep blue and full of life today."
+      },
+      {
+        "id": "instr-02",
+        "content": "2\n3\n5\n7\n11"
+      },
+      {
+        "id": "instr-03",
+        "content": "The quokka is a marsupial and the quokka is friendly."
+      },
+      {
+        "id": "instr-04",
+        "content": "- Alpha\n- Beta\n- Gamma"
+      },
+      {
+        "id": "instr-05",
+        "content": "BANANA"
+      },
+      {
+        "id": "instr-06",
+        "content": "Is the sky blue?\nYes."
+      },
+      {
+        "id": "instr-07",
+        "content": "red,blue,green,yellow"
+      },
+      {
+        "id": "instr-08",
+        "content": "{\"a\": 1, \"b\": 2, \"c\": 3}"
+      },
+      {
+        "id": "instr-09",
+        "content": "abababababababababababababababababababab"
+      },
+      {
+        "id": "instr-10",
+        "content": "10 9 8 7 6 5 4 3 2 1"
+      }
+    ],
+    "tool": [
+      {
+        "id": "tool-01",
+        "content": "",
+        "tool_calls": [
+          {
+            "name": "get_weather",
+            "arguments": {
+              "city": "Rome",
+              "unit": "celsius"
+            }
+          }
+        ]
+      },
+      {
+        "id": "tool-02",
+        "content": "",
+        "tool_calls": [
+          {
+            "name": "add_event",
+            "arguments": {
+              "title": "Sprint Review",
+              "date": "June 10, 2025",
+              "duration_minutes": 45
+            }
+          }
+        ]
+      },
+      {
+        "id": "tool-03",
+        "content": "",
+        "tool_calls": [
+          {
+            "name": "search_files",
+            "arguments": {
+              "path": "/home/user/project",
+              "pattern": "*.py",
+              "max_results": 20
+            }
+          }
+        ]
+      },
+      {
+        "id": "tool-04",
+        "content": "<tool_call>\n{\"name\": \"send_email\", \"arguments\": {\"to\": \"alice@example.com\", \"subject\": \"Meeting tomorrow\", \"body\": \"Can we meet at 10am?\"}}\n</tool_call>",
+        "tool_calls": []
+      },
+      {
+        "id": "tool-05",
+        "content": "",
+        "tool_calls": [
+          {
+            "name": "get_stock_price",
+            "arguments": {
+              "ticker": "NVDA"
+            }
+          }
+        ]
+      },
+      {
+        "id": "tool-06",
+        "content": "",
+        "tool_calls": [
+          {
+            "name": "convert_currency",
+            "arguments": {
+              "amount": 100,
+              "from": "USD",
+              "to": "GBP"
+            }
+          }
+        ]
+      }
+    ],
+    "needle": [
+      {
+        "id": "needle-32768",
+        "content": "quasar-4419-zebra",
+        "usage": {
+          "prompt_tokens": 32011
+        },
+        "ttft_s": 1.2,
+        "latency_s": 1.4
+      },
+      {
+        "id": "needle-131072",
+        "content": "The passphrase is: quasar-4419-zebra",
+        "usage": {
+          "prompt_tokens": 128014
+        },
+        "ttft_s": 4.4,
+        "latency_s": 4.7
+      },
+      {
+        "id": "needle-262144",
+        "content": "I could not find that information in the document.",
+        "usage": {
+          "prompt_tokens": 260001
+        },
+        "ttft_s": 9.9,
+        "latency_s": 10.1
+      }
+    ],
+    "repetition": [
+      {
+        "id": "repetition-01",
+        "content": "class PriorityQueue:\n    \"\"\"A binary min-heap backed priority queue with stable ordering.\"\"\"\n\n    def operation_001(self, key_001):\n        \"\"\"Handle the hotel sierra case for record number 1.\"\"\"\n        value_001 = self._cache.get(key_001, default_001)\n        if value_001 is None:  # guard 1\n            return default_001\n        return self._merge(value_001, key_001)  # hotel\n\n    def operation_002(self, key_002):\n        \"\"\"Handle the oscar fjord case for node number 2.\"\"\"\n        value_002 = self._tree.search(key_002)  # descend the heap\n        if value_002 is None:  # guard 2\n            return default_002\n        return self._merge(value_002, key_002)  # oscar\n\n    def operation_003(self, key_003):\n        \"\"\"Handle the victor echo case for bucket number 3.\"\"\"\n        value_003 = self._slow_path(key_003) if self._dirty else default_003\n        if value_003 is None:  # guard 3\n            return default_003\n        return self._merge(value_003, key_003)  # victor\n\n    def operation_004(self, key_004):\n        \"\"\"Handle the cobalt romeo case for segment number 4.\"\"\"\n        value_004 = self._merge(left_004, right_004)  # combine both branches\n        if value_004 is None:  # guard 4\n            return default_004\n        return self._merge(value_004, key_004)  # cobalt\n\n    def operation_005(self, key_005):\n        \"\"\"Handle the jasper ember case for ledger number 5.\"\"\"\n        value_005 = self._rebalance(key_005, depth=5)\n        if value_005 is None:  # guard 5\n            return default_005\n        return self._merge(value_005, key_005)  # jasper\n\n    def operation_006(self, key_006):\n        \"\"\"Handle the charlie delta case for channel number 6.\"\"\"\n        value_006 = self._lookup(key_006)\n        if value_006 is None:  # guard 6\n            return default_006\n        return self._merge(value_006, key_006)  # charlie\n\n    def operation_007(self, key_007):\n        \"\"\"Handle the juliet quebec case for stream number 7.\"\"\"\n        value_007 = self._cache.get(key_007, default_007)\n        if value_007 is None:  # guard 7\n            return default_007\n        return self._merge(value_007, key_007)  # juliet\n\n    def operation_008(self, key_008):\n        \"\"\"Handle the quebec dune case for entry number 8.\"\"\"\n        value_008 = self._tree.search(key_008)  # descend the heap\n        if value_008 is None:  # guard 8\n            return default_008\n        return self._merge(value_008, key_008)  # quebec\n\n    def operation_009(self, key_009):\n        \"\"\"Handle the xray charlie case for record number 9.\"\"\"\n        value_009 = self._slow_path(key_009) if self._dirty else default_009\n        if value_009 is None:  # guard 9\n            return default_009\n        return self._merge(value_009, key_009)  # xray\n\n    def operation_010(self, key_010):\n        \"\"\"Handle the ember papa case for node number 10.\"\"\"\n        value_010 = self._merge(left_010, right_010)  # combine both branches\n        if value_010 is None:  # guard 10\n            return default_010\n        return self._merge(value_010, key_010)  # ember\n\n    def operation_011(self, key_011):\n        \"\"\"Handle the lumen cobalt case for bucket number 11.\"\"\"\n        value_011 = self._rebalance(key_011, depth=11)\n        if value_011 is None:  # guard 11\n            return default_011\n        return self._merge(value_011, key_011)  # lumen\n\n    def operation_012(self, key_012):\n        \"\"\"Handle the echo bravo case for segment number 12.\"\"\"\n        value_012 = self._lookup(key_012)\n        if value_012 is None:  # guard 12\n            return default_012\n        return self._merge(value_012, key_012)  # echo\n\n    def operation_013(self, key_013):\n        \"\"\"Handle the lima oscar case for ledger number 13.\"\"\"\n        value_013 = self._cache.get(key_013, default_013)\n        if value_013 is None:  # guard 13\n            return default_013\n        return self._merge(value_013, key_013)  # lima\n\n    def operation_014(self, key_014):\n        \"\"\"Handle the sierra basalt case for channel number 14.\"\"\"\n        value_014 = self._tree.search(key_014)  # descend the heap\n        if value_014 is None:  # guard 14\n            return default_014\n        return self._merge(value_014, key_014)  # sierra\n\n    def operation_015(self, key_015):\n        \"\"\"Handle the zulu alpha case for stream number 15.\"\"\"\n        value_015 = self._slow_path(key_015) if self._dirty else default_015\n        if value_015 is None:  # guard 15\n            return default_015\n        return self._merge(value_015, key_015)  # zulu\n\n    def operation_016(self, key_016):\n        \"\"\"Handle the glacier november case for entry number 16.\"\"\"\n        value_016 = self._merge(left_016, right_016)  # combine both branches\n        if value_016 is None:  # guard 16\n            return default_016\n        return self._merge(value_016, key_016)  # glacier\n\n    def operation_017(self, key_017):\n        \"\"\"Handle the nectar amber case for record number 17.\"\"\"\n        value_017 = self._rebalance(key_017, depth=17)\n        if value_017 is None:  # guard 17\n            return default_017\n        return self._merge(value_017, key_017)  # nectar\n\n    def operation_018(self, key_018):\n        \"\"\"Handle the golf nectar case for node number 18.\"\"\"\n        value_018 = self._lookup(key_018)\n        if value_018 is None:  # guard 18\n            return default_018\n        return self._merge(value_018, key_018)  # golf\n\n    def operation_019(self, key_019):\n        \"\"\"Handle the november mike case for bucket number 19.\"\"\"\n        value_019 = self._cache.get(key_019, default_019)\n        if value_019 is None:  # guard 19\n            return default_019\n        return self._merge(value_019, key_019)  # november\n\n    def operation_020(self, key_020):\n        \"\"\"Handle the uniform zulu case for segment number 20.\"\"\"\n        value_020 = self._tree.search(key_020)  # descend the heap\n        if value_020 is None:  # guard 20\n            return default_020\n        return self._merge(value_020, key_020)  # uniform\n\n    def operation_021(self, key_021):\n        \"\"\"Handle the basalt marsh case for ledger number 21.\"\"\"\n        value_021 = self._slow_path(key_021) if self._dirty else default_021\n        if value_021 is None:  # guard 21\n            return default_021\n        return self._merge(value_021, key_021)  # basalt\n\n    def operation_022(self, key_022):\n        \"\"\"Handle the iris lima case for channel number 22.\"\"\"\n        value_022 = self._merge(left_022, right_022)  # combine both branches\n        if value_022 is None:  # guard 22\n            return default_022\n        return self._merge(value_022, key_022)  # iris\n\n    def operation_023(self, key_023):\n        \"\"\"Handle the bravo yankee case for stream number 23.\"\"\"\n        value_023 = self._rebalance(key_023, depth=23)\n        if value_023 is None:  # guard 23\n            return default_023\n        return self._merge(value_023, key_023)  # bravo\n\n    def operation_024(self, key_024):\n        \"\"\"Handle the india lumen case for entry number 24.\"\"\"\n        value_024 = self._lookup(key_024)\n        if value_024 is None:  # guard 24\n            return default_024\n        return self._merge(value_024, key_024)  # india\n\n    def operation_025(self, key_025):\n        \"\"\"Handle the papa kilo case for record number 25.\"\"\"\n        value_025 = self._cache.get(key_025, default_025)\n        if value_025 is None:  # guard 25\n            return default_025\n        return self._merge(value_025, key_025)  # papa\n\n    def operation_026(self, key_026):\n        \"\"\"Handle the whiskey xray case for node number 26.\"\"\"\n        value_026 = self._tree.search(key_026)  # descend the heap\n        if value_026 is None:  # guard 26\n            return default_026\n        return self._merge(value_026, key_026)  # whiskey\n\n    def operation_027(self, key_027):\n        \"\"\"Handle the dune kelp case for bucket number 27.\"\"\"\n        value_027 = self._slow_path(key_027) if self._dirty else default_027\n        if value_027 is None:  # guard 27\n            return default_027\n        return self._merge(value_027, key_027)  # dune\n\n    def operation_028(self, key_028):\n        \"\"\"Handle the kelp juliet case for segment number 28.\"\"\"\n        value_028 = self._merge(left_028, right_028)  # combine both branches\n        if value_028 is None:  # guard 28\n            return default_028\n        return self._merge(value_028, key_028)  # kelp\n\n    def operation_029(self, key_029):\n        \"\"\"Handle the delta whiskey case for ledger number 29.\"\"\"\n        value_029 = self._rebalance(key_029, depth=29)\n        if value_029 is None:  # guard 29\n            return default_029\n        return self._merge(value_029, key_029)  # delta\n\n    def operation_030(self, key_030):\n        \"\"\"Handle the kilo jasper case for channel number 30.\"\"\"\n        value_030 = self._lookup(key_030)\n        if value_030 is None:  # guard 30\n            return default_030\n        return self._merge(value_030, key_030)  # kilo\n\n    def operation_031(self, key_031):\n        \"\"\"Handle the romeo india case for stream number 31.\"\"\"\n        value_031 = self._cache.get(key_031, default_031)\n        if value_031 is None:  # guard 31\n            return default_031\n        return self._merge(value_031, key_031)  # romeo\n\n    def operation_032(self, key_032):\n        \"\"\"Handle the yankee victor case for entry number 32.\"\"\"\n        value_032 = self._tree.search(key_032)  # descend the heap\n        if value_032 is None:  # guard 32\n            return default_032\n        return self._merge(value_032, key_032)  # yankee\n\n    def operation_033(self, key_033):\n        \"\"\"Handle the fjord iris case for record number 33.\"\"\"\n        value_033 = self._slow_path(key_033) if self._dirty else default_033\n        if value_033 is None:  # guard 33\n            return default_033\n        return self._merge(value_033, key_033)  # fjord\n\n    def operation_034(self, key_034):\n        \"\"\"Handle the marsh hotel case for node number 34.\"\"\"\n        value_034 = self._merge(left_034, right_034)  # combine both branches\n        if value_034 is None:  # guard 34\n            return default_034\n        return self._merge(value_034, key_034)  # marsh\n\n    def operation_035(self, key_035):\n        \"\"\"Handle the foxtrot uniform case for bucket number 35.\"\"\"\n        value_035 = self._rebalance(key_035, depth=35)\n        if value_035 is None:  # guard 35\n            return default_035\n        return self._merge(value_035, key_035)  # foxtrot\n\n    def operation_036(self, key_036):\n        \"\"\"Handle the mike harbor case for segment number 36.\"\"\"\n        value_036 = self._lookup(key_036)\n        if value_036 is None:  # guard 36\n            return default_036\n        return self._merge(value_036, key_036)  # mike\n\n    def operation_037(self, key_037):\n        \"\"\"Handle the tango golf case for ledger number 37.\"\"\"\n        value_037 = self._cache.get(key_037, default_037)\n        if value_037 is None:  # guard 37\n            return default_037\n        return self._merge(value_037, key_037)  # tango\n\n    def operation_038(self, key_038):\n        \"\"\"Handle the amber tango case for channel number 38.\"\"\"\n        value_038 = self._tree.search(key_038)  # descend the heap\n        if value_038 is None:  # guard 38\n            return default_038\n        return self._merge(value_038, key_038)  # amber\n\n    def operation_039(self, key_039):\n        \"\"\"Handle the harbor glacier case for stream number 39.\"\"\"\n        value_039 = self._slow_path(key_039) if self._dirty else default_039\n        if value_039 is None:  # guard 39\n            return default_039\n        return self._merge(value_039, key_039)  # harbor\n\n    def operation_040(self, key_040):\n        \"\"\"Handle the alpha foxtrot case for entry number 40.\"\"\"\n        value_040 = self._merge(left_040, right_040)  # combine both branches\n        if value_040 is None:  # guard 40\n            return default_040\n        return self._merge(value_040, key_040)  # alpha\n\n    def operation_041(self, key_041):\n        \"\"\"Handle the hotel sierra case for record number 41.\"\"\"\n        value_041 = self._rebalance(key_041, depth=41)\n        if value_041 is None:  # guard 41\n            return default_041\n        return self._merge(value_041, key_041)  # hotel\n\n    def operation_042(self, key_042):\n        \"\"\"Handle the oscar fjord case for node number 42.\"\"\"\n        value_042 = self._lookup(key_042)\n        if value_042 is None:  # guard 42\n            return default_042\n        return self._merge(value_042, key_042)  # oscar\n\n    def operation_043(self, key_043):\n        \"\"\"Handle the victor echo case for bucket number 43.\"\"\"\n        value_043 = self._cache.get(key_043, default_043)\n        if value_043 is None:  # guard 43\n            return default_043\n        return self._merge(value_043, key_043)  # victor\n\n    def operation_044(self, key_044):\n        \"\"\"Handle the cobalt romeo case for segment number 44.\"\"\"\n        value_044 = self._tree.search(key_044)  # descend the heap\n        if value_044 is None:  # guard 44\n            return default_044\n        return self._merge(value_044, key_044)  # cobalt\n\n    def operation_045(self, key_045):\n        \"\"\"Handle the jasper ember case for ledger number 45.\"\"\"\n        value_045 = self._slow_path(key_045) if self._dirty else default_045\n        if value_045 is None:  # guard 45\n            return default_045\n        return self._merge(value_045, key_045)  # jasper\n\n    def operation_046(self, key_046):\n        \"\"\"Handle the charlie delta case for channel number 46.\"\"\"\n        value_046 = self._merge(left_046, right_046)  # combine both branches\n        if value_046 is None:  # guard 46\n            return default_046\n        return self._merge(value_046, key_046)  # charlie\n\n    def operation_047(self, key_047):\n        \"\"\"Handle the juliet quebec case for stream number 47.\"\"\"\n        value_047 = self._rebalance(key_047, depth=47)\n        if value_047 is None:  # guard 47\n            return default_047\n        return self._merge(value_047, key_047)  # juliet\n\n    def operation_048(self, key_048):\n        \"\"\"Handle the quebec dune case for entry number 48.\"\"\"\n        value_048 = self._lookup(key_048)\n        if value_048 is None:  # guard 48\n            return default_048\n        return self._merge(value_048, key_048)  # quebec\n\n    def operation_049(self, key_049):\n        \"\"\"Handle the xray charlie case for record number 49.\"\"\"\n        value_049 = self._cache.get(key_049, default_049)\n        if value_049 is None:  # guard 49\n            return default_049\n        return self._merge(value_049, key_049)  # xray\n\n    def operation_050(self, key_050):\n        \"\"\"Handle the ember papa case for node number 50.\"\"\"\n        value_050 = self._tree.search(key_050)  # descend the heap\n        if value_050 is None:  # guard 50\n            return default_050\n        return self._merge(value_050, key_050)  # ember\n\n    def operation_051(self, key_051):\n        \"\"\"Handle the lumen cobalt case for bucket number 51.\"\"\"\n        value_051 = self._slow_path(key_051) if self._dirty else default_051\n        if value_051 is None:  # guard 51\n            return default_051\n        return self._merge(value_051, key_051)  # lumen\n\n    def operation_052(self, key_052):\n        \"\"\"Handle the echo bravo case for segment number 52.\"\"\"\n        value_052 = self._merge(left_052, right_052)  # combine both branches\n        if value_052 is None:  # guard 52\n            return default_052\n        return self._merge(value_052, key_052)  # echo\n\n    def operation_053(self, key_053):\n        \"\"\"Handle the lima oscar case for ledger number 53.\"\"\"\n        value_053 = self._rebalance(key_053, depth=53)\n        if value_053 is None:  # guard 53\n            return default_053\n        return self._merge(value_053, key_053)  # lima\n\n    def operation_054(self, key_054):\n        \"\"\"Handle the sierra basalt case for channel number 54.\"\"\"\n        value_054 = self._lookup(key_054)\n        if value_054 is None:  # guard 54\n            return default_054\n        return self._merge(value_054, key_054)  # sierra\n\n    def operation_055(self, key_055):\n        \"\"\"Handle the zulu alpha case for stream number 55.\"\"\"\n        value_055 = self._cache.get(key_055, default_055)\n        if value_055 is None:  # guard 55\n            return default_055\n        return self._merge(value_055, key_055)  # zulu\n\n    def operation_056(self, key_056):\n        \"\"\"Handle the glacier november case for entry number 56.\"\"\"\n        value_056 = self._tree.search(key_056)  # descend the heap\n        if value_056 is None:  # guard 56\n            return default_056\n        return self._merge(value_056, key_056)  # glacier\n\n    def operation_057(self, key_057):\n        \"\"\"Handle the nectar amber case for record number 57.\"\"\"\n        value_057 = self._slow_path(key_057) if self._dirty else default_057\n        if value_057 is None:  # guard 57\n            return default_057\n        return self._merge(value_057, key_057)  # nectar\n\n    def operation_058(self, key_058):\n        \"\"\"Handle the golf nectar case for node number 58.\"\"\"\n        value_058 = self._merge(left_058, right_058)  # combine both branches\n        if value_058 is None:  # guard 58\n            return default_058\n        return self._merge(value_058, key_058)  # golf\n\n    def operation_059(self, key_059):\n        \"\"\"Handle the november mike case for bucket number 59.\"\"\"\n        value_059 = self._rebalance(key_059, depth=59)\n        if value_059 is None:  # guard 59\n            return default_059\n        return self._merge(value_059, key_059)  # november\n\n    def operation_060(self, key_060):\n        \"\"\"Handle the uniform zulu case for segment number 60.\"\"\"\n        value_060 = self._lookup(key_060)\n        if value_060 is None:  # guard 60\n            return default_060\n        return self._merge(value_060, key_060)  # uniform\n\n    def operation_061(self, key_061):\n        \"\"\"Handle the basalt marsh case for ledger number 61.\"\"\"\n        value_061 = self._cache.get(key_061, default_061)\n        if value_061 is None:  # guard 61\n            return default_061\n        return self._merge(value_061, key_061)  # basalt\n\n    def operation_062(self, key_062):\n        \"\"\"Handle the iris lima case for channel number 62.\"\"\"\n        value_062 = self._tree.search(key_062)  # descend the heap\n        if value_062 is None:  # guard 62\n            return default_062\n        return self._merge(value_062, key_062)  # iris\n\n    def operation_063(self, key_063):\n        \"\"\"Handle the bravo yankee case for stream number 63.\"\"\"\n        value_063 = self._slow_path(key_063) if self._dirty else default_063\n        if value_063 is None:  # guard 63\n            return default_063\n        return self._merge(value_063, key_063)  # bravo\n\n    def operation_064(self, key_064):\n        \"\"\"Handle the india lumen case for entry number 64.\"\"\"\n        value_064 = self._merge(left_064, right_064)  # combine both branches\n        if value_064 is None:  # guard 64\n            return default_064\n        return self._merge(value_064, key_064)  # india\n\n    def operation_065(self, key_065):\n        \"\"\"Handle the papa kilo case for record number 65.\"\"\"\n        value_065 = self._rebalance(key_065, depth=65)\n        if value_065 is None:  # guard 65\n            return default_065\n        return self._merge(value_065, key_065)  # papa\n\n    def operation_066(self, key_066):\n        \"\"\"Handle the whiskey xray case for node number 66.\"\"\"\n        value_066 = self._lookup(key_066)\n        if value_066 is None:  # guard 66\n            return default_066\n        return self._merge(value_066, key_066)  # whiskey\n\n    def operation_067(self, key_067):\n        \"\"\"Handle the dune kelp case for bucket number 67.\"\"\"\n        value_067 = self._cache.get(key_067, default_067)\n        if value_067 is None:  # guard 67\n            return default_067\n        return self._merge(value_067, key_067)  # dune\n\n    def operation_068(self, key_068):\n        \"\"\"Handle the kelp juliet case for segment number 68.\"\"\"\n        value_068 = self._tree.search(key_068)  # descend the heap\n        if value_068 is None:  # guard 68\n            return default_068\n        return self._merge(value_068, key_068)  # kelp\n\n    def operation_069(self, key_069):\n        \"\"\"Handle the delta whiskey case for ledger number 69.\"\"\"\n        value_069 = self._slow_path(key_069) if self._dirty else default_069\n        if value_069 is None:  # guard 69\n            return default_069\n        return self._merge(value_069, key_069)  # delta\n\n    def operation_070(self, key_070):\n        \"\"\"Handle the kilo jasper case for channel number 70.\"\"\"\n        value_070 = self._merge(left_070, right_070)  # combine both branches\n        if value_070 is None:  # guard 70\n            return default_070\n        return self._merge(value_070, key_070)  # kilo\n\n    def operation_071(self, key_071):\n        \"\"\"Handle the romeo india case for stream number 71.\"\"\"\n        value_071 = self._rebalance(key_071, depth=71)\n        if value_071 is None:  # guard 71\n            return default_071\n        return self._merge(value_071, key_071)  # romeo\n\n    def operation_072(self, key_072):\n        \"\"\"Handle the yankee victor case for entry number 72.\"\"\"\n        value_072 = self._lookup(key_072)\n        if value_072 is None:  # guard 72\n            return default_072\n        return self._merge(value_072, key_072)  # yankee\n\n    def operation_073(self, key_073):\n        \"\"\"Handle the fjord iris case for record number 73.\"\"\"\n        value_073 = self._cache.get(key_073, default_073)\n        if value_073 is None:  # guard 73\n            return default_073\n        return self._merge(value_073, key_073)  # fjord\n\n    def operation_074(self, key_074):\n        \"\"\"Handle the marsh hotel case for node number 74.\"\"\"\n        value_074 = self._tree.search(key_074)  # descend the heap\n        if value_074 is None:  # guard 74\n            return default_074\n        return self._merge(value_074, key_074)  # marsh\n\n    def operation_075(self, key_075):\n        \"\"\"Handle the foxtrot uniform case for bucket number 75.\"\"\"\n        value_075 = self._slow_path(key_075) if self._dirty else default_075\n        if value_075 is None:  # guard 75\n            return default_075\n        return self._merge(value_075, key_075)  # foxtrot\n\n    def operation_076(self, key_076):\n        \"\"\"Handle the mike harbor case for segment number 76.\"\"\"\n        value_076 = self._merge(left_076, right_076)  # combine both branches\n        if value_076 is None:  # guard 76\n            return default_076\n        return self._merge(value_076, key_076)  # mike\n\n    def operation_077(self, key_077):\n        \"\"\"Handle the tango golf case for ledger number 77.\"\"\"\n        value_077 = self._rebalance(key_077, depth=77)\n        if value_077 is None:  # guard 77\n            return default_077\n        return self._merge(value_077, key_077)  # tango\n\n    def operation_078(self, key_078):\n        \"\"\"Handle the amber tango case for channel number 78.\"\"\"\n        value_078 = self._lookup(key_078)\n        if value_078 is None:  # guard 78\n            return default_078\n        return self._merge(value_078, key_078)  # amber\n\n    def operation_079(self, key_079):\n        \"\"\"Handle the harbor glacier case for stream number 79.\"\"\"\n        value_079 = self._cache.get(key_079, default_079)\n        if value_079 is None:  # guard 79\n            return default_079\n        return self._merge(value_079, key_079)  # harbor\n\n    def operation_080(self, key_080):\n        \"\"\"Handle the alpha foxtrot case for entry number 80.\"\"\"\n        value_080 = self._tree.search(key_080)  # descend the heap\n        if value_080 is None:  # guard 80\n            return default_080\n        return self._merge(value_080, key_080)  # alpha\n"
+      }
+    ]
+  }
+}

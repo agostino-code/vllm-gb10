@@ -1,0 +1,95 @@
+[
+  {
+    "id": "code-01",
+    "function": "is_prime",
+    "prompt": "Write a Python function named is_prime(n) that returns True if the integer n is prime and False otherwise. Handle n < 2 correctly. Output only one Python code block with the function definition.",
+    "tests": [
+      "is_prime(2) == True",
+      "is_prime(3) == True",
+      "is_prime(17) == True",
+      "is_prime(97) == True",
+      "is_prime(1) == False",
+      "is_prime(0) == False",
+      "is_prime(18) == False",
+      "is_prime(100) == False"
+    ]
+  },
+  {
+    "id": "code-02",
+    "function": "reverse_words",
+    "prompt": "Write a Python function named reverse_words(s) that takes a string of space-separated words and returns the words in reverse order, separated by single spaces. Output only one Python code block with the function definition.",
+    "tests": [
+      "reverse_words('hello world') == 'world hello'",
+      "reverse_words('a b c') == 'c b a'",
+      "reverse_words('one') == 'one'",
+      "reverse_words('') == ''"
+    ]
+  },
+  {
+    "id": "code-03",
+    "function": "count_vowels",
+    "prompt": "Write a Python function named count_vowels(s) that returns the number of vowels (a, e, i, o, u, case-insensitive) in the string s. Output only one Python code block with the function definition.",
+    "tests": [
+      "count_vowels('Hello World') == 3",
+      "count_vowels('') == 0",
+      "count_vowels('AEIOU') == 5",
+      "count_vowels('xyz') == 0"
+    ]
+  },
+  {
+    "id": "code-04",
+    "function": "fibonacci",
+    "prompt": "Write a Python function named fibonacci(n) that returns the n-th Fibonacci number with fibonacci(0) == 0 and fibonacci(1) == 1. Use an iterative implementation so it stays fast for n = 30. Output only one Python code block with the function definition.",
+    "tests": [
+      "fibonacci(0) == 0",
+      "fibonacci(1) == 1",
+      "fibonacci(2) == 1",
+      "fibonacci(10) == 55",
+      "fibonacci(20) == 6765"
+    ]
+  },
+  {
+    "id": "code-05",
+    "function": "flatten",
+    "prompt": "Write a Python function named flatten(lst) that flattens arbitrarily nested lists of integers into a single flat list preserving order. Output only one Python code block with the function definition.",
+    "tests": [
+      "flatten([1, [2, [3, 4]], 5]) == [1, 2, 3, 4, 5]",
+      "flatten([]) == []",
+      "flatten([[[[1]]]]) == [1]",
+      "flatten([1, 2, 3]) == [1, 2, 3]"
+    ]
+  },
+  {
+    "id": "code-06",
+    "function": "binary_search",
+    "prompt": "Write a Python function named binary_search(arr, target) that searches a sorted list of integers and returns the index of target, or -1 if it is absent. Output only one Python code block with the function definition.",
+    "tests": [
+      "binary_search([1, 3, 5, 7, 9], 7) == 3",
+      "binary_search([1, 3, 5, 7, 9], 4) == -1",
+      "binary_search([], 1) == -1",
+      "binary_search([2], 2) == 0"
+    ]
+  },
+  {
+    "id": "code-07",
+    "function": "word_frequencies",
+    "prompt": "Write a Python function named word_frequencies(text) that returns a dict mapping each whitespace-separated word to the number of times it occurs, ignoring case (lowercase the words). Empty input returns an empty dict. Output only one Python code block with the function definition.",
+    "tests": [
+      "word_frequencies('a b a') == {'a': 2, 'b': 1}",
+      "word_frequencies('') == {}",
+      "word_frequencies('One one TWO') == {'one': 2, 'two': 1}",
+      "word_frequencies('x') == {'x': 1}"
+    ]
+  },
+  {
+    "id": "code-08",
+    "function": "run_length_encode",
+    "prompt": "Write a Python function named run_length_encode(s) that compresses a string into run-length form, e.g. 'aaabbc' becomes 'a3b2c1'. An empty string returns an empty string. Output only one Python code block with the function definition.",
+    "tests": [
+      "run_length_encode('aaabbc') == 'a3b2c1'",
+      "run_length_encode('') == ''",
+      "run_length_encode('abc') == 'a1b1c1'",
+      "run_length_encode('aaaa') == 'a4'"
+    ]
+  }
+]

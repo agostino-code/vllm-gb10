@@ -1,0 +1,370 @@
+[
+  {
+    "id": "json-01",
+    "prompt": "Return a JSON array of exactly 5 objects describing the first five planets from the Sun. Each object must have the keys 'name' (string), 'moons' (non-negative integer) and 'order' (integer from 1 to 8). Output only the JSON, nothing else.",
+    "schema": {
+      "type": "array",
+      "minItems": 5,
+      "maxItems": 5,
+      "items": {
+        "type": "object",
+        "required": [
+          "name",
+          "moons",
+          "order"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 2
+          },
+          "moons": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "order": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 8
+          }
+        }
+      }
+    }
+  },
+  {
+    "id": "json-02",
+    "prompt": "Invent a plausible book and return a JSON object with exactly the keys 'title', 'author', 'year' and 'genres'. 'title' and 'author' are strings, 'year' is an integer, and 'genres' is an array of at least 2 strings. Output only the JSON, nothing else.",
+    "schema": {
+      "type": "object",
+      "exactly_keys": [
+        "title",
+        "author",
+        "year",
+        "genres"
+      ],
+      "required": [
+        "title",
+        "author",
+        "year",
+        "genres"
+      ],
+      "properties": {
+        "title": {
+          "type": "string",
+          "minLength": 1
+        },
+        "author": {
+          "type": "string",
+          "minLength": 1
+        },
+        "year": {
+          "type": "integer",
+          "minimum": 1400,
+          "maximum": 2100
+        },
+        "genres": {
+          "type": "array",
+          "minItems": 2,
+          "items": {
+            "type": "string",
+            "minLength": 2
+          }
+        }
+      }
+    }
+  },
+  {
+    "id": "json-03",
+    "prompt": "Return a JSON object with exactly two keys: 'user' and 'roles'. 'user' must be an object with keys 'id' (integer >= 1), 'name' (string) and 'active' (boolean). 'roles' must be an array of exactly 3 strings. Output only the JSON, nothing else.",
+    "schema": {
+      "type": "object",
+      "exactly_keys": [
+        "user",
+        "roles"
+      ],
+      "required": [
+        "user",
+        "roles"
+      ],
+      "properties": {
+        "user": {
+          "type": "object",
+          "exactly_keys": [
+            "id",
+            "name",
+            "active"
+          ],
+          "required": [
+            "id",
+            "name",
+            "active"
+          ],
+          "properties": {
+            "id": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "name": {
+              "type": "string",
+              "minLength": 1
+            },
+            "active": {
+              "type": "boolean"
+            }
+          }
+        },
+        "roles": {
+          "type": "array",
+          "minItems": 3,
+          "maxItems": 3,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    }
+  },
+  {
+    "id": "json-04",
+    "prompt": "Return a JSON array of exactly 10 objects. Each object must have the keys 'id' (integer from 1 to 10) and 'status' (one of 'ok', 'warn', 'error'). Output only the JSON, nothing else.",
+    "schema": {
+      "type": "array",
+      "minItems": 10,
+      "maxItems": 10,
+      "items": {
+        "type": "object",
+        "exactly_keys": [
+          "id",
+          "status"
+        ],
+        "required": [
+          "id",
+          "status"
+        ],
+        "properties": {
+          "id": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 10
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "ok",
+              "warn",
+              "error"
+            ]
+          }
+        }
+      }
+    }
+  },
+  {
+    "id": "json-05",
+    "prompt": "Return a JSON object with exactly 3 keys. Every value must be a string, and one of the keys must be 'summary'. Output only the JSON, nothing else.",
+    "schema": {
+      "type": "object",
+      "minProperties": 3,
+      "maxProperties": 3,
+      "required": [
+        "summary"
+      ],
+      "properties": {
+        "summary": {
+          "type": "string",
+          "minLength": 10
+        }
+      },
+      "additionalProperties": {
+        "type": "string"
+      }
+    }
+  },
+  {
+    "id": "json-06",
+    "prompt": "Return a JSON array of exactly 3 arrays, each containing exactly 3 integers between 0 and 9 (i.e. a 3x3 matrix). Output only the JSON, nothing else.",
+    "schema": {
+      "type": "array",
+      "minItems": 3,
+      "maxItems": 3,
+      "items": {
+        "type": "array",
+        "minItems": 3,
+        "maxItems": 3,
+        "items": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9
+        }
+      }
+    }
+  },
+  {
+    "id": "json-07",
+    "prompt": "Return a JSON object with exactly two keys: 'items' and 'total'. 'items' is an array of exactly 4 objects; each object has the keys 'sku' (string matching the pattern SKU- followed by exactly 4 digits), 'qty' (integer >= 1) and 'price' (number > 0). 'total' is a number. Output only the JSON, nothing else.",
+    "schema": {
+      "type": "object",
+      "exactly_keys": [
+        "items",
+        "total"
+      ],
+      "required": [
+        "items",
+        "total"
+      ],
+      "properties": {
+        "items": {
+          "type": "array",
+          "minItems": 4,
+          "maxItems": 4,
+          "items": {
+            "type": "object",
+            "exactly_keys": [
+              "sku",
+              "qty",
+              "price"
+            ],
+            "required": [
+              "sku",
+              "qty",
+              "price"
+            ],
+            "properties": {
+              "sku": {
+                "type": "string",
+                "pattern": "^SKU-[0-9]{4}$"
+              },
+              "qty": {
+                "type": "integer",
+                "minimum": 1
+              },
+              "price": {
+                "type": "number",
+                "minimum": 0.01
+              }
+            }
+          }
+        },
+        "total": {
+          "type": "number",
+          "minimum": 0
+        }
+      }
+    }
+  },
+  {
+    "id": "json-08",
+    "prompt": "Return a JSON object with exactly two keys: 'config' and 'tags'. 'config' is an object with keys 'host' (string), 'port' (integer 1-65535), 'tls' (boolean) and 'retries' (integer 0-10). 'tags' is an array of exactly 3 unique strings. Output only the JSON, nothing else.",
+    "schema": {
+      "type": "object",
+      "exactly_keys": [
+        "config",
+        "tags"
+      ],
+      "required": [
+        "config",
+        "tags"
+      ],
+      "properties": {
+        "config": {
+          "type": "object",
+          "exactly_keys": [
+            "host",
+            "port",
+            "tls",
+            "retries"
+          ],
+          "required": [
+            "host",
+            "port",
+            "tls",
+            "retries"
+          ],
+          "properties": {
+            "host": {
+              "type": "string",
+              "minLength": 1
+            },
+            "port": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 65535
+            },
+            "tls": {
+              "type": "boolean"
+            },
+            "retries": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 10
+            }
+          }
+        },
+        "tags": {
+          "type": "array",
+          "minItems": 3,
+          "maxItems": 3,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    }
+  },
+  {
+    "id": "json-09",
+    "prompt": "Return a JSON array of exactly 6 unique strings. Each string must be 3-20 characters long and contain only lowercase letters, digits and underscores. Output only the JSON, nothing else.",
+    "schema": {
+      "type": "array",
+      "minItems": 6,
+      "maxItems": 6,
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "minLength": 3,
+        "maxLength": 20,
+        "pattern": "^[a-z0-9_]{3,20}$"
+      }
+    }
+  },
+  {
+    "id": "json-10",
+    "prompt": "Return a JSON object with exactly the keys 'equation', 'root' and 'steps'. 'equation' is a string containing a linear equation, 'root' is the number 7, and 'steps' is an array of at least 2 strings. Output only the JSON, nothing else.",
+    "schema": {
+      "type": "object",
+      "exactly_keys": [
+        "equation",
+        "root",
+        "steps"
+      ],
+      "required": [
+        "equation",
+        "root",
+        "steps"
+      ],
+      "properties": {
+        "equation": {
+          "type": "string",
+          "minLength": 3
+        },
+        "root": {
+          "type": "number",
+          "minimum": 7,
+          "maximum": 7
+        },
+        "steps": {
+          "type": "array",
+          "minItems": 2,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    }
+  }
+]

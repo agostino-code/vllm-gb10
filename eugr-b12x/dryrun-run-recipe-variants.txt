@@ -1,0 +1,59 @@
+############ recipe-az-b12x ############
+Recipe: Qwen3.8-Flash-Next-FP4-Local-AZ (eugr b12x, spec4/fp8-kv)
+Container: eugr/spark-vllm-b12x:latest
+Model: azampatti/Qwen3.8-Flash-Next-FP4-Local-AZ
+  --kv-cache-dtype fp8 \
+  --block-size 16 \
+  --max-model-len 262144 \
+  --max-num-seqs 8 \
+  --speculative-config '{"method":"mtp","num_speculative_tokens":4}' \
+  --gpu-memory-utilization 0.75
+   ./launch-cluster.sh -t eugr/spark-vllm-b12x:latest --solo -e PYTORCH_ALLOC_CONF=per_process_memory_fraction:0.75 -e VLLM_PLE_TABLE_MEMORY=disk -e B12X_DISK_BACKEND=io_uring -e CUTE_DSL_ARCH=sm_121a -e SAFETENSORS_FAST_GPU=1 -e VLLM_WORKER_MULTIPROC_METHOD=spawn -e VLLM_SSM_CONV_STATE_LAYOUT=DS -e VLLM_USE_AOT_COMPILE=1 -e VLLM_USE_MEGA_AOT_ARTIFACT=1 -e VLLM_USE_V2_MODEL_RUNNER=1 -e VLLM_MXFP8_LM_HEAD=1 -e VLLM_B12X_MOE_FP4_LAYER_MAX_INPUT_SCALE=w13 -e VLLM_B12X_MOE_FP4_FORCE_A16=1 -e B12X_W4A16_A4_PREFILL=1 -v /home/pgx/.cache/huggingface/hub/models--azampatti--Qwen3.8-Flash-Next-FP4-Local-AZ/snapshots/5d927eabd4e4766a69bf12f7a1387b01d936a78f:/models/Qwen3.8-Flash-Next-FP4-Local-AZ:ro \
+
+############ recipe-az-b12x-spec0 ############
+Recipe: Qwen3.8-Flash-Next-FP4-Local-AZ (eugr b12x, spec0/fp8-kv)
+Container: eugr/spark-vllm-b12x:latest
+Model: azampatti/Qwen3.8-Flash-Next-FP4-Local-AZ
+  --kv-cache-dtype fp8 \
+  --block-size 16 \
+  --max-model-len 262144 \
+  --max-num-seqs 8 \
+  --gpu-memory-utilization 0.75
+   ./launch-cluster.sh -t eugr/spark-vllm-b12x:latest --solo -e PYTORCH_ALLOC_CONF=per_process_memory_fraction:0.75 -e VLLM_PLE_TABLE_MEMORY=disk -e B12X_DISK_BACKEND=io_uring -e CUTE_DSL_ARCH=sm_121a -e SAFETENSORS_FAST_GPU=1 -e VLLM_WORKER_MULTIPROC_METHOD=spawn -e VLLM_SSM_CONV_STATE_LAYOUT=DS -e VLLM_USE_AOT_COMPILE=1 -e VLLM_USE_MEGA_AOT_ARTIFACT=1 -e VLLM_USE_V2_MODEL_RUNNER=1 -e VLLM_MXFP8_LM_HEAD=1 -e VLLM_B12X_MOE_FP4_LAYER_MAX_INPUT_SCALE=w13 -e VLLM_B12X_MOE_FP4_FORCE_A16=1 -e B12X_W4A16_A4_PREFILL=1 -v /home/pgx/.cache/huggingface/hub/models--azampatti--Qwen3.8-Flash-Next-FP4-Local-AZ/snapshots/5d927eabd4e4766a69bf12f7a1387b01d936a78f:/models/Qwen3.8-Flash-Next-FP4-Local-AZ:ro \
+
+############ recipe-az-b12x-spec6 ############
+Recipe: Qwen3.8-Flash-Next-FP4-Local-AZ (eugr b12x, spec6/fp8-kv)
+Container: eugr/spark-vllm-b12x:latest
+Model: azampatti/Qwen3.8-Flash-Next-FP4-Local-AZ
+  --kv-cache-dtype fp8 \
+  --block-size 16 \
+  --max-model-len 262144 \
+  --max-num-seqs 8 \
+  --speculative-config '{"method":"mtp","num_speculative_tokens":6}' \
+  --gpu-memory-utilization 0.75
+   ./launch-cluster.sh -t eugr/spark-vllm-b12x:latest --solo -e PYTORCH_ALLOC_CONF=per_process_memory_fraction:0.75 -e VLLM_PLE_TABLE_MEMORY=disk -e B12X_DISK_BACKEND=io_uring -e CUTE_DSL_ARCH=sm_121a -e SAFETENSORS_FAST_GPU=1 -e VLLM_WORKER_MULTIPROC_METHOD=spawn -e VLLM_SSM_CONV_STATE_LAYOUT=DS -e VLLM_USE_AOT_COMPILE=1 -e VLLM_USE_MEGA_AOT_ARTIFACT=1 -e VLLM_USE_V2_MODEL_RUNNER=1 -e VLLM_MXFP8_LM_HEAD=1 -e VLLM_B12X_MOE_FP4_LAYER_MAX_INPUT_SCALE=w13 -e VLLM_B12X_MOE_FP4_FORCE_A16=1 -e B12X_W4A16_A4_PREFILL=1 -v /home/pgx/.cache/huggingface/hub/models--azampatti--Qwen3.8-Flash-Next-FP4-Local-AZ/snapshots/5d927eabd4e4766a69bf12f7a1387b01d936a78f:/models/Qwen3.8-Flash-Next-FP4-Local-AZ:ro \
+
+############ recipe-az-b12x-spec9 ############
+Recipe: Qwen3.8-Flash-Next-FP4-Local-AZ (eugr b12x, spec9/fp8-kv)
+Container: eugr/spark-vllm-b12x:latest
+Model: azampatti/Qwen3.8-Flash-Next-FP4-Local-AZ
+  --kv-cache-dtype fp8 \
+  --block-size 16 \
+  --max-model-len 262144 \
+  --max-num-seqs 8 \
+  --speculative-config '{"method":"mtp","num_speculative_tokens":9}' \
+  --gpu-memory-utilization 0.75
+   ./launch-cluster.sh -t eugr/spark-vllm-b12x:latest --solo -e PYTORCH_ALLOC_CONF=per_process_memory_fraction:0.75 -e VLLM_PLE_TABLE_MEMORY=disk -e B12X_DISK_BACKEND=io_uring -e CUTE_DSL_ARCH=sm_121a -e SAFETENSORS_FAST_GPU=1 -e VLLM_WORKER_MULTIPROC_METHOD=spawn -e VLLM_SSM_CONV_STATE_LAYOUT=DS -e VLLM_USE_AOT_COMPILE=1 -e VLLM_USE_MEGA_AOT_ARTIFACT=1 -e VLLM_USE_V2_MODEL_RUNNER=1 -e VLLM_MXFP8_LM_HEAD=1 -e VLLM_B12X_MOE_FP4_LAYER_MAX_INPUT_SCALE=w13 -e VLLM_B12X_MOE_FP4_FORCE_A16=1 -e B12X_W4A16_A4_PREFILL=1 -v /home/pgx/.cache/huggingface/hub/models--azampatti--Qwen3.8-Flash-Next-FP4-Local-AZ/snapshots/5d927eabd4e4766a69bf12f7a1387b01d936a78f:/models/Qwen3.8-Flash-Next-FP4-Local-AZ:ro \
+
+############ recipe-az-b12x-spec6-bf16kv ############
+Recipe: Qwen3.8-Flash-Next-FP4-Local-AZ (eugr b12x, spec6/bf16-kv)
+Container: eugr/spark-vllm-b12x:latest
+Model: azampatti/Qwen3.8-Flash-Next-FP4-Local-AZ
+  --kv-cache-dtype auto \
+  --block-size 16 \
+  --max-model-len 262144 \
+  --max-num-seqs 8 \
+  --speculative-config '{"method":"mtp","num_speculative_tokens":6}' \
+  --gpu-memory-utilization 0.8
+   ./launch-cluster.sh -t eugr/spark-vllm-b12x:latest --solo -e PYTORCH_ALLOC_CONF=per_process_memory_fraction:0.80 -e VLLM_PLE_TABLE_MEMORY=disk -e B12X_DISK_BACKEND=io_uring -e CUTE_DSL_ARCH=sm_121a -e SAFETENSORS_FAST_GPU=1 -e VLLM_WORKER_MULTIPROC_METHOD=spawn -e VLLM_SSM_CONV_STATE_LAYOUT=DS -e VLLM_USE_AOT_COMPILE=1 -e VLLM_USE_MEGA_AOT_ARTIFACT=1 -e VLLM_USE_V2_MODEL_RUNNER=1 -e VLLM_MXFP8_LM_HEAD=1 -e VLLM_B12X_MOE_FP4_LAYER_MAX_INPUT_SCALE=w13 -e VLLM_B12X_MOE_FP4_FORCE_A16=1 -e B12X_W4A16_A4_PREFILL=1 -v /home/pgx/.cache/huggingface/hub/models--azampatti--Qwen3.8-Flash-Next-FP4-Local-AZ/snapshots/5d927eabd4e4766a69bf12f7a1387b01d936a78f:/models/Qwen3.8-Flash-Next-FP4-Local-AZ:ro \
+

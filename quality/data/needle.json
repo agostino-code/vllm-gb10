@@ -1,0 +1,7 @@
+{
+  "id": "needle-01",
+  "fact": "quasar-4419-zebra",
+  "context_template": "IMPORTANT ARCHIVE NOTE: the secret passphrase for the vault is '{fact}' and no other passphrase is valid.",
+  "question": "Earlier in this long document there was a secret passphrase for the vault. Reply with that passphrase only, exactly as written.",
+  "system": "You are a precise assistant. Answer the question using only information found in the document."
+}

@@ -1,0 +1,9 @@
+# generated benchmark outputs (recreate with bench/suite.py / bench/run_matrix.py)
+results/*
+# keep the small aggregated evidence files in the repo
+!results/RESULTS.md
+!results/summary.csv
+# python bytecode
+__pycache__/
+*.pyc
+tests/__pycache__/

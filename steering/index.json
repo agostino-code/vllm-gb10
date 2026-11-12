@@ -1,0 +1,5 @@
+{
+  "default": {"path": "steering/identity.pt", "strength": 0.0},
+  "orca_abl": {"path": "steering/orca_steer.pt", "strength": 1.0},
+  "concise": {"path": "steering/succinct.pt", "strength": 0.5}
+}

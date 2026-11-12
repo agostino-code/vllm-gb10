@@ -1,11 +1,14 @@
 #!/usr/bin/env bash
 # run.sh — Run Qwen3.8-Flash-Next on ONE DGX Spark / GB10 with vLLM 0.32 (v5.4 stack)
 #
-# Configured via YAML (default: recipe-az.yaml)
+# Configured via YAML (default: qwen38-flash-solo-optimized.yaml)
 # Usage:
-#   ./run.sh                  # runs recipe-az.yaml
-#   ./run.sh recipe.yaml      # runs recipe.yaml
+#   ./run.sh                  # runs qwen38-flash-solo-optimized.yaml
+#   ./run.sh qwen38-flash-cluster-optimized.yaml      # runs qwen38-flash-cluster-optimized.yaml
 set -euo pipefail
+export DOWNLOAD_MODE="${DOWNLOAD_MODE:-cache}"
+export HF_HOME="${HF_HOME:-$HOME/.cache/huggingface}"
+export MODELS_DIR="./models"
 cd "$(dirname "$0")"; source ./config.env
 
 # Dynamic KV Cache Calculation
@@ -25,8 +28,15 @@ if [ -n "${STEERING_KEY:-}" ]; then
     fi
 fi
 
+DOWNLOAD_MODE="${DOWNLOAD_MODE:-cache}"
+export DOWNLOAD_MODE
+export HF_HOME="${HF_HOME:-$HOME/.cache/huggingface}"
+
+set -euo pipefail
+cd "$(dirname "$0")"; source ./config.env
+
 command -v docker >/dev/null || { echo "docker is required"; exit 1; }
-RECIPE="${1:-recipe-az.yaml}"
+RECIPE="${1:-$DEFAULT_RECIPE}"
 [ -f "$RECIPE" ] || { echo "✗ recipe file '$RECIPE' not found"; exit 1; }
 
 # Helper to read two-level YAML sections
@@ -50,23 +60,38 @@ rsection() {  # all key/value lines of a section, "key<TAB>value"
     }' "$RECIPE"
 }
 
-IMAGE="$(rkey server image)"
-PORT="$(rkey server port)"
-HF_REPO="$(rkey server model)"
-MODELS_DIR="$(rkey server models_dir)"
-CACHE_DIR="$(rkey server cache_dir)"
+IMAGE="${IMAGE:-$(rkey server image)}"
+# Force override if recipe image is the default one that doesn't exist
+if [ "$IMAGE" = "qwen38-flash-dgx:a5b-int4" ]; then
+    IMAGE="myllmbox/qwen38-flash-next-vllm:v5.4"
+fi
+PORT="${PORT:-$(rkey server port)}"
+HF_REPO="${MODEL_REPO:-$(rkey server model)}"
+MODELS_DIR="${MODELS_DIR:-$(rkey server models_dir)}"
+CACHE_DIR="${CACHE_DIR:-$(rkey server cache_dir)}"
 CPUSET="$(rkey server cpuset)"
 DOCKER_ARGS="$(rkey server docker_args)"
 NAME="qwen38-flash-next"
+
+: ${IMAGE:=myllmbox/qwen38-flash-next-vllm:v5.4}
+: ${PORT:=8000}
+: ${MODELS_DIR:=./models}
+: ${CACHE_DIR:=./cache}
 
 mkdir -p "$MODELS_DIR" "$CACHE_DIR"
 MODELS_ABS="$(cd "$MODELS_DIR" && pwd)"
 CACHE_ABS="$(cd "$CACHE_DIR" && pwd)"
 LOCAL_NAME="$(basename "$HF_REPO")"
 MODEL_DIR="$MODELS_ABS/$LOCAL_NAME"
+if [ "$DOWNLOAD_MODE" = "cache" ]; then
+    CACHE_MODEL_DIR="$(hf_snapshot_dir "$HF_REPO" 2>/dev/null || true)"
+    if [ -n "$CACHE_MODEL_DIR" ] && [ -f "$CACHE_MODEL_DIR/model.safetensors.index.json" ]; then
+        MODEL_DIR="$CACHE_MODEL_DIR"
+    fi
+fi
 
 # Check weights
-if [ ! -f "$MODEL_DIR/model.safetensors.index.json" ] || [ -n "$(find "$MODEL_DIR/.cache" -name '*.incomplete' -print -quit 2>/dev/null)" ]; then
+if [ ! -f "$MODEL_DIR/model.safetensors.index.json" ] || ( [ "$DOWNLOAD_MODE" != "cache" ] && [ -n "$(find "$MODEL_DIR/.cache" -name '*.incomplete' -print -quit 2>/dev/null)" ] ); then
   echo "· Weights for $HF_REPO not complete in $MODEL_DIR"
   echo "  Downloading..."
   if command -v hf >/dev/null; then
@@ -80,6 +105,13 @@ fi
 # Assemble docker env & vLLM flags
 ENVS=()
 while IFS=$'\t' read -r k v; do [ -n "$k" ] && ENVS+=(-e "$k=$v"); done < <(rsection env)
+
+# Cache mounts
+MOUNTS=(-v "$MODELS_ABS:/models" -v "$CACHE_ABS:/cache")
+if [ "$DOWNLOAD_MODE" = "cache" ]; then
+    MOUNTS+=(-v "$HF_HOME/hub":"$HF_HOME/hub":ro)
+fi
+MOUNTS+=(-v "$(readlink -f "$MODEL_DIR"):/models/$LOCAL_NAME")
 
 # Support INT4-AutoRound if selected
 if [ -d "$MODEL_DIR/ple-table" ]; then
@@ -125,6 +157,35 @@ if [ "$cp_now" != "0" ]; then
   echo "  ⚠ vm.compaction_proactiveness is $cp_now (recommended: 0). Run ./tune-host.sh to prevent memory freezes."
 fi
 
+# Chat template handling
+TPL=(); TPL_MOUNT=(); TPL_NOTE=""
+[ "$CHAT_TEMPLATE" = model ] && CHAT_TEMPLATE=""
+if [ -n "$CHAT_TEMPLATE" ]; then
+  TPL_FILE="$CHAT_TEMPLATE"
+  if [ "${CHAT_TEMPLATE#*/}" = "$CHAT_TEMPLATE" ] && [ ! -f "$CHAT_TEMPLATE" ]; then
+    for cand in "$MODEL_DIR/${CHAT_TEMPLATE}_chat_template.jinja" "$MODEL_DIR/$CHAT_TEMPLATE"; do
+      [ -f "$cand" ] && { TPL_FILE="$cand"; break; }
+    done
+  fi
+  if [ -f "$TPL_FILE" ]; then
+    TPL_MOUNT=(-v "$TPL_FILE:/chat_template.jinja:ro"); TPL=(--chat-template /chat_template.jinja)
+    TPL_NOTE=", template $(basename "$TPL_FILE")"
+  else
+    echo "  ⚠ CHAT_TEMPLATE '$CHAT_TEMPLATE' not found, skipping template"
+  fi
+fi
+
+# MTP / Speculative decoding
+SPEC=(); DRAFT_NOTE=""
+if [ "${MTP:-0}" != 0 ]; then
+  # Use self-draft (same model as target) to avoid quantization issues with MTP layers
+  # This works like the original MTP=12 config
+  RS=""; [ "${REJECTION_SAMPLE:-standard}" != standard ] && RS=",\"rejection_sample_method\":\"$REJECTION_SAMPLE\""
+  [ "${DRAFT_SAMPLE:-greedy}" != greedy ] && RS="$RS,\"draft_sample_method\":\"$DRAFT_SAMPLE\""
+  SPEC=(--speculative-config "{\"method\":\"mtp\",\"num_speculative_tokens\":${MTP}$RS}")
+  DRAFT_NOTE=" (MTP=${MTP}, self-draft)"
+fi
+
 docker rm -f "$NAME" "$NAME-proxy" >/dev/null 2>&1 || true
 
 # Memory check
@@ -138,15 +199,14 @@ find "$MODEL_DIR" -type f -name "*.safetensors" -exec dd if={} iflag=nocache cou
 echo "· starting $NAME ($IMAGE) on port :$PORT with recipe $RECIPE"
 docker run -d --name "$NAME" --gpus all --ipc=host \
   ${CPUSET:+--cpuset-cpus "$CPUSET"} \
-  ${DOCKER_ARGS} \
+  ${DOCKER_EXTRA_ARGS} \
   -p "$PORT:8000" \
-  -v "$MODELS_ABS:/models" -v "$CACHE_ABS:/cache" \
-  -v "$(readlink -f "$MODEL_DIR"):/models/$LOCAL_NAME" \
+  "${MOUNTS[@]}" "${TPL_MOUNT[@]}" \
   -e HF_HUB_OFFLINE=1 -e TRANSFORMERS_OFFLINE=1 \
   -e FLASHINFER_WORKSPACE_BASE=/cache/flashinfer-workspace \
   -e VLLM_CACHE_ROOT=/cache/vllm-cache \
   "${ENVS[@]}" \
-  --entrypoint vllm "$IMAGE" serve "/models/$LOCAL_NAME" --port 8000 "${FLAGS[@]}" >/dev/null
+  --entrypoint vllm "$IMAGE" serve "/models/$LOCAL_NAME" --port 8000 "${FLAGS[@]}" "${TPL[@]}" "${SPEC[@]}" $EXTRA_ARGS >/dev/null
 
 echo "· streaming engine logs until healthy (Ctrl-C detaches; the server continues booting)"
 docker logs -f "$NAME" 2>&1 &

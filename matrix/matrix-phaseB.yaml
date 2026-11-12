@@ -1,0 +1,79 @@
+# matrix/matrix-phaseB.yaml — targeted second phase, derived from Phase A findings.
+#
+# Phase A results (decode tok/s / acceptance / tokens-per-step / C=8):
+#   M0 shipped (K=12 dynamic, self)        53.3 / 17.0% / 3.04 / 142.0
+#   draft-k10 K=6 dynamic                  56.4 / 34.0% / 3.04 / 162.9
+#   dynamic-ceiling-9                      50.7 / 21.6% / 2.95 / 147.8
+#   MBX_MTP_DRAFT_SCALE=2                  51.8 / 16.7% / 3.00 / 142.9
+#   *** curve-k4 (dynamic, ceiling 4)      60.9 / 48.5% / 2.94 / 178.4  <-- best
+# Conclusion: shallow drafting wins; per-position acceptance dies after position 2 on every
+# drafter; k10 raises per-draft efficiency at equal depth. Phase B pins the depth ceiling at
+# 3/4 with and without the k10 drafter, then tests the two acceptance/quality levers.
+#
+# Run:  python3 bench/run_matrix.py --matrix matrix/matrix-phaseB.yaml
+
+defaults:
+  results_dir: bench/results
+  port: 8000
+  boot_timeout_s: 1500
+  per_config_timeout_s: 2400
+  stop_server: true
+  suite_profile: quick
+  suite:
+    request_timeout: 300
+    retries: 1
+    concurrency: [1, 2, 4, 8]
+    include_16: false
+  env: {}
+
+configs:
+  - name: b-k10-curve-k4
+    recipe: matrix/recipes/draftk10-curve-k4.yaml
+    priority: 1
+    tag: phaseB-combo
+    suite:
+      quality: quick
+    notes: >-
+      PRIMARY WINNER CANDIDATE: k10 drafter + shallow dynamic ladder capped at 4. Combines the
+      two measured wins (k10 per-draft efficiency, shallow depth).
+
+  - name: b-k10-curve-k3
+    recipe: matrix/recipes/draftk10-curve-k3.yaml
+    priority: 2
+    tag: phaseB-combo
+    notes: k10 drafter with ceiling 3 — is depth 3 enough (position 3 almost never accepts)?
+
+  - name: b-curve-k3
+    recipe: draft-lab/recipes/curve-k3.yaml
+    priority: 3
+    tag: phaseB-depth
+    notes: self-drafter ceiling 3 — isolates depth from drafter at the shallowest setting.
+
+  - name: b-k10-curve-k4-medium
+    recipe: matrix/recipes/draftk10-curve-k4.yaml
+    priority: 4
+    tag: phaseB-combo
+    chat_template: matrix/templates/medium_chat_template.jinja
+    suite:
+      quality: quick
+    notes: k10 + ceiling 4 + medium chat template — the two acceptance levers together.
+
+  - name: b-kvfp8-spec7
+    recipe: matrix/recipes/az-kvfp8-spec7.yaml
+    priority: 5
+    tag: phaseB-serving
+    suite:
+      quality: quick
+    notes: >-
+      fp8 KV doubles the pool (~1.5M tokens) at a throughput cost; depth 7 per myllmbox's
+      guidance. Quality quick gates whether fp8 KV changes the answers.
+
+  - name: b-medium-template
+    recipe: matrix/recipes/az-medium-template.yaml
+    priority: 6
+    tag: phaseB-serving
+    chat_template: matrix/templates/medium_chat_template.jinja
+    suite:
+      quality: quick
+    notes: >-
+      medium template on the shipped M0 depth (K=12) — isolates the template effect alone.

@@ -3,15 +3,16 @@
 set -euo pipefail
 cd "$(dirname "$0")"
 
+source ./config.env
 NAME="qwen38-flash-next"
 docker ps --filter "name=$NAME" --format '{{.Names}}' | grep -q "^$NAME$" || NAME="qwen38-flash"
 
 S="$(docker ps --filter "name=$NAME" --format '{{.Status}}')"
-[ -n "$S" ] || { echo "· Server container is not running (start it with ./serve.sh or ./run.sh recipe-az.yaml)"; exit 1; }
+[ -n "$S" ] || { echo "· Server container is not running (start it with ./run.sh $DEFAULT_RECIPE)"; exit 1; }
 
 PORT=8000
-if [ -f recipe-az.yaml ]; then
-  PORT="$(awk '$1=="port:"{print $2; exit}' recipe-az.yaml 2>/dev/null || echo 8000)"
+if [ -f "recipes/$DEFAULT_RECIPE" ]; then
+  PORT="$(awk '$1=="port:"{print $2; exit}' "recipes/$DEFAULT_RECIPE" 2>/dev/null || echo 8000)"
 fi
 
 H="$(curl -s -m 3 -o /dev/null -w '%{http_code}' "http://127.0.0.1:${PORT}/health" 2>/dev/null || echo "offline")"

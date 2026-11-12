@@ -1,0 +1,8 @@
+[
+  {
+    "id": "repetition-01",
+    "prompt": "Write a complete Python implementation of a min-heap priority queue class named PriorityQueue with push, pop, peek and heapify methods. Include clear docstrings and inline comments. The implementation should be at least 150 lines long.",
+    "ngram": 20,
+    "max_tokens": 2048
+  }
+]

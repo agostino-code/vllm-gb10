@@ -3,21 +3,35 @@ __pycache__/
 *.pyc
 *.pyo
 
-# Data and Models
+# Model weights and large inputs (never commit)
 *.pt
 *.f32
 *.safetensors
 *.gguf
 /steering/*.pt
 /steering/*.f32
+/models/
+/cache/
+/venv/
 
-# Logs and Experiments
+# Runtime artifacts and experiment outputs
 *.log
-*.json
 /experiments/
+/bench/refs/*
+!/bench/refs/README.md
+/bench/results/*
+!/bench/results/RESULTS.md
+!/bench/results/summary.csv
+/quality/runs/
+/draft-lab/drafts/
+/eugr-b12x/cache/
+/eugr-b12x/logs/
+/eugr-b12x/runs/*
+!/eugr-b12x/runs/RESULTS.md
+!/eugr-b12x/runs/RESULTS-*.md
 
-# OS/Docker
-.DS_Store
+# Local machine state
+/.backend
+/.b12x-image
 *.tmp
-.b12x-image
-EOF
+.DS_Store

@@ -1,0 +1,77 @@
+[
+  {
+    "id": "instr-01",
+    "prompt": "Reply with exactly 12 words describing the ocean. Use no other text.",
+    "checks": [{"type": "word_count_eq", "value": 12}]
+  },
+  {
+    "id": "instr-02",
+    "prompt": "List exactly 5 prime numbers, one per line, with no other text.",
+    "checks": [
+      {"type": "line_count_eq", "value": 5},
+      {"type": "all_lines_numeric"},
+      {"type": "all_lines_prime"}
+    ]
+  },
+  {
+    "id": "instr-03",
+    "prompt": "Write a single sentence that contains the word 'quokka' at least twice and contains no commas. Output nothing else.",
+    "checks": [
+      {"type": "one_line"},
+      {"type": "contains_count_min", "value": "quokka", "min": 2, "case_sensitive": false},
+      {"type": "absent_char", "value": ","}
+    ]
+  },
+  {
+    "id": "instr-04",
+    "prompt": "Answer with exactly 3 bullet points, each starting with '- '. Output nothing else.",
+    "checks": [
+      {"type": "line_count_eq", "value": 3},
+      {"type": "each_line_startswith", "value": "- "}
+    ]
+  },
+  {
+    "id": "instr-05",
+    "prompt": "Output the word BANANA in uppercase letters, and nothing else.",
+    "checks": [{"type": "canonical_equals", "value": "BANANA"}]
+  },
+  {
+    "id": "instr-06",
+    "prompt": "Write exactly two lines. The first line must end with a question mark. The second line must be exactly: Yes.",
+    "checks": [
+      {"type": "line_count_eq", "value": 2},
+      {"type": "line_endswith", "line": 1, "value": "?"},
+      {"type": "line_equals", "line": 2, "value": "Yes."}
+    ]
+  },
+  {
+    "id": "instr-07",
+    "prompt": "Name 4 colors on a single line, separated by commas, with no spaces anywhere.",
+    "checks": [
+      {"type": "one_line"},
+      {"type": "split_count", "sep": ",", "value": 4},
+      {"type": "no_space"}
+    ]
+  },
+  {
+    "id": "instr-08",
+    "prompt": "Output a JSON object with exactly the keys a, b and c, each with an integer value. Output no markdown fences and no other text.",
+    "checks": [
+      {"type": "absent_substr", "value": "```"},
+      {"type": "json_keys_exact", "keys": ["a", "b", "c"], "values_int": true}
+    ]
+  },
+  {
+    "id": "instr-09",
+    "prompt": "Repeat the two-character string 'ab' exactly 20 times with no separators and no other text.",
+    "checks": [{"type": "canonical_equals", "value": "abababababababababababababababababababab"}]
+  },
+  {
+    "id": "instr-10",
+    "prompt": "Write the integers from 10 down to 1, separated by single spaces, with no commas and no other text.",
+    "checks": [
+      {"type": "token_sequence", "value": ["10", "9", "8", "7", "6", "5", "4", "3", "2", "1"]},
+      {"type": "absent_char", "value": ","}
+    ]
+  }
+]

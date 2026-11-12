@@ -1,0 +1,95 @@
+# Recipe: azampatti/Qwen3.8-Flash-Next-FP4-Local-AZ on the eugr B12X stack (solo, DGX Spark GB10)
+#
+# BASE CONFIG of the eugr b12x benchmark matrix:
+#   speculative tokens 4 | KV cache fp8 | block-size 16 | max-model-len 262144
+#   max-num-seqs 8 | gpu-memory-utilization 0.75 (PYTORCH_ALLOC_CONF matches)
+#
+# The B12X PLE disk path (VLLM_PLE_TABLE_MEMORY=disk -> b12x "io_uring") reads the
+# n-gram embedding rows directly from the checkpoint shards. It does NOT create a
+# table map file and does not write to the model directory, so the model can be
+# mounted read-only (see the -v mount in eugr-b12x/README.md).
+#
+# The vLLM command serves a LOCAL PATH (/models/<name>), not the HF repo id, so a
+# read-only bind mount of the HF-cache snapshot is required:
+#
+#   cd eugr-stack
+#   ./run-recipe.sh ../eugr-b12x/recipe-az-b12x.yaml --solo \
+#     -v "$SNAP:/models/Qwen3.8-Flash-Next-FP4-Local-AZ:ro"
+#
+# where SNAP is the snapshot directory under
+# ~/.cache/huggingface/hub/models--azampatti--Qwen3.8-Flash-Next-FP4-Local-AZ/snapshots/.
+# Prefer eugr-b12x/launch.sh (plain docker run, no eugr tooling) for reproducibility.
+
+recipe_version: "1"
+name: Qwen3.8-Flash-Next-FP4-Local-AZ (eugr b12x, spec4/fp8-kv)
+description: vLLM B12X serving of azampatti/Qwen3.8-Flash-Next-FP4-Local-AZ on one DGX Spark, PLE n-gram table read from disk via io_uring
+
+model: azampatti/Qwen3.8-Flash-Next-FP4-Local-AZ
+# Local tag of the eugr b12x image. eugr recipes use `vllm-node-b12x`, which this
+# host does not have; using the real tag avoids -t/--container overrides.
+container: eugr/spark-vllm-b12x:latest
+
+solo_only: true
+mods: []
+
+defaults:
+  port: 8000
+  host: 0.0.0.0
+  model_path: /models/Qwen3.8-Flash-Next-FP4-Local-AZ
+  tensor_parallel: 1
+  pipeline_parallel: 1
+  block_size: 16
+  max_model_len: 262144
+  max_num_seqs: 8
+  max_num_batched_tokens: 4096
+  num_speculative_tokens: 4
+  gpu_memory_utilization: 0.75
+
+env:
+  # Bound the PyTorch CUDA reservation during A16 weight preparation on shared
+  # RAM. Independent of vLLM's --gpu-memory-utilization budget. Keep in sync.
+  PYTORCH_ALLOC_CONF: "per_process_memory_fraction:0.75"
+  # PLE n-gram table off the GPU: b12x io_uring row reads from the checkpoint.
+  VLLM_PLE_TABLE_MEMORY: "disk"
+  B12X_DISK_BACKEND: "io_uring"
+  CUTE_DSL_ARCH: "sm_121a"
+  SAFETENSORS_FAST_GPU: "1"
+  VLLM_WORKER_MULTIPROC_METHOD: "spawn"
+  VLLM_SSM_CONV_STATE_LAYOUT: "DS"
+  VLLM_USE_AOT_COMPILE: "1"
+  VLLM_USE_MEGA_AOT_ARTIFACT: "1"
+  VLLM_USE_V2_MODEL_RUNNER: "1"
+  VLLM_MXFP8_LM_HEAD: "1"
+  VLLM_B12X_MOE_FP4_LAYER_MAX_INPUT_SCALE: "w13"
+  VLLM_B12X_MOE_FP4_FORCE_A16: "1"
+  B12X_W4A16_A4_PREFILL: "1"
+
+command: |
+  vllm serve {model_path} \
+    --host {host} \
+    --port {port} \
+    --served-model-name azampatti/Qwen3.8-Flash-Next-FP4-Local-AZ \
+    --tensor-parallel-size {tensor_parallel} \
+    --pipeline-parallel-size {pipeline_parallel} \
+    --mamba-cache-mode align \
+    --enable-prefix-caching \
+    --enable-chunked-prefill \
+    --dtype bfloat16 \
+    --kv-cache-dtype fp8 \
+    --quantization modelopt_mixed \
+    --block-size {block_size} \
+    --load-format b12x \
+    --max-model-len {max_model_len} \
+    --max-num-seqs {max_num_seqs} \
+    --max-num-batched-tokens {max_num_batched_tokens} \
+    --speculative-config '{{"method":"mtp","num_speculative_tokens":{num_speculative_tokens}}}' \
+    --gdn-decode-kernel b12x \
+    --linear-backend b12x \
+    --moe-backend b12x \
+    --no-enable-flashinfer-autotune \
+    --mm-encoder-tp-mode data \
+    --reasoning-parser qwen3 \
+    --tool-call-parser qwen3_xml \
+    --enable-auto-tool-choice \
+    --compilation-config '{{"pass_config":{{"fuse_act_quant":true}}}}' \
+    --gpu-memory-utilization {gpu_memory_utilization}

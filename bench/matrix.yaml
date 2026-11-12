@@ -1,0 +1,114 @@
+# bench/matrix.yaml — example matrix for bench/run_matrix.py
+#
+# The Lead owns the final matrix (matrix/matrix.yaml or similar).  This file is
+# a template + a handful of entries that work against the current repo state.
+#
+# Runner contract:
+#   * configs are executed STRICTLY sequentially, ordered by `priority` then name
+#   * for each config: serve.py up (boots container "bench-<name>") -> suite.py
+#     -> serve.py down; safety checks refuse to boot while another model server
+#     is running / the port is serving
+#   * results land in <results_dir>/<name>/: summary.json, meta.json,
+#     requests.jsonl, metrics/, server.log, status.json
+#   * resumable: rerun the same command; configs whose status.json says "done"
+#     are skipped. Use --force to redo, --only NAME / --start-at NAME to slice.
+#
+# Per-config keys (all optional except name/recipe):
+#   name:            unique results dir name and container suffix; [A-Za-z0-9_.-]+
+#   recipe:          recipe YAML path relative to the repo root (native
+#                    server/env/vllm format or eugr command format)
+#   priority:        lower runs first; default = file order
+#   image:           docker image override (default: recipe's server.image)
+#   port:            host port override (default: defaults.port or 8000)
+#   chat_template:   absolute path or repo-relative path to a .jinja template;
+#                    mounted read-only at /chat_template.jinja and passed as
+#                    --chat-template (recorded in meta.json under vllm.chat_template)
+#   set:             recipe value overrides as "<section>.<key>": <value>
+#                    (vllm.* map to vllm CLI flags, env.* to container env,
+#                    server.* to server fields such as cpuset)
+#   env:             container env overrides/additions (shorthand for set.env.*)
+#   mounts:          list of extra docker bind mounts "host:container[:ro]"
+#   docker_args:     list of extra `docker run` flags
+#   extra_args:      raw extra vLLM argv string (advanced; NOT deduplicated)
+#   suite_profile:   "quick" (<=~4-5 min) or "full" (<=~10 min incl 128k smoke)
+#   suite:           per-config suite overrides (merged over defaults.suite):
+#                    repeats, decode_max_tokens, decode_prompts_per_category,
+#                    concurrency: [1,2,4,8], include_16: true, conc_waves,
+#                    conc_max_tokens, prefill_targets: [...], long_smoke: true,
+#                    long_target_tokens, request_timeout, retries, quality:
+#                    off|quick|full, extra: ["--flag", ...]
+#   boot_timeout_s:  per-config boot timeout override
+#   tag:             label copied into summary.json (default: name)
+#   enabled:         false to skip without deleting the entry
+#   notes:           free text, ignored by the runner
+
+defaults:
+  results_dir: bench/results
+  port: 8000
+  boot_timeout_s: 1500          # generous: this checkpoint boots in ~6-9 min
+  per_config_timeout_s: 2400    # boot + suite hard timeout per config
+  stop_server: true
+  suite_profile: full
+  suite:
+    # Keys here override BOTH profiles for every config (profile defaults <- these
+    # <- per-config `suite:`). Keep this empty unless you want a global override;
+    # put per-config tweaks under the config instead.
+    request_timeout: 300
+    retries: 1
+  env: {}
+
+configs:
+  # ── example 1: reference preset, full suite ───────────────────────────────
+  - name: az-ref
+    recipe: matrix/recipes/az-ref.yaml
+    priority: 10
+    suite_profile: full
+    notes: shipped myllmbox v5.4 recipe (MTP=12 recipe flag, dynamic depth env)
+
+  # ── example 2: MTP=3 recipe variant, quick suite ──────────────────────────
+  - name: az-mtp3
+    recipe: recipes/qwen38-mtp3.yaml
+    priority: 20
+    suite_profile: quick
+    notes: same stack, speculative-config num_speculative_tokens=3 from the recipe
+
+  # ── example 3: vllm CLI override via `set:` ───────────────────────────────
+  - name: az-seqs8
+    recipe: matrix/recipes/az-ref.yaml
+    priority: 30
+    suite_profile: quick
+    set:
+      vllm.max-num-seqs: "8"      # string values; numbers are fine unquoted too
+    notes: limits concurrency seats to 8; compares with az-ref full
+
+  # ── example 4: env override via `env:` ────────────────────────────────────
+  - name: az-static-depth
+    recipe: matrix/recipes/az-ref.yaml
+    priority: 40
+    suite_profile: quick
+    env:
+      MBX_DEPTH_MODE: static      # overrides the recipe env value
+    notes: disables dynamic draft-depth to measure its effect
+
+  # ── example 5: chat template from matrix/templates/ ───────────────────────
+  - name: az-medium-template
+    recipe: matrix/recipes/az-ref.yaml
+    priority: 50
+    suite_profile: quick
+    chat_template: matrix/templates/medium_chat_template.jinja
+    notes: medium template is what the speculative head was trained on
+
+  # ── examples for other stacks (uncomment when their recipes are ready) ────
+  # - name: eugr-b12x-ref
+  #   recipe: eugr-b12x/recipes/<recipe>.yaml
+  #   image: eugr/spark-vllm-b12x:latest
+  #   priority: 100
+  #   suite_profile: quick
+  #
+  # - name: draft-k3
+  #   recipe: draft-lab/recipes/<draft-recipe>.yaml
+  #   priority: 60
+  #   suite_profile: quick
+  #   mounts:
+  #     - /home/pgx/Documenti/vllm-gb10/draft-lab/drafts/k3:/drafts/k3:ro
+  #   notes: speculative-config in the recipe uses the absolute container path

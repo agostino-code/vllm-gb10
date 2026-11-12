@@ -1,0 +1,27 @@
+=== SOURCE SNAPSHOT (read-only) ===
+index sha256 now / backup: 60e0e2d847ca469105f697ae7721227b07b3bda788cf23c67853cad50b10d71a / 60e0e2d847ca469105f697ae7721227b07b3bda788cf23c67853cad50b10d71a
+snapshot files newer than build window: 0 (must be 0)
+
+=== KNOWN BOOT CONSTRAINTS (v5.4) ===
+1) MBX_DEPTH_MODE=off alone: NOT BOOTABLE (d-fixed-5/d-fixed-3 failed; pinned-ladder fix applied)
+2) speculative depth < 4: NOT BOOTABLE (b-curve-k3 / b-k10-curve-k3 failed; min bootable depth = 4)
+   recipes marked non-bootable: curve-k1.yaml curve-k3.yaml draftk10-spec3.yaml fixed-3.yaml 
+   bench-matrix disabled entries: ['dl-dynamic-ceiling-12-ref', 'dl-fixed-3', 'dl-curve-k1', 'dl-curve-k3', 'dl-draftk10-spec3']
+
+=== ARTIFACTS ===
+e66b43c502bad172bb97231812ef268cd2fd56d1c2d6739692aa54e0ef1539a2  draft-lab/matrix.yaml
+a8ab661e72ab89a2d06b9712db065a1fc9497685f560164e8ff6b73943ba8cb9  draft-lab/bench-matrix.yaml
+be495e816e58821be8102bb37b923ce1384881d88ee5cda1a80d80f7f7e81f94  draft-lab/gen_recipes.py
+06fa8a610aff0b47db127db46d08c5e4286280789fa0b4612c847b6eddc03ec2  draft-lab/MEASURED.md
+1535b66549c68801c7decdfaa83a999753c3b69869aaf2531341d186e4f0bc8c  draft-lab/README.md
+recipes: 28 matrix + 6 run.sh copies
+
+=== VALIDATION ===
+repo run.sh parser simulation: 34/34 recipes OK; no MBX_DEPTH_MODE=off; every depth<4 recipe annotated NOT BOOTABLE
+  tier 2 (6): self-draftfp8, draftk10-spec9, draftk5-spec6, dynamic-ceiling-12-ref, no-spec, draftk10-dynamic
+failure evidence: boot-failure-static-depth.log (40 lines), boot-failure-min-depth.log (33 lines)
+
+=== REPO FILES ADDED/CHANGED ===
+ M tools/make_draft_dir.py
+?? draft-lab/
+?? models/

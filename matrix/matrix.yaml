@@ -1,0 +1,185 @@
+# matrix/matrix.yaml — Lead-owned benchmark matrix for
+# azampatti/Qwen3.8-Flash-Next-FP4-Local-AZ (DGX Spark GB10 / GB10, myllmbox v5.4 image).
+#
+# Run:  python3 bench/run_matrix.py --matrix matrix/matrix.yaml --dry-run
+#       python3 bench/run_matrix.py --matrix matrix/matrix.yaml            # long; use a background job
+# Resumable; finished configs are skipped.  Phase with --max-configs / --start-at.
+#
+# Baseline (M0) = the shipped myllmbox recipe-az settings:
+#   K=12 dynamic depth, bf16 KV 23G, 16 seats, block 3456, YaRN 409600,
+#   rejection=block, draft_sample=probabilistic, MBX_DRAFT_HEAD=1.
+# The measured problem: acceptance 17.2%, tokens/step ~3.0 (accepted per position
+# collapses after position 2).  The draft axis below tests the fixes: the MTP layer
+# was trained at 10 experts but self-drafts at 5; draft-k10 restores its native routing.
+
+defaults:
+  results_dir: bench/results
+  port: 8000
+  boot_timeout_s: 1500
+  per_config_timeout_s: 2400
+  stop_server: true
+  suite_profile: quick
+  suite:
+    request_timeout: 300
+    retries: 1
+    concurrency: [1, 2, 4, 8]
+    include_16: false
+  env: {}
+
+configs:
+  # ── priority 1: official clean reference (replaces the contaminated M0 run) ──
+  - name: m0-reference
+    recipe: recipes/qwen38-flash-solo-optimized.yaml
+    priority: 1
+    tag: reference
+    suite_profile: full
+    suite:
+      include_16: true
+      long_smoke: true
+      quality: quick
+    notes: >-
+      Shipped myllmbox AZ recipe (K=12 dynamic, bf16 KV 23G). Full suite + quality quick.
+      Official baseline for every comparison.
+
+  # ── priority 2-7: draft/MTP tier 1 (highest expected impact) ─────────────────
+  - name: d-draftk10-spec6
+    recipe: draft-lab/recipes/draftk10-spec6.yaml
+    priority: 2
+    tag: draft-tier1
+    suite:
+      quality: quick
+    notes: >-
+      HIGHEST-VALUE hypothesis: drafter from draft-lab/drafts/qwen38-az-draft-k10
+      (text_config.num_experts_per_tok=10, the routing the MTP layer was trained on),
+      K=6 dynamic. If accepted_per_position stops collapsing, this is the winner.
+
+  - name: d-dynamic-ceiling-9
+    recipe: draft-lab/recipes/dynamic-ceiling-9.yaml
+    priority: 6
+    tag: draft-tier1
+    notes: dynamic depth ladder unchanged, ceiling 9 instead of 12 (v5.4 generic update value).
+
+  - name: d-self-scale2
+    recipe: draft-lab/recipes/self-scale2.yaml
+    priority: 7
+    tag: draft-tier1
+    notes: MBX_MTP_DRAFT_SCALE=2 (draft logits x2 before accept test; output-exact, acceptance up).
+
+  - name: d-self-head0
+    recipe: draft-lab/recipes/self-head0.yaml
+    priority: 8
+    tag: draft-tier1
+    notes: MBX_DRAFT_HEAD=0 — drafter uses the bf16 head instead of the NVFP4 copy.
+
+  - name: d-fixed-5
+    recipe: draft-lab/recipes/fixed-5.yaml
+    priority: 3
+    tag: draft-tier1
+    notes: static depth 5 (MBX_DEPTH_MODE=off); v4-era optimum, sanity check for the dynamic policy.
+
+  - name: d-fixed-9
+    recipe: draft-lab/recipes/fixed-9.yaml
+    priority: 9
+    tag: draft-tier1
+    notes: static depth 9; tests whether the dynamic ladder is leaving speed on the table.
+
+  # ── priority 8-13: serving knobs (mostly step speed / quality tradeoffs) ────
+  - name: s-kvfp8-spec7
+    recipe: matrix/recipes/az-kvfp8-spec7.yaml
+    priority: 11
+    tag: serving
+    suite:
+      quality: quick
+    notes: fp8 KV (2x pool) + depth retuned to 7; myllmbox says 7-19% slower, doubles context.
+
+  - name: s-medium-template
+    recipe: matrix/recipes/az-medium-template.yaml
+    priority: 12
+    tag: serving
+    chat_template: matrix/templates/medium_chat_template.jinja
+    suite:
+      quality: quick
+    notes: >-
+      medium chat template (azampatti INT4 repo) instead of stock: default reasoning effort
+      medium, in-band think markers, extra tool rules. Claimed +5pp acceptance / +6% tok/s.
+
+  - name: s-native262k
+    recipe: matrix/recipes/az-native262k.yaml
+    priority: 13
+    tag: serving
+    notes: native 262,144-token context (no YaRN); isolates rope-scaling cost.
+
+  - name: s-seqs8
+    recipe: matrix/recipes/az-seqs8.yaml
+    priority: 14
+    tag: serving
+    notes: 8 seats instead of 16; smaller verify batches, less KV pressure.
+
+  - name: s-batched4096
+    recipe: matrix/recipes/az-batched4096.yaml
+    priority: 15
+    tag: serving
+    notes: chunked-prefill chunk 4096 instead of 8192; finer request interleaving.
+
+  - name: s-mxfp8a16
+    recipe: matrix/recipes/az-mxfp8a16.yaml
+    priority: 16
+    tag: serving
+    notes: MBX_MXFP8_A16=1 (MXFP8 A16 attention kernels; NVIDIA ships A16 off).
+
+  # ── priority 14-19: draft/MTP tier 2 ─────────────────────────────────────────
+  - name: d-no-spec
+    recipe: draft-lab/recipes/no-spec.yaml
+    priority: 10
+    tag: draft-tier2
+    notes: no speculative decoding at all — the true single-step baseline.
+
+  - name: d-draftk10-spec9
+    recipe: draft-lab/recipes/draftk10-spec9.yaml
+    priority: 17
+    tag: draft-tier2
+    notes: draft-k10 + K=9 dynamic (deeper than tier-1 k10 run).
+
+  - name: d-draftk10-dynamic
+    recipe: draft-lab/recipes/draftk10-dynamic.yaml
+    priority: 18
+    tag: draft-tier2
+    notes: draft-k10 + full K=12 dynamic ladder.
+
+  - name: d-draftk5-spec6
+    recipe: draft-lab/recipes/draftk5-spec6.yaml
+    priority: 19
+    tag: draft-tier2
+    notes: CONTROL — same folder structure but num_experts_per_tok=5 (= self-draft with folder). Confirms the k10 delta is routing, not folder plumbing.
+
+  - name: d-self-draftfp8
+    recipe: draft-lab/recipes/self-draftfp8.yaml
+    priority: 20
+    tag: draft-tier2
+    notes: MBX_DRAFT_FP8=1 — fp8 drafter linears (faster drafts, maybe lower acceptance).
+
+  - name: d-ceil-flat9
+    recipe: draft-lab/recipes/ceil-flat9.yaml
+    priority: 21
+    tag: draft-tier2
+    notes: K=12 but hard dynamic ceiling 9 at ALL concurrency (MBX_DEPTH_CEIL="[1 -> 9]").
+
+  # ── priority 20-21: draft/MTP tier 3 ─────────────────────────────────────────
+  - name: d-self-greedy
+    recipe: draft-lab/recipes/self-greedy.yaml
+    priority: 22
+    tag: draft-tier3
+    notes: draft_sample_method=greedy (vs probabilistic); matters less at temperature 0.
+
+  - name: d-fixed-3
+    recipe: draft-lab/recipes/fixed-3.yaml
+    priority: 4
+    tag: draft-tier3
+    notes: static depth 3 — the v3-era setting; floor of the dynamic policy.
+  - name: d-curve-k4
+    recipe: draft-lab/recipes/curve-k4.yaml
+    priority: 5
+    tag: draft-tier1
+    notes: >-
+      static depth 4 (same effective depth as the eugr b12x base) — apples-to-apples cross-stack
+      depth comparison; tests the over-drafting hypothesis directly.

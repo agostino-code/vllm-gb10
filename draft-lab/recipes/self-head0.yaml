@@ -1,0 +1,84 @@
+# draft-lab recipe: self-head0  (tier 1, priority 4)
+# MBX_DRAFT_HEAD=0: drafter scores with the full bf16 target head (no NVFP4 copy).
+# Axis: K=12 depth=dynamic drafter=self head=0 scale=1 fp8=0 rejection=block sample=probabilistic.
+# Reference/control: dynamic-ceiling-12-ref.yaml (self-draft K=12 dynamic = measured M0); the only
+# difference from that recipe is the axis above -- every other env/vllm value is identical.
+# speculative-config (the ONLY one in this file): {"method":"mtp","num_speculative_tokens":12,"rejection_sample_method":"block","draft_sample_method":"probabilistic"}
+# Drafter: self-draft (no "model" key: the MTP layer is taken from the target)
+# Launch (preferred, bench/serve.py parses this file directly):
+#   bench/serve.py --recipe draft-lab/recipes/self-head0.yaml
+# run.sh fallback (MTP=0 stops run.sh appending a second --speculative-config):
+#   MTP=0 ./run.sh draft-lab/recipes/self-head0.yaml
+# Container mounts (bench-harness adds these; same absolute path, read-only):
+#   -v /home/pgx/Documenti/vllm-gb10:/home/pgx/Documenti/vllm-gb10:ro
+#   -v /home/pgx/.cache/huggingface/hub:/home/pgx/.cache/huggingface/hub:ro
+
+server:
+  image: "myllmbox/qwen38-flash-next-vllm:v5.4"
+  docker_args: "--security-opt seccomp=unconfined"
+  cpuset: "5-9,15-19"
+  model: azampatti/Qwen3.8-Flash-Next-FP4-Local-AZ
+  port: 8000
+  models_dir: ./models
+  cache_dir: ./cache
+  patches: ""
+
+env:
+  MBX_PLE_MMAP: "1"
+  MBX_PLE_MMAP_MODE: "nvme"
+  MBX_PLE_MMAP_PREWARM: "0"
+  MBX_PLE_ASYNC: "1"
+  VLLM_USE_BREAKABLE_CUDAGRAPH: "1"
+  MBX_LOADER_PREPARE: "0"
+  MBX_LOADER_EMPTY_CACHE: "1"
+  MBX_MARLIN_CSF: "1"
+  MBX_CSF_VISUAL_BF16: "0"
+  MBX_MXFP8_A16: "0"
+  MBX_PLE_PREFILL_CKPT: "1"
+  VLLM_DISABLED_KERNELS: "FlashInferCutedslMxfp8LinearKernel,FlashInferTrtllmMxfp8LinearKernel,DeepGemmMxfp8BmmLinearKernel,HummingMxfp8LinearKernel"
+  MBX_DEPTH_SYNCFREE: "1"
+  MBX_DEPTH_MODE: "dynamic"
+  MBX_DEPTH_MIN: "3"
+  MBX_DEPTH_WINDOW: "48"
+  MBX_DEPTH_PROMOTE: "60,45"
+  MBX_DEPTH_DEMOTE: "25,15"
+  MBX_DEPTH_CEIL: "[4 -> 8, 6 -> 7, 12 -> 6, 14 -> 5]"
+  MBX_DRAFT_HEAD: "0"
+  MBX_MTP_DRAFT_SCALE: "1"
+  MBX_DRAFT_FP8: "0"
+  PYTHONUNBUFFERED: "1"
+  VLLM_MARLIN_USE_ATOMIC_ADD: "1"
+  TORCH_CUDA_ARCH_LIST: "12.1a"
+  FLASHINFER_CUDA_ARCH_LIST: "12.1a"
+  TRITON_CACHE_DIR: "/cache/triton"
+  PYTORCH_CUDA_ALLOC_CONF: "expandable_segments:True"
+  MALLOC_MMAP_THRESHOLD_: "65536"
+  MALLOC_TRIM_THRESHOLD_: "131072"
+
+vllm:
+  served-model-name: azampatti/Qwen3.8-Flash-Next-FP4-Local-AZ
+  engram-config: '{"cpu_offload": false}'
+  moe-backend: marlin
+  kernel-config: '{"linear_backend_per_quant":{"mxfp8":"b12x"}}'
+  load-format: mbx
+  distributed-executor-backend: mp
+  gpu-memory-utilization: 0.88
+  kv-cache-memory: 23000000000
+  kv-cache-dtype: auto
+  mamba-ssm-cache-dtype: bfloat16
+  max-model-len: 409600
+  hf-overrides: '{"text_config":{"max_position_embeddings":409600,"rope_parameters":{"rope_type":"yarn","factor":1.5625,"original_max_position_embeddings":262144,"rope_theta":10000000,"partial_rotary_factor":0.25,"mrope_section":[11,11,10],"mrope_interleaved":true}}}'
+  block-size: 3456
+  prefix-match-unit: 64
+  compilation-config: '{"cudagraph_mode":"FULL_AND_PIECEWISE","cudagraph_capture_sizes":[1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,18,20,21,24,25,27,30,32,35,39,40,44,48,49,54,60,64,70,75,80,90,96]}'
+  max-num-seqs: 16
+  max-num-batched-tokens: 8192
+  enable-prefix-caching: true
+  enable-prompt-tokens-details: true
+  enable-auto-tool-choice: true
+  tool-call-parser: qwen3_xml
+  reasoning-parser: qwen3
+  override-generation-config: '{"temperature": 0.6, "presence_penalty": 0.1, "top_p": 0.95}'
+  speculative-config: '{"method":"mtp","num_speculative_tokens":12,"rejection_sample_method":"block","draft_sample_method":"probabilistic"}'
+  async-scheduling: true
+  use-replayssm: true

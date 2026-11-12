@@ -1,0 +1,54 @@
+=== FILES WRITTEN BY tools/make_draft_dir.py ===
+
+## draft-lab/drafts/qwen38-az-draft-k10
+d draft-lab/drafts/qwen38-az-draft-k10/tensors -> 
+f draft-lab/drafts/qwen38-az-draft-k10/config.json -> 
+f draft-lab/drafts/qwen38-az-draft-k10/.make_draft_dir.json -> 
+f draft-lab/drafts/qwen38-az-draft-k10/model.safetensors.index.json -> 
+l draft-lab/drafts/qwen38-az-draft-k10/chat_template.jinja -> /home/pgx/.cache/huggingface/hub/models--azampatti--Qwen3.8-Flash-Next-FP4-Local-AZ/snapshots/5d927eabd4e4766a69bf12f7a1387b01d936a78f/chat_template.jinja
+l draft-lab/drafts/qwen38-az-draft-k10/generation_config.json -> /home/pgx/.cache/huggingface/hub/models--azampatti--Qwen3.8-Flash-Next-FP4-Local-AZ/snapshots/5d927eabd4e4766a69bf12f7a1387b01d936a78f/generation_config.json
+l draft-lab/drafts/qwen38-az-draft-k10/merges.txt -> /home/pgx/.cache/huggingface/hub/models--azampatti--Qwen3.8-Flash-Next-FP4-Local-AZ/snapshots/5d927eabd4e4766a69bf12f7a1387b01d936a78f/merges.txt
+l draft-lab/drafts/qwen38-az-draft-k10/preprocessor_config.json -> /home/pgx/.cache/huggingface/hub/models--azampatti--Qwen3.8-Flash-Next-FP4-Local-AZ/snapshots/5d927eabd4e4766a69bf12f7a1387b01d936a78f/preprocessor_config.json
+l draft-lab/drafts/qwen38-az-draft-k10/tensors/model-00001-of-00021.safetensors -> /home/pgx/.cache/huggingface/hub/models--azampatti--Qwen3.8-Flash-Next-FP4-Local-AZ/snapshots/5d927eabd4e4766a69bf12f7a1387b01d936a78f/tensors/model-00001-of-00021.safetensors
+l draft-lab/drafts/qwen38-az-draft-k10/tensors/model-00014-of-00021.safetensors -> /home/pgx/.cache/huggingface/hub/models--azampatti--Qwen3.8-Flash-Next-FP4-Local-AZ/snapshots/5d927eabd4e4766a69bf12f7a1387b01d936a78f/tensors/model-00014-of-00021.safetensors
+l draft-lab/drafts/qwen38-az-draft-k10/tensors/model-00015-of-00021.safetensors -> /home/pgx/.cache/huggingface/hub/models--azampatti--Qwen3.8-Flash-Next-FP4-Local-AZ/snapshots/5d927eabd4e4766a69bf12f7a1387b01d936a78f/tensors/model-00015-of-00021.safetensors
+l draft-lab/drafts/qwen38-az-draft-k10/tokenizer_config.json -> /home/pgx/.cache/huggingface/hub/models--azampatti--Qwen3.8-Flash-Next-FP4-Local-AZ/snapshots/5d927eabd4e4766a69bf12f7a1387b01d936a78f/tokenizer_config.json
+l draft-lab/drafts/qwen38-az-draft-k10/tokenizer.json -> /home/pgx/.cache/huggingface/hub/models--azampatti--Qwen3.8-Flash-Next-FP4-Local-AZ/snapshots/5d927eabd4e4766a69bf12f7a1387b01d936a78f/tokenizer.json
+l draft-lab/drafts/qwen38-az-draft-k10/video_preprocessor_config.json -> /home/pgx/.cache/huggingface/hub/models--azampatti--Qwen3.8-Flash-Next-FP4-Local-AZ/snapshots/5d927eabd4e4766a69bf12f7a1387b01d936a78f/video_preprocessor_config.json
+l draft-lab/drafts/qwen38-az-draft-k10/vocab.json -> /home/pgx/.cache/huggingface/hub/models--azampatti--Qwen3.8-Flash-Next-FP4-Local-AZ/snapshots/5d927eabd4e4766a69bf12f7a1387b01d936a78f/vocab.json
+
+## draft-lab/drafts/qwen38-az-draft-k5
+d draft-lab/drafts/qwen38-az-draft-k5/tensors -> 
+f draft-lab/drafts/qwen38-az-draft-k5/config.json -> 
+f draft-lab/drafts/qwen38-az-draft-k5/.make_draft_dir.json -> 
+f draft-lab/drafts/qwen38-az-draft-k5/model.safetensors.index.json -> 
+l draft-lab/drafts/qwen38-az-draft-k5/chat_template.jinja -> /home/pgx/.cache/huggingface/hub/models--azampatti--Qwen3.8-Flash-Next-FP4-Local-AZ/snapshots/5d927eabd4e4766a69bf12f7a1387b01d936a78f/chat_template.jinja
+l draft-lab/drafts/qwen38-az-draft-k5/generation_config.json -> /home/pgx/.cache/huggingface/hub/models--azampatti--Qwen3.8-Flash-Next-FP4-Local-AZ/snapshots/5d927eabd4e4766a69bf12f7a1387b01d936a78f/generation_config.json
+l draft-lab/drafts/qwen38-az-draft-k5/merges.txt -> /home/pgx/.cache/huggingface/hub/models--azampatti--Qwen3.8-Flash-Next-FP4-Local-AZ/snapshots/5d927eabd4e4766a69bf12f7a1387b01d936a78f/merges.txt
+l draft-lab/drafts/qwen38-az-draft-k5/preprocessor_config.json -> /home/pgx/.cache/huggingface/hub/models--azampatti--Qwen3.8-Flash-Next-FP4-Local-AZ/snapshots/5d927eabd4e4766a69bf12f7a1387b01d936a78f/preprocessor_config.json
+l draft-lab/drafts/qwen38-az-draft-k5/tensors/model-00001-of-00021.safetensors -> /home/pgx/.cache/huggingface/hub/models--azampatti--Qwen3.8-Flash-Next-FP4-Local-AZ/snapshots/5d927eabd4e4766a69bf12f7a1387b01d936a78f/tensors/model-00001-of-00021.safetensors
+l draft-lab/drafts/qwen38-az-draft-k5/tensors/model-00014-of-00021.safetensors -> /home/pgx/.cache/huggingface/hub/models--azampatti--Qwen3.8-Flash-Next-FP4-Local-AZ/snapshots/5d927eabd4e4766a69bf12f7a1387b01d936a78f/tensors/model-00014-of-00021.safetensors
+l draft-lab/drafts/qwen38-az-draft-k5/tensors/model-00015-of-00021.safetensors -> /home/pgx/.cache/huggingface/hub/models--azampatti--Qwen3.8-Flash-Next-FP4-Local-AZ/snapshots/5d927eabd4e4766a69bf12f7a1387b01d936a78f/tensors/model-00015-of-00021.safetensors
+l draft-lab/drafts/qwen38-az-draft-k5/tokenizer_config.json -> /home/pgx/.cache/huggingface/hub/models--azampatti--Qwen3.8-Flash-Next-FP4-Local-AZ/snapshots/5d927eabd4e4766a69bf12f7a1387b01d936a78f/tokenizer_config.json
+l draft-lab/drafts/qwen38-az-draft-k5/tokenizer.json -> /home/pgx/.cache/huggingface/hub/models--azampatti--Qwen3.8-Flash-Next-FP4-Local-AZ/snapshots/5d927eabd4e4766a69bf12f7a1387b01d936a78f/tokenizer.json
+l draft-lab/drafts/qwen38-az-draft-k5/video_preprocessor_config.json -> /home/pgx/.cache/huggingface/hub/models--azampatti--Qwen3.8-Flash-Next-FP4-Local-AZ/snapshots/5d927eabd4e4766a69bf12f7a1387b01d936a78f/video_preprocessor_config.json
+l draft-lab/drafts/qwen38-az-draft-k5/vocab.json -> /home/pgx/.cache/huggingface/hub/models--azampatti--Qwen3.8-Flash-Next-FP4-Local-AZ/snapshots/5d927eabd4e4766a69bf12f7a1387b01d936a78f/vocab.json
+
+## nothing was written outside these two folders; the source snapshot was only read.
+
+## models/draft-k10  (run.sh deployment copy; created with the same tools/make_draft_dir.py)
+d models/draft-k10/tensors -> 
+f models/draft-k10/config.json -> 
+f models/draft-k10/.make_draft_dir.json -> 
+f models/draft-k10/model.safetensors.index.json -> 
+l models/draft-k10/chat_template.jinja -> /home/pgx/.cache/huggingface/hub/models--azampatti--Qwen3.8-Flash-Next-FP4-Local-AZ/snapshots/5d927eabd4e4766a69bf12f7a1387b01d936a78f/chat_template.jinja
+l models/draft-k10/generation_config.json -> /home/pgx/.cache/huggingface/hub/models--azampatti--Qwen3.8-Flash-Next-FP4-Local-AZ/snapshots/5d927eabd4e4766a69bf12f7a1387b01d936a78f/generation_config.json
+l models/draft-k10/merges.txt -> /home/pgx/.cache/huggingface/hub/models--azampatti--Qwen3.8-Flash-Next-FP4-Local-AZ/snapshots/5d927eabd4e4766a69bf12f7a1387b01d936a78f/merges.txt
+l models/draft-k10/preprocessor_config.json -> /home/pgx/.cache/huggingface/hub/models--azampatti--Qwen3.8-Flash-Next-FP4-Local-AZ/snapshots/5d927eabd4e4766a69bf12f7a1387b01d936a78f/preprocessor_config.json
+l models/draft-k10/tensors/model-00001-of-00021.safetensors -> /home/pgx/.cache/huggingface/hub/models--azampatti--Qwen3.8-Flash-Next-FP4-Local-AZ/snapshots/5d927eabd4e4766a69bf12f7a1387b01d936a78f/tensors/model-00001-of-00021.safetensors
+l models/draft-k10/tensors/model-00014-of-00021.safetensors -> /home/pgx/.cache/huggingface/hub/models--azampatti--Qwen3.8-Flash-Next-FP4-Local-AZ/snapshots/5d927eabd4e4766a69bf12f7a1387b01d936a78f/tensors/model-00014-of-00021.safetensors
+l models/draft-k10/tensors/model-00015-of-00021.safetensors -> /home/pgx/.cache/huggingface/hub/models--azampatti--Qwen3.8-Flash-Next-FP4-Local-AZ/snapshots/5d927eabd4e4766a69bf12f7a1387b01d936a78f/tensors/model-00015-of-00021.safetensors
+l models/draft-k10/tokenizer_config.json -> /home/pgx/.cache/huggingface/hub/models--azampatti--Qwen3.8-Flash-Next-FP4-Local-AZ/snapshots/5d927eabd4e4766a69bf12f7a1387b01d936a78f/tokenizer_config.json
+l models/draft-k10/tokenizer.json -> /home/pgx/.cache/huggingface/hub/models--azampatti--Qwen3.8-Flash-Next-FP4-Local-AZ/snapshots/5d927eabd4e4766a69bf12f7a1387b01d936a78f/tokenizer.json
+l models/draft-k10/video_preprocessor_config.json -> /home/pgx/.cache/huggingface/hub/models--azampatti--Qwen3.8-Flash-Next-FP4-Local-AZ/snapshots/5d927eabd4e4766a69bf12f7a1387b01d936a78f/video_preprocessor_config.json
+l models/draft-k10/vocab.json -> /home/pgx/.cache/huggingface/hub/models--azampatti--Qwen3.8-Flash-Next-FP4-Local-AZ/snapshots/5d927eabd4e4766a69bf12f7a1387b01d936a78f/vocab.json
