@@ -6,7 +6,24 @@
 #   ./run.sh                  # runs recipe-az.yaml
 #   ./run.sh recipe.yaml      # runs recipe.yaml
 set -euo pipefail
-cd "$(dirname "$0")"
+cd "$(dirname "$0")"; source ./config.env
+
+# Dynamic KV Cache Calculation
+KV_BYTES=$(get_kv_cache_bytes)
+echo "KV Cache dinamica calcolata: $KV_BYTES bytes"
+
+# Parsing Steering (if provided via ENV or flag)
+if [ -n "${STEERING_KEY:-}" ]; then
+    STEERING_DATA=$(python3 -c "import json; d=json.load(open('steering/index.json')); print(f'{d[\"$STEERING_KEY\"][\"path\"]}|{d[\"$STEERING_KEY\"][\"strength\"]}')" 2>/dev/null || echo "")
+    if [ -n "$STEERING_DATA" ]; then
+        export STEERING_VECTOR_PATH=$(echo $STEERING_DATA | cut -d'|' -f1)
+        export STEERING_STRENGTH=$(echo $STEERING_DATA | cut -d'|' -f2)
+        echo "Steering attivo: $STEERING_KEY (path: $STEERING_VECTOR_PATH, strength: $STEERING_STRENGTH)"
+    else
+        echo "Errore: Steering key '$STEERING_KEY' non trovata in steering/index.json"
+        exit 1
+    fi
+fi
 
 command -v docker >/dev/null || { echo "docker is required"; exit 1; }
 RECIPE="${1:-recipe-az.yaml}"
