@@ -60,8 +60,29 @@ echo "KV Cache dinamica calcolata: $KV_BYTES bytes"
 # Imposta il path per il submodule locale
 EUGR_DIR="$(cd "$(dirname "$0")"; pwd)/eugr-stack"
 
+# Parsing Steering
+STEERING_KEY=""
+for i in "$@"; do
+  if [[ "$i" == "--steering="* ]]; then
+    STEERING_KEY="${i#*=}"
+    break
+  fi
+done
+
+if [ -n "$STEERING_KEY" ]; then
+    STEERING_DATA=$(python3 -c "import json; d=json.load(open('steering/index.json')); print(f'{d[\"$STEERING_KEY\"][\"path\"]}|{d[\"$STEERING_KEY\"][\"strength\"]}')" 2>/dev/null || echo "")
+    if [ -n "$STEERING_DATA" ]; then
+        export STEERING_VECTOR_PATH=$(echo $STEERING_DATA | cut -d'|' -f1)
+        export STEERING_STRENGTH=$(echo $STEERING_DATA | cut -d'|' -f2)
+        echo "Steering attivo: $STEERING_KEY (path: $STEERING_VECTOR_PATH, strength: $STEERING_STRENGTH)"
+    else
+        echo "Errore: Steering key '$STEERING_KEY' non trovata in steering/index.json"
+        exit 1
+    fi
+fi
+
 if [ "$BACKEND" = v54 ]; then
-  RECIPE="${RECIPE:-recipe-az.yaml}"
+  RECIPE="${RECIPE:-recipes/recipe-az.yaml}"
   echo "Serving with v5.4 stack (vLLM 0.32 + RecoverSSM + Dynamic Draft) using $RECIPE..."
   exec ./run.sh "$RECIPE"
 fi
