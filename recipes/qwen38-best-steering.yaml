@@ -1,0 +1,80 @@
+# BEST PRESET + RUNTIME STEERING (concise style)
+# = the shipped myllmbox v5.4 recipe (K=12 dynamic) plus orthogonal-projection steering on the
+# final residual stream. Requires the patched model source mounted by
+# presets/run_qwen38_best_steering.sh (the stock image has no steering support).
+# Steering vector: steering/succinct.pt (unit direction "verbose style", projected out of the
+# final hidden state, DS4 formula: y = y - strength * (y @ v) * v).
+# Launch only through:  presets/run_qwen38_best_steering.sh   (plain run.sh lacks the mounts)
+# Qwen3.8-Flash-Next-FP4-Local-AZ by Alberto Zampatti (@azampatti)
+# 5 of 512 experts per token, widened re-trained shared expert, NVFP4 on vLLM 0.32
+# DGX Spark / GB10 (128GB unified memory)
+
+server:
+  image: myllmbox/qwen38-flash-next-vllm:v5.4
+  docker_args: --security-opt seccomp=unconfined
+  cpuset: "5-9,15-19"                           # GB10's 10 Cortex-X925 3.9GHz cores (+2-3% speed)
+  model: azampatti/Qwen3.8-Flash-Next-FP4-Local-AZ
+  port: 8000
+  models_dir: ./models
+  cache_dir: ./cache
+  patches: ""
+
+env:
+  STEERING_VECTOR_PATH: "/steering/vector.pt"   # mounted by presets/run_qwen38_best_steering.sh
+  STEERING_STRENGTH: "1.0"                       # >0 = steer (concise); edit preset env to tune
+  MBX_PLE_MMAP: "1"                             # n-gram table off the GPU, read from NVMe
+  MBX_PLE_MMAP_MODE: "nvme"
+  MBX_PLE_MMAP_PREWARM: "0"
+  MBX_PLE_ASYNC: "1"                            # table reads off critical path: decode stays in full CUDA graphs
+  VLLM_USE_BREAKABLE_CUDAGRAPH: "1"
+  MBX_LOADER_PREPARE: "0"
+  MBX_LOADER_EMPTY_CACHE: "1"
+  MBX_MARLIN_CSF: "1"                           # NVFP4 expert scales stay compressed on the GPU
+  MBX_CSF_VISUAL_BF16: "0"
+  MBX_MXFP8_A16: "0"                            # MXFP8 on b12x "auto"
+  MBX_PLE_PREFILL_CKPT: "1"                     # prefill checkpoints for agent turns
+  VLLM_DISABLED_KERNELS: FlashInferCutedslMxfp8LinearKernel,FlashInferTrtllmMxfp8LinearKernel,DeepGemmMxfp8BmmLinearKernel,HummingMxfp8LinearKernel
+  MBX_DEPTH_SYNCFREE: "1"                       # draft-depth bookkeeping stays on GPU
+  MBX_DEPTH_MODE: dynamic                       # dynamic speculative draft depth
+  MBX_DEPTH_MIN: "3"
+  MBX_DEPTH_WINDOW: "48"
+  MBX_DEPTH_PROMOTE: "60,45"
+  MBX_DEPTH_DEMOTE: "25,15"
+  MBX_DEPTH_CEIL: "[4 -> 8, 6 -> 7, 12 -> 6, 14 -> 5]"   # 1-3 reqs -> 12, 4-5 -> 8, 6-11 -> 7, 12-13 -> 6, 14+ -> 5
+  MBX_DRAFT_HEAD: "1"                           # drafter scores with NVFP4 copy of head (0.36 GB vs 1.27 GB per draft)
+  PYTHONUNBUFFERED: "1"
+  VLLM_MARLIN_USE_ATOMIC_ADD: "1"
+  TORCH_CUDA_ARCH_LIST: "12.1a"
+  FLASHINFER_CUDA_ARCH_LIST: "12.1a"
+  TRITON_CACHE_DIR: /cache/triton
+  PYTORCH_CUDA_ALLOC_CONF: expandable_segments:True
+  MALLOC_MMAP_THRESHOLD_: "65536"
+  MALLOC_TRIM_THRESHOLD_: "131072"
+
+vllm:
+  served-model-name: azampatti/Qwen3.8-Flash-Next-FP4-Local-AZ
+  engram-config: '{"cpu_offload": false}'
+  moe-backend: marlin
+  kernel-config: '{"linear_backend_per_quant":{"mxfp8":"b12x"}}'
+  load-format: mbx
+  distributed-executor-backend: mp
+  gpu-memory-utilization: 0.88
+  kv-cache-memory: "23000000000"                # 23G bf16 KV = 750,933 tokens: room for 16 streams
+  kv-cache-dtype: auto
+  mamba-ssm-cache-dtype: bfloat16               # GDN recurrent state in bf16
+  max-model-len: 409600                         # 400k context via YaRN
+  hf-overrides: '{"text_config":{"max_position_embeddings":409600,"rope_parameters":{"rope_type":"yarn","factor":1.5625,"original_max_position_embeddings":262144,"rope_theta":10000000,"partial_rotary_factor":0.25,"mrope_section":[11,11,10],"mrope_interleaved":true}}}'
+  block-size: 3456                              # multiple of 16 (ring at K=12) and 64 (prefill checkpoints)
+  prefix-match-unit: 64
+  compilation-config: '{"cudagraph_mode":"FULL_AND_PIECEWISE","cudagraph_capture_sizes":[1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,18,20,21,24,25,27,30,32,35,39,40,44,48,49,54,60,64,70,75,80,90,96]}'
+  max-num-seqs: 16                              # 16 concurrent requests (RecoverSSM zero-copy GDN state)
+  max-num-batched-tokens: 8192
+  enable-prefix-caching: true
+  enable-prompt-tokens-details: true
+  enable-auto-tool-choice: true
+  tool-call-parser: qwen3_xml
+  reasoning-parser: qwen3
+  override-generation-config: '{"temperature": 0.6, "presence_penalty": 0.1, "top_p": 0.95}'
+  speculative-config: '{"method":"mtp","num_speculative_tokens":12,"rejection_sample_method":"block","draft_sample_method":"probabilistic"}'
+  async-scheduling: true
+  use-replayssm: true                           # RecoverSSM (vLLM PR #58863)

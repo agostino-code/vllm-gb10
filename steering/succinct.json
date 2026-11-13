@@ -1,0 +1,50 @@
+{
+  "kind": "lm_head_style_direction",
+  "description": "unit vector: verbose-style direction removed by orthogonal projection on the final hidden state; positive strength => more concise answers",
+  "model": "model",
+  "hidden_size": 2560,
+  "lm_head_shard": "tensors/model-00014-of-00021.safetensors",
+  "concise_markers": [
+    " briefly",
+    " concisely",
+    " concise",
+    " short",
+    " terse",
+    " compact",
+    " minimal",
+    " in short",
+    " succinct",
+    " one sentence"
+  ],
+  "verbose_markers": [
+    " detailed",
+    " thoroughly",
+    " comprehensive",
+    " expansive",
+    " in depth",
+    " elaborate",
+    " extensively",
+    " multi-paragraph",
+    " thorough",
+    " in detail"
+  ],
+  "concise_token_ids": [
+    25899,
+    61446,
+    2716,
+    48834,
+    16338,
+    16866,
+    95225
+  ],
+  "verbose_token_ids": [
+    11346,
+    25522,
+    15352,
+    58691,
+    34775,
+    40339,
+    16908
+  ],
+  "vector_norm_unscaled": 0.4697863757610321
+}

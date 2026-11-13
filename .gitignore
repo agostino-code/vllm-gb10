@@ -35,3 +35,9 @@ __pycache__/
 /.b12x-image
 *.tmp
 .DS_Store
+
+# generated steering artifacts (rebuild with steering/build_vector.sh + install_patch.sh)
+/steering/succinct.pt
+/steering/model.py.orig
+/steering/patched_model.py
+/steering/.model_py_path

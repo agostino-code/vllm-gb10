@@ -1,5 +1,12 @@
 {
-  "default": {"path": "steering/identity.pt", "strength": 0.0},
-  "orca_abl": {"path": "steering/orca_steer.pt", "strength": 1.0},
-  "concise": {"path": "steering/succinct.pt", "strength": 0.5}
+  "default": {
+    "path": "",
+    "strength": 0.0,
+    "description": "steering off"
+  },
+  "succinct": {
+    "path": "steering/succinct.pt",
+    "strength": 1.5,
+    "description": "concise-style direction extracted from lm_head style markers; projected out of the final residual stream (requires the patched model from steering/install_patch.sh). Use presets/run_qwen38_best_steering.sh."
+  }
 }
