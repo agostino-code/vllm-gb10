@@ -1,0 +1,12 @@
+{
+  "kind": "refusal_direction_difference_in_means",
+  "dataset": "LLM-LAT/harmful-dataset",
+  "method": "mean(h|refusal prefix) - mean(h|compliance prefix) at the final residual stream, captured at the decision point (last token of a forced response prefix, continue_final_message), per Arditi et al. 2024",
+  "n_prompts_used": 200,
+  "n_prompts_skipped": 0,
+  "seed": 42,
+  "hidden_size": 2560,
+  "raw_norm_before_unit": 37.778610704678705,
+  "cosine_means": 0.9764824097702355,
+  "sign": "positive v = refusal direction; steering SUBTRACTS its component => compliance"
+}

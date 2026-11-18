@@ -41,3 +41,11 @@ __pycache__/
 /steering/model.py.orig
 /steering/patched_model.py
 /steering/.model_py_path
+
+# Generated steering data (rebuild with steering/build_vector.sh + build_refusal_vector.py)
+/steering/data/*.parquet
+/steering/data/*.csv
+/steering/data/*.json
+/steering/refusal.*
+/steering/capture/
+/steering/cap_*
