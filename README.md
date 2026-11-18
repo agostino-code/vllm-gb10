@@ -170,7 +170,7 @@ matrix/                       the preset study: matrix definitions, generated re
 draft-lab/                    draft/MTP experiments, rebuilt draft folders (k10/k5),
                               fixed builder tools/make_draft_dir.py, MEASURED.md
 eugr-b12x/                    self-contained eugr b12x launcher (plain docker run)
-steering/                     runtime steering: vector builder, model patch, eval, VALIDATION.md
+steering/                     runtime steering: vector builder, model patches, eval, VALIDATION*.md
 docs/ADR/                     design records (orthogonal-projection steering)
 tools/                        helper scripts (draft dirs, MTP drafter check, simple benchmark)
 examples/                     prompt sets: benchmarks, long_context, red_teaming, steering_pairs
@@ -400,10 +400,9 @@ non-zero on regression — use `--noise 0` for finalist acceptance.
 Refusal removal must live **in the weights**. Runtime projection of a measured refusal
 direction does not work on this checkpoint: it refuses even when forced to open with a
 compliance sentence, so there is no single decision point to steer — measured 82 % → 82 % at
-λ = ±1 on all 96 residual writers, and large strengths only produce repetition loops. Full
-evidence: [`steering/VALIDATION_REFUSAL.md`](steering/VALIDATION_REFUSAL.md).
+λ = ±1 on all 96 residual writers, and large strengths only produce repetition loops.
 
-Use the abliterated checkpoint instead:
+Use the abliterated checkpoint instead — **measured 0 % refusals, quality unchanged**:
 
 ```bash
 # one-time: accept the licence on
@@ -413,12 +412,22 @@ hf auth login
 ./presets/run_qwen38_uncensored.sh              # serve — NO GUARDRAILS
 ```
 
+| metric | uncensored | base (AZ) |
+|---|---|---|
+| refusal rate, 50 held-out harmful prompts | **0 %** | 78–82 % |
+| quality suite (quick) | **0.9667** | 0.9667 |
+| decode single stream | 52.8 tok/s | 53.3 tok/s |
+| C=8 throughput | 134.5 tok/s | 142.0 tok/s |
+
 `myllmbox/Qwen3.8-Flash-Next-hibrid48-uncensored` is OrcaRouter's abliterated body (refusal
-direction removed in the weights with `W' = W − r (rᵀ W)`, λ = 1, on every residual writer) with
-myllmbox's NVFP4 output head. Same image and settings as the best preset; only the checkpoint
-differs, so there is no runtime hook that can drift or loop. Published quality (thinking on):
-HumanEval 94.5, GSM8K 97.5, IFEval 94.5/96.2, MMLU-Pro 82.9. It also thinks shorter than the
-base checkpoint (median reasoning −8 %, p90 −27 %).
+direction removed in the weights, `W' = W − r (rᵀ W)`, λ = 1, on every residual writer) with
+myllmbox's NVFP4 output head — same 5-of-512 architecture, so the same recipe applies.
+
+The preset also applies `steering/patch_unfuse_qkv.py`: this checkpoint stores
+`q_proj`/`k_proj`/`v_proj` under mixed schemes (int8 on 12 of 48 layers, bf16 on the rest), and
+vLLM's fused `qkv_proj` module cannot be built from that. Dropping the fusion entry loads the
+weights 1:1. Full details and rejected alternatives:
+[`steering/VALIDATION_REFUSAL.md`](steering/VALIDATION_REFUSAL.md).
 
 The preset is gated on Hugging Face: accept the agreement, then authenticate. Serving is at your
 own risk and your own moderation.
