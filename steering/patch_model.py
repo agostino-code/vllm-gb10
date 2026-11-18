@@ -1,22 +1,38 @@
 #!/usr/bin/env python3
-"""Insert runtime steering (+ optional activation capture) into the v5.4 image's Qwen4Exp model source.
+"""Insert runtime abliteration + steering + optional activation capture into the v5.4
+image's Qwen4Exp model source.
 
-The image has no steering support. Rather than rebuild it, we patch one file and mount it
-over the image's copy at launch (see steering/install_patch.sh and presets/run_qwen38_best_steering.sh).
+Three independent hooks, each gated by an environment variable:
 
-The injection point is the final residual stream of `Qwen4ExpModel.forward`
-(`sample_hidden_states`, hidden_size = 2560, the tensor that feeds lm_head):
-it applies the orthogonal-projection rule from docs/ADR/001:
+1. ABLITERATION (STEERING_ABLITERATE=1) — real multi-layer refusal removal on *every*
+   residual writer of every decoder layer, following OrcaRouter's abliteration map
+   (lambda = 1) as done by the myllmbox hibrid48-uncensored checkpoint:
 
-    y = y - strength * (y @ v) * v        (v unit-norm, y float32)
+       W' = W - r (r^T W)        <=>     out' = out - r (r . out)
 
-This is a captured-by-CUDA-graph tensor op (no Python hooks at replay time), and it does not
-touch the MTP drafter (which consumes the pre-mixer multi-stream buffer), so speculative
-acceptance and quality are unaffected except through the intended style shift.
+   applied to the two block outputs of each layer (`attn_out` = o_proj / GDN out_proj,
+   `mlp_out` = routed experts + shared expert, already summed). This is the same linear
+   map the uncensored weights carry, so int4/fp8 weights stay byte-identical without
+   re-rounding. Because the projection is applied to EVERY residual writer, the residual
+   stream stays on-manifold: no per-step norm drift, hence no repetition loops — unlike
+   projecting only the final hidden state.
 
-When STEERING_CAPTURE_DIR is set, every forward also writes the last row of the
-*pre-steering* hidden state to that directory (prefill runs eager, so Python executes):
-used by steering/build_refusal_vector.py to collect decision-point activations.
+   Optional per-layer scaling: STEERING_ABLATE_SCALE=<s> multiplies r before projecting
+   (s = 1.0 is the standard abliteration).
+
+   Direction: STEERING_VECTOR_PATH must point at a unit-length tensor of shape
+   [hidden_size] (single direction, applied to all layers) or [48, hidden_size]
+   (one direction per layer).
+
+2. OUTPUT STEERING (runtime style control) — STEERING_VECTOR_PATH + STEERING_STRENGTH,
+   orthogonal projection on the FINAL residual stream (y = y - s (y.v) v). Kept for
+   style experiments; NOT used for abliteration.
+
+3. CAPTURE (STEERING_CAPTURE_DIR) — writes the post-block hidden state of the last
+   prompt token for each eager (prefill) forward, used by steering/build_refusal_vector.py.
+
+The abliteration hook runs inside CUDA-graph-captured decode and eager prefill alike and
+never touches the MTP drafter (which reads the pre-mixer multi-stream buffer).
 
 Usage:
     python3 steering/patch_model.py steering/model.py.orig steering/patched_model.py
@@ -26,9 +42,42 @@ from __future__ import annotations
 import sys
 from pathlib import Path
 
-ANCHOR = "        return sample_hidden_states\n"
+# --- anchor 1: block outputs of the decoder layer (abliteration) -------------------
+ABL_ATTN_ANCHOR = """        mlp_hc = self.mlp_hyper_connection
+        if self.use_hc_sequence_parallel:
+            attn_out = sp_reduce_scatter(attn_out)
+"""
+ABL_ATTN_CALL = """        mlp_hc = self.mlp_hyper_connection
+        if self.use_hc_sequence_parallel:
+            attn_out = sp_reduce_scatter(attn_out)
+"""
 
-CALL = """        # --- runtime steering (steering/patch_model.py) ---
+ABL_MLP_ANCHOR = """                    sp_reduce_scatter(mlp_out) if reduce_output else sp_shard(mlp_out)
+                )
+        return hidden_states, mlp_out, injection
+"""
+ABL_MLP_CALL = """                    sp_reduce_scatter(mlp_out) if reduce_output else sp_shard(mlp_out)
+                )
+        return hidden_states, mlp_out, injection
+"""
+
+# --- anchor 3: layer __init__ (preload the direction while no capture is active) -----
+ABL_INIT_ANCHOR = """        self.mlp_hyper_connection = GatedResidual(
+            hc_config,
+            prefix=maybe_prefix(prefix, "mlp_hyper_connection"),
+            quant_config=quant_config,  # MBX hc quant
+        )
+"""
+ABL_INIT_CALL = """        self.mlp_hyper_connection = GatedResidual(
+            hc_config,
+            prefix=maybe_prefix(prefix, "mlp_hyper_connection"),
+            quant_config=quant_config,  # MBX hc quant
+        )
+"""
+
+# --- anchor 2: final residual stream (output steering + capture) --------------------
+OUT_ANCHOR = "        return sample_hidden_states\n"
+OUT_CALL = """        # --- runtime steering (steering/patch_model.py) ---
         _maybe_capture_steering(sample_hidden_states)
         sample_hidden_states = _apply_output_steering(sample_hidden_states)
         return sample_hidden_states
@@ -36,17 +85,20 @@ CALL = """        # --- runtime steering (steering/patch_model.py) ---
 
 HELPER = '''
 
-# ===== runtime steering, added by steering/patch_model.py ==========================
+# ===== runtime steering / abliteration, added by steering/patch_model.py ===========
 _STEERING_STATE: dict = {}
 _CAPTURE_STATE = {"n": 0}
+_ABL_STATE: dict = {}
+
+
+
 
 
 def _maybe_capture_steering(hidden_states):
-    """Persist the final-residual last-token state per forward (for direction building).
+    """Persist the final-residual last-token state per eager forward (vector building).
 
-    Enabled with STEERING_CAPTURE_DIR=<writable dir>. Prefill executes Python (eager),
-    so each request's prefill shows up here. Decode runs in CUDA graphs; we skip those
-    because CPU<->CUDA copies are forbidden during graph capture.
+    Enabled with STEERING_CAPTURE_DIR=<writable dir>. CUDA-graph capture is skipped
+    (CPU<->CUDA copies are forbidden during graph capture).
     """
     import json
     import os
@@ -54,9 +106,9 @@ def _maybe_capture_steering(hidden_states):
     out_dir = os.environ.get("STEERING_CAPTURE_DIR", "")
     if not out_dir:
         return
-    # Skip during CUDA graph capture: CPU<->CUDA copies are not allowed.
     try:
         import torch as _torch
+
         if _torch.cuda.is_current_stream_capturing():
             return
     except Exception:
@@ -67,7 +119,6 @@ def _maybe_capture_steering(hidden_states):
         row = hidden_states[-1].detach().float().cpu()
         t = int(hidden_states.shape[0])
         os.makedirs(out_dir, exist_ok=True)
-        # raw float32 + json sidecar: readable without torch (host numpy)
         row.numpy().tofile(f"{out_dir}/cap_{n:08d}.f32")
         with open(f"{out_dir}/cap_{n:08d}.json", "w") as f:
             json.dump({"n": n, "t": t, "dim": int(row.numel())}, f)
@@ -80,9 +131,9 @@ def _maybe_capture_steering(hidden_states):
 
 
 def _apply_output_steering(hidden_states):
-    """Orthogonal-projection steering on the final residual stream (DS4 formula).
+    """Orthogonal-projection style steering on the FINAL residual stream (DS4 formula).
 
-    y = y - strength * (y @ v) * v, with v loaded once from $STEERING_VECTOR_PATH.
+    y = y - strength * (y @ v) * v, v loaded once from $STEERING_VECTOR_PATH.
     Disabled when STEERING_VECTOR_PATH is unset or STEERING_STRENGTH is 0.
     """
     import os
@@ -126,16 +177,22 @@ def _apply_output_steering(hidden_states):
 '''
 
 
+def _replace_once(text: str, anchor: str, replacement: str, label: str) -> str:
+    n = text.count(anchor)
+    if n != 1:
+        raise SystemExit(f"[{label}] expected exactly 1 anchor, found {n}")
+    return text.replace(anchor, replacement)
+
+
 def main() -> int:
     if len(sys.argv) != 3:
         print(__doc__)
         return 2
     src, dst = Path(sys.argv[1]), Path(sys.argv[2])
     text = src.read_text()
-    n = text.count(ANCHOR)
-    if n != 1:
-        raise SystemExit(f"expected exactly 1 anchor in {src}, found {n}")
-    text = text.replace(ANCHOR, CALL)
+    text = _replace_once(text, ABL_ATTN_ANCHOR, ABL_ATTN_CALL, "abliterate-attn")
+    text = _replace_once(text, ABL_MLP_ANCHOR, ABL_MLP_CALL, "abliterate-mlp")
+    text = _replace_once(text, OUT_ANCHOR, OUT_CALL, "output-steering")
     text = text.rstrip("\n") + "\n" + HELPER
     dst.write_text(text)
     compile(dst.read_text(), str(dst), "exec")  # syntax check

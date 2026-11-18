@@ -49,3 +49,6 @@ __pycache__/
 /steering/refusal.*
 /steering/capture/
 /steering/cap_*
+
+# uncensored checkpoint is downloaded by the preset, never committed
+/models--myllmbox--*/

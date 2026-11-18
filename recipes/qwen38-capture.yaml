@@ -13,6 +13,8 @@ server:
   patches: ""
 
 env:
+  STEERING_CAPTURE_ROWS: "1"                     # per-layer residual-writer capture
+  STEERING_CAPTURE_DIR: "/cache/capture"          # mount cache/ here (preset does)
   MBX_PLE_MMAP: "1"
   MBX_PLE_MMAP_MODE: "nvme"
   MBX_PLE_MMAP_PREWARM: "0"

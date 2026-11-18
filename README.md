@@ -46,7 +46,7 @@ quality gate and limitations) is in **[BENCHMARK-REPORT.md](BENCHMARK-REPORT.md)
 depth, drafter, KV-cache or chat-template variants beat it beyond run-to-run noise.
 
 ```bash
-presets/run_qwen38_best.sh
+presets/run_qwen38.sh
 # equivalent:  MTP=0 ./run.sh recipes/qwen38-flash-solo-optimized.yaml
 ```
 
@@ -103,7 +103,7 @@ cd vllm-gb10
 docker pull myllmbox/qwen38-flash-next-vllm:v5.4
 
 # 3a. model already in the HF cache? just launch:
-presets/run_qwen38_best.sh
+presets/run_qwen38.sh
 
 # 3b. otherwise run.sh downloads it (~102 GB) into the HF cache on first launch:
 MTP=0 ./run.sh recipes/qwen38-flash-solo-optimized.yaml
@@ -151,10 +151,10 @@ recipes/                      YAML recipes: qwen38-flash-solo-optimized.yaml (be
                               qwen38-k4.yaml (alternative), qwen38-best-steering.yaml,
                               plus the upstream recipe collection for other models
 presets/                      ready-to-run launchers
-  run_qwen38_best.sh          best preset (shipped recipe, safe MTP=0)
+  run_qwen38.sh               best preset (shipped recipe, safe MTP=0)
   run_qwen38_k4.sh            K=4 alternative (equal throughput, half the draft compute)
   run_qwen38_eugr_b12x.sh     eugr b12x stack
-  run_qwen38_best_steering.sh best preset + runtime steering (experimental)
+  run_qwen38_uncensored.sh    abliterated checkpoint, no guardrails (research/red-team)
 bench/                        reproducible benchmark harness
   serve.py                    recipe -> docker launch manifest, health wait, logs, boot time
   suite.py                    standardized measurement suite (decode/concurrency/prefill/needle/spec)
@@ -240,11 +240,11 @@ Notes:
 
 | preset | command | notes |
 |---|---|---|
-| **best (default)** | `presets/run_qwen38_best.sh` | shipped myllmbox v5.4 recipe; best measured configuration |
+| **best (default)** | `presets/run_qwen38.sh` | shipped myllmbox v5.4 recipe; best measured configuration |
 | K=4 depth | `presets/run_qwen38_k4.sh` | throughput-equal alternative, halved draft compute; not faster |
 | long-context KV | `MTP=0 ./run.sh matrix/recipes/az-kvfp8-spec7.yaml` | fp8 KV, 1,458,424-token pool (~1.94×), −8 % decode |
 | eugr b12x | `presets/run_qwen38_eugr_b12x.sh` | alternative image/loader, quality-equal, ~30 % slower at C=8, low host-RAM use |
-| best + steering | `presets/run_qwen38_best_steering.sh` | experimental runtime steering (see below) |
+| uncensored | `presets/run_qwen38_uncensored.sh` | abliterated weights, no guardrails (see below) |
 
 `STEERING_STRENGTH=<float>` tunes the steering preset; other presets honour `BACKEND`,
 `MODEL_REPO`, `CTX`, `KV_BYTES`, `CHAT_TEMPLATE`.
@@ -395,34 +395,55 @@ Scoring: per-category score, overall score, JSON + per-item raw outputs. `compar
 item-level noise tolerance (`--noise N`), prints pass→fail flips with attribution, and exits
 non-zero on regression — use `--noise 0` for finalist acceptance.
 
-## Runtime steering (`steering/`)
+## Uncensored checkpoint (no guardrails) — research / red-team use
 
-The stock v5.4 image has **no steering support**. This repo adds a CUDA-graph-safe hook without
-rebuilding the image:
+Refusal removal must live **in the weights**. Runtime projection of a measured refusal
+direction does not work on this checkpoint: it refuses even when forced to open with a
+compliance sentence, so there is no single decision point to steer — measured 82 % → 82 % at
+λ = ±1 on all 96 residual writers, and large strengths only produce repetition loops. Full
+evidence: [`steering/VALIDATION_REFUSAL.md`](steering/VALIDATION_REFUSAL.md).
+
+Use the abliterated checkpoint instead:
 
 ```bash
-presets/run_qwen38_best_steering.sh                          # best preset + steering, strength 1.0
-STEERING_STRENGTH=2.0 presets/run_qwen38_best_steering.sh    # stronger projection
-STEERING_STRENGTH=0   presets/run_qwen38_best_steering.sh    # patched stack, steering off
+# one-time: accept the licence on
+#   https://huggingface.co/myllmbox/Qwen3.8-Flash-Next-hibrid48-uncensored
+hf auth login
+./presets/run_qwen38_uncensored.sh --download   # ~105 GB
+./presets/run_qwen38_uncensored.sh              # serve — NO GUARDRAILS
 ```
 
-What happens under the hood:
+`myllmbox/Qwen3.8-Flash-Next-hibrid48-uncensored` is OrcaRouter's abliterated body (refusal
+direction removed in the weights with `W' = W − r (rᵀ W)`, λ = 1, on every residual writer) with
+myllmbox's NVFP4 output head. Same image and settings as the best preset; only the checkpoint
+differs, so there is no runtime hook that can drift or loop. Published quality (thinking on):
+HumanEval 94.5, GSM8K 97.5, IFEval 94.5/96.2, MMLU-Pro 82.9. It also thinks shorter than the
+base checkpoint (median reasoning −8 %, p90 −27 %).
 
-1. `steering/make_steering_vector.py` builds `steering/succinct.pt` (2560-dim, unit norm) from the
-   model's own output head: mean `lm_head` row of verbose-style markers minus mean row of
-   concise-style markers (`steering/succinct.json` lists them).
+The preset is gated on Hugging Face: accept the agreement, then authenticate. Serving is at your
+own risk and your own moderation.
+
+## Runtime steering hook (`steering/`) — experimental
+
+The stock v5.4 image has no steering support. This repo adds a CUDA-graph-safe hook without
+rebuilding the image (`steering/make_steering_vector.py`, `steering/install_patch.sh`,
+`steering/patch_model.py`):
+
+1. a 2560-dim unit vector is built from the model's own output head (mean `lm_head` row of
+   verbose-style markers minus concise-style markers, listed in `steering/succinct.json`);
 2. `steering/install_patch.sh` extracts the image's `Qwen4ExpModel` source and injects the
-   orthogonal-projection rule from `docs/ADR/001` on the final residual stream:
-   `y = y − strength · (y · v) · v`. The preset bind-mounts the patched file over the image copy.
-   The op is captured inside the CUDA graphs; the MTP drafter is untouched.
-3. The server log then shows `[steering] active on final residual stream: …`.
+   orthogonal-projection rule from `docs/ADR/001` on the final residual stream
+   (`y = y − strength · (y · v) · v`), bind-mounted over the image copy;
+3. the server log shows `[steering] active on final residual stream: …`.
 
-**Honest validation status:** the hook is real and reproducible, but this head-space style vector
-does **not** give clean verbosity control at the strengths tested — at 1.5 the output-length change
-is inside noise; at ±8 outputs change but become longer/more padded. Details and limitations:
-[`steering/VALIDATION.md`](steering/VALIDATION.md). Treat steering as an experimental hook.
-`steering/generate_vector.py` (random/zero/safetensors conversion) and `steering/eval_steering.py`
-(measure response length/speed) are also available.
+**Validation status: the plumbing works, the effect does not.** The head-space style vector gives
+no clean verbosity control at any strength tested (at 1.5 the change is inside run-to-run noise;
+at ±8 outputs change but get longer and more padded). Details:
+[`steering/VALIDATION.md`](steering/VALIDATION.md) and
+[`steering/VALIDATION_REFUSAL.md`](steering/VALIDATION_REFUSAL.md).
+
+Note: the vectors are generated artefacts (gitignored). `steering/generate_vector.py` and
+`steering/eval_steering.py` are still available for building/inspecting vectors.
 
 ## eugr b12x stack (`eugr-b12x/`)
 

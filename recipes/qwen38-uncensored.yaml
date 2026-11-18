@@ -1,10 +1,16 @@
-# ABLITERATED PRESET (research / red-team use, local only)
-# = the shipped myllmbox v5.4 best recipe + refusal-direction steering: the difference-in-means
-# direction between forced refusal and forced compliance completions (LLM-LAT/harmful-dataset),
-# projected out of the final residual stream (Arditi et al. 2024). Requires the patched model
-# source mounted by presets/run_qwen38_abliterated.sh, which also builds steering/refusal.pt on
-# first run (capture server boot -> 400 forced-prefix requests -> direction -> restart).
-# Launch only through:  presets/run_qwen38_abliterated.sh
+# UNCENSORED PRESET (research / red-team / private local use) — NO GUARDRAILS
+# myllmbox/Qwen3.8-Flash-Next-hibrid48-uncensored: OrcaRouter's abliterated body (refusal
+# direction removed in the WEIGHTS, lambda=1 on every residual writer) with myllmbox's NVFP4
+# output head. Same image/recipe as the best preset; only the checkpoint differs.
+#
+# Why this instead of runtime steering: runtime projection of a measured refusal direction on
+# this checkpoint family does not move behaviour (measured: refusal 82% -> 82% at lambda +/-1;
+# the model refuses even when forced to start with a compliance prefix, so the decision is not
+# localised at a single prefix position). Abliteration has to be in the weights, which is what
+# this checkpoint is.
+#
+# License: gated on Hugging Face (accept the agreement, then `hf auth login`).
+# Launch only through: presets/run_qwen38_uncensored.sh
 # Qwen3.8-Flash-Next-FP4-Local-AZ by Alberto Zampatti (@azampatti)
 # 5 of 512 experts per token, widened re-trained shared expert, NVFP4 on vLLM 0.32
 # DGX Spark / GB10 (128GB unified memory)
@@ -13,15 +19,13 @@ server:
   image: myllmbox/qwen38-flash-next-vllm:v5.4
   docker_args: --security-opt seccomp=unconfined
   cpuset: "5-9,15-19"                           # GB10's 10 Cortex-X925 3.9GHz cores (+2-3% speed)
-  model: azampatti/Qwen3.8-Flash-Next-FP4-Local-AZ
+  model: myllmbox/Qwen3.8-Flash-Next-hibrid48-uncensored
   port: 8000
   models_dir: ./models
   cache_dir: ./cache
   patches: ""
 
 env:
-  STEERING_VECTOR_PATH: "/steering/vector.pt"   # mounted by presets/run_qwen38_abliterated.sh
-  STEERING_STRENGTH: "-2.0"                       # full projection removal of the refusal direction
   MBX_PLE_MMAP: "1"                             # n-gram table off the GPU, read from NVMe
   MBX_PLE_MMAP_MODE: "nvme"
   MBX_PLE_MMAP_PREWARM: "0"
@@ -52,7 +56,7 @@ env:
   MALLOC_TRIM_THRESHOLD_: "131072"
 
 vllm:
-  served-model-name: azampatti/Qwen3.8-Flash-Next-FP4-Local-AZ
+  served-model-name: Qwen/Qwen3.8-Flash-Next
   engram-config: '{"cpu_offload": false}'
   moe-backend: marlin
   kernel-config: '{"linear_backend_per_quant":{"mxfp8":"b12x"}}'
