@@ -56,8 +56,9 @@ if [ -d "models/$(basename "$MODEL")" ]; then
 fi
 
 # This checkpoint stores q_proj/k_proj/v_proj under mixed schemes (int8 on 12 layers, bf16 on
-# the other 36), so vLLM cannot build a fused qkv_proj. Mount a source tree with the fusion off.
-echo "· installing the unfused-qkv patch (mixed-precision weights)"
+# the other 36), so vLLM cannot build a fused qkv_proj. UNFUSE_QKV=1 installs ONLY that
+# mapping change — no steering hook is mounted (steering is what caused the repetition loops).
+echo "· installing the unfused-qkv patch (mixed-precision weights, no steering hook)"
 UNFUSE_QKV=1 ./steering/install_patch.sh
 MODEL_PY="$(cat steering/.model_py_path)"
 export DOCKER_EXTRA_ARGS="-v $PWD/steering/patched_model.py:$MODEL_PY:ro ${DOCKER_EXTRA_ARGS:-}"
