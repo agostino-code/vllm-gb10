@@ -121,6 +121,11 @@ Before you run it:
 - **nothing else may be on the GPU.** It refuses to start if a server is running, and tells you
   what to stop. If you want to measure a server you started yourself, without the harness
   touching it: `./bench/baseline.py --attach http://127.0.0.1:8000`.
+- **enough free RAM.** On the GB10 there is no separate VRAM: weights, KV and activations share
+  the 128 GB. The preflight refuses any boot that cannot fit (`~74 GB weights + the recipe's
+  KV reservation + 9 GB slack`) rather than dying 4 minutes in, so a too-large `kv-cache-memory`
+  fails fast with the numbers, not as an OOM. Close the desktop's heavy apps first; `--force`
+  overrides the check.
 - **run `./tune-host.sh` once.** The GB10 page compaction is the single biggest source of noise
   on this box.
 - **run it twice for anything you intend to decide on.** Single runs swing ±10–15 %; only
@@ -422,8 +427,20 @@ you can paste straight into a conversation.
 ./bench/baseline.py --report             # rebuild BASELINE.md from the newest results
 ./bench/baseline.py --report DIR [DIR…]  # …or merge specific runs (later dirs override
                                          # the same config — how this file combines
-                                         # 033710Z's standards with 161012Z's 524k)
+                                         # 161012Z's 524k into the standards from 033710Z)
 ```
+
+**The full picture — baseline + all twelve open-question candidates, merged into one table:**
+
+```bash
+./bench/baseline.py --run-id b-today \
+ && ./bench/baseline.py --run-id t-today --matrix bench/matrix-tests.yaml \
+ && ./bench/baseline.py --report bench/baseline/t-today bench/baseline/b-today
+```
+
+~2.5–3 h: 4 full-quality boots + 12 quick ones. Where a config appears in both matrices the
+full-quality row wins; the abba block is compared inside its own run
+(`./bench/baseline.py --report bench/baseline/t-today`).
 
 It refuses to start while another model server is running — this box serves one model at a time
 and the numbers are meaningless with two. If you already have a server up and want to measure it

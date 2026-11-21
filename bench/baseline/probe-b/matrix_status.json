@@ -1,0 +1,8 @@
+{
+  "configs": [],
+  "finished_at": "2026-11-21T18:37:35.885+00:00",
+  "matrix": "bench/baseline/probe-b.matrix.yaml",
+  "results_dir": "/home/pgx/Documenti/vllm-gb10/bench/baseline/probe-b",
+  "started_at": "2026-11-21T18:37:35.884+00:00",
+  "updated_at": "2026-11-21T18:37:35.885+00:00"
+}

@@ -448,12 +448,17 @@ def run_matrix(args, matrix_path: Path, results_dir: Path) -> int:
 
 
 def write_matrix(args, run_id: str) -> Path:
-    """bench/matrix.yaml + the baseline overrides (quality on, results dir)."""
-    raw = C.load_yaml(MATRIX)
+    """The chosen matrix + the baseline overrides (quality on, results dir)."""
+    raw = C.load_yaml(Path(args.matrix) if args.matrix else MATRIX)
     defaults = dict(raw.get("defaults") or {})
     defaults["results_dir"] = str(BASE / run_id)
     suite = dict(defaults.get("suite") or {})
-    suite["quality"] = args.quality
+    # --quality wins; otherwise respect the matrix's own choice (matrix-tests
+    # sets quality: off deliberately), defaulting to full for the baseline.
+    if args.quality is not None:
+        suite["quality"] = args.quality
+    elif "quality" not in suite:
+        suite["quality"] = "full"
     defaults["suite"] = suite
     raw["defaults"] = defaults
     out = BASE / f"{run_id}.matrix.yaml"
@@ -472,8 +477,11 @@ def main(argv=None) -> int:
     ap.add_argument("--run-id", default=datetime.now().strftime("%Y%m%dT%H%M%SZ"))
     ap.add_argument("--profile", default="full", choices=["quick", "full"],
                     help="suite profile (default full)")
-    ap.add_argument("--quality", default="full", choices=["off", "quick", "full"],
-                    help="quality gate mode (default full)")
+    ap.add_argument("--quality", default=None, choices=["off", "quick", "full"],
+                    help="quality gate mode (default: the matrix's own choice, else full)")
+    ap.add_argument("--matrix", default=None, metavar="YAML",
+                    help="matrix file to run (default bench/matrix.yaml; "
+                         "bench/matrix-tests.yaml runs the 12 open-question candidates)")
     ap.add_argument("--only", action="append", metavar="NAME")
     ap.add_argument("--force", action="store_true")
     ap.add_argument("--fail-fast", action="store_true")
@@ -500,6 +508,8 @@ def main(argv=None) -> int:
     servers = running_servers()
     if args.attach:
         print(f"· attach mode: measuring {args.attach}, no container is started or stopped")
+    elif args.dry_run:
+        pass  # nothing boots in a dry run; the live-server rule does not apply
     else:
         if servers:
             print("✗ refusing to start: a model server is already running.", file=sys.stderr)
@@ -527,7 +537,7 @@ def main(argv=None) -> int:
             d.mkdir(exist_ok=True)
             cmd = [sys.executable, str(HERE / "suite.py"), "--base-url", args.attach,
                    "--run-dir", str(d), "--config-id", name, "--profile", args.profile,
-                   "--tag", name, "--quality", args.quality]
+                   "--tag", name, "--quality", args.quality or "full"]
             print(" ".join(cmd))
             if not args.dry_run:
                 rc = subprocess.call(cmd, cwd=str(REPO))

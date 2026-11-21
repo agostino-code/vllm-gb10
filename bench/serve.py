@@ -378,6 +378,46 @@ def resolve_chat_template(template: str, model_dir: Path) -> Path | None:
 # ──────────────────────────────────────────────────────────────────────────────
 
 
+def estimate_boot_memory_gb(meta: dict) -> tuple[float, str]:
+    """Rough but conservative host-memory need for this recipe, in GB.
+
+    On the GB10 there is no separate VRAM: weights, KV pool and activations all
+    come out of the same 128 GB, and an over-subscribed boot dies 4 minutes in
+    (or wakes the OOM killer) instead of failing here. The estimate, anchored on
+    the 2026-11-21 boot logs (weights 73.45 GiB resident, graphs 0.94 GiB,
+    activation peak unmeasured so padded to 8 GB):
+
+        weights(74) + KV reservation + graphs(1) + activations(8)
+
+    The KV reservation is --kv-cache-memory when set (all shipped recipes set
+    it, which makes the number exact); otherwise gpu-memory-utilization × total.
+    Returns (needed_gb, explanation).
+    """
+    argv = meta["vllm"]["argv"]
+    kv_raw = C.get_flag_value(argv, "kv-cache-memory")
+    if kv_raw:
+        try:
+            kv_gb = float(kv_raw) / 1e9
+            how = f"KV reservation {kv_gb:.0f} GB (--kv-cache-memory)"
+        except ValueError:
+            kv_gb, how = 24.0, "KV reservation assumed 24 GB (unparsable flag)"
+    else:
+        util = float(C.get_flag_value(argv, "gpu-memory-utilization") or 0.88)
+        kv_gb = 24.0
+        how = f"no --kv-cache-memory: assumed 24 GB (util {util})"
+    return 74.0 + kv_gb + 1.0 + 8.0, how
+
+
+def mem_available_gb() -> float:
+    try:
+        for line in open("/proc/meminfo", encoding="utf-8"):
+            if line.startswith("MemAvailable:"):
+                return int(line.split()[1]) / 1048576.0  # kB -> GB
+    except OSError:
+        pass
+    return float("inf")
+
+
 def preflight(meta: dict, *, force: bool, quiet: bool = False, port_wait: float = 30.0) -> None:
     name = meta["container"]["name"]
     port = meta["container"]["host_port"]
@@ -413,8 +453,19 @@ def preflight(meta: dict, *, force: bool, quiet: bool = False, port_wait: float 
             "another model-server-looking container is already running: " + ", ".join(others)
             + "; stop it first (never run two on one GPU) or pass --force"
         )
+    # GB10 unified memory: the honest preflight is a RAM check, not a GPU one.
+    need_gb, how = estimate_boot_memory_gb(meta)
+    avail_gb = mem_available_gb()
+    if avail_gb < need_gb:
+        msg = (f"insufficient host memory to boot this recipe: {avail_gb:.0f} GB available, "
+               f"~{need_gb:.0f} GB needed ({how} + 74 weights + 9 slack). "
+               "The boot would likely die in the KV reservation or wake the OOM killer.")
+        if not force:
+            raise SystemExit(msg + " Free memory, or pass --force to try anyway.")
+        C.log(f"WARNING: {msg}")
     if not quiet:
-        C.log(f"preflight ok: port {port} free, no other model server")
+        C.log(f"preflight ok: port {port} free, no other model server, "
+              f"{avail_gb:.0f} GB available (need ~{need_gb:.0f})")
 
 
 def wait_for_health(meta: dict, timeout: float, poll: float, run_dir: C.RunDir) -> dict:
