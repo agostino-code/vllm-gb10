@@ -1,0 +1,53 @@
+{
+  "duration_s": 497.3,
+  "error": null,
+  "exit_codes": {
+    "serve": 0,
+    "suite": 0
+  },
+  "name": "256k-quad-fp8",
+  "serve_command": [
+    "/usr/bin/python3",
+    "/home/pgx/Documenti/vllm-gb10/bench/serve.py",
+    "up",
+    "--recipe",
+    "recipes/tests/256k-quad-fp8.yaml",
+    "--name",
+    "bench-256k-quad-fp8",
+    "--run-id",
+    "256k-quad-fp8",
+    "--run-dir",
+    "/home/pgx/Documenti/vllm-gb10/bench/baseline/t-today/256k-quad-fp8",
+    "--config-id",
+    "256k-quad-fp8",
+    "--port",
+    "8000",
+    "--boot-timeout",
+    "1500"
+  ],
+  "started_at": "2026-11-21T23:01:07.793+00:00",
+  "status": "done",
+  "suite_command": [
+    "/usr/bin/python3",
+    "/home/pgx/Documenti/vllm-gb10/bench/suite.py",
+    "--base-url",
+    "http://127.0.0.1:8000",
+    "--run-dir",
+    "/home/pgx/Documenti/vllm-gb10/bench/baseline/t-today/256k-quad-fp8",
+    "--config-id",
+    "256k-quad-fp8",
+    "--profile",
+    "quick",
+    "--tag",
+    "256k-quad-fp8",
+    "--quality",
+    "off",
+    "--concurrency",
+    "1,4",
+    "--long-smoke",
+    "--long-target-tokens",
+    "260000"
+  ],
+  "summary_path": "/home/pgx/Documenti/vllm-gb10/bench/baseline/t-today/256k-quad-fp8/summary.json",
+  "updated_at": "2026-11-21T23:09:25.075+00:00"
+}

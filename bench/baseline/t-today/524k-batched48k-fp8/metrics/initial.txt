@@ -18,16 +18,16 @@ python_gc_collections_total{generation="2"} 11.0
 python_info{implementation="CPython",major="3",minor="12",patchlevel="3",version="3.12.3"} 1.0
 # HELP process_virtual_memory_bytes Virtual memory size in bytes.
 # TYPE process_virtual_memory_bytes gauge
-process_virtual_memory_bytes 2.249633792e+010
+process_virtual_memory_bytes 2.2495260672e+010
 # HELP process_resident_memory_bytes Resident memory size in bytes.
 # TYPE process_resident_memory_bytes gauge
-process_resident_memory_bytes 2.728157184e+09
+process_resident_memory_bytes 2.71828992e+09
 # HELP process_start_time_seconds Start time of the process since unix epoch in seconds.
 # TYPE process_start_time_seconds gauge
-process_start_time_seconds 1.79529593923e+09
+process_start_time_seconds 1.79529963666e+09
 # HELP process_cpu_seconds_total Total user and system CPU time spent in seconds.
 # TYPE process_cpu_seconds_total counter
-process_cpu_seconds_total 27.62
+process_cpu_seconds_total 27.63
 # HELP process_open_fds Number of open file descriptors.
 # TYPE process_open_fds gauge
 process_open_fds 69.0
@@ -39,19 +39,19 @@ process_max_fds 65535.0
 vllm:spec_decode_num_drafts_total{engine="0",model_name="azampatti/Qwen3.8-Flash-Next-FP4-Local-AZ-524k-b48k-fp8"} 0.0
 # HELP vllm:spec_decode_num_drafts_created Number of spec decoding drafts.
 # TYPE vllm:spec_decode_num_drafts_created gauge
-vllm:spec_decode_num_drafts_created{engine="0",model_name="azampatti/Qwen3.8-Flash-Next-FP4-Local-AZ-524k-b48k-fp8"} 1.7952963349983616e+09
+vllm:spec_decode_num_drafts_created{engine="0",model_name="azampatti/Qwen3.8-Flash-Next-FP4-Local-AZ-524k-b48k-fp8"} 1.79530004407472e+09
 # HELP vllm:spec_decode_num_draft_tokens_total Number of draft tokens.
 # TYPE vllm:spec_decode_num_draft_tokens_total counter
 vllm:spec_decode_num_draft_tokens_total{engine="0",model_name="azampatti/Qwen3.8-Flash-Next-FP4-Local-AZ-524k-b48k-fp8"} 0.0
 # HELP vllm:spec_decode_num_draft_tokens_created Number of draft tokens.
 # TYPE vllm:spec_decode_num_draft_tokens_created gauge
-vllm:spec_decode_num_draft_tokens_created{engine="0",model_name="azampatti/Qwen3.8-Flash-Next-FP4-Local-AZ-524k-b48k-fp8"} 1.7952963349983737e+09
+vllm:spec_decode_num_draft_tokens_created{engine="0",model_name="azampatti/Qwen3.8-Flash-Next-FP4-Local-AZ-524k-b48k-fp8"} 1.795300044074732e+09
 # HELP vllm:spec_decode_num_accepted_tokens_total Number of accepted tokens.
 # TYPE vllm:spec_decode_num_accepted_tokens_total counter
 vllm:spec_decode_num_accepted_tokens_total{engine="0",model_name="azampatti/Qwen3.8-Flash-Next-FP4-Local-AZ-524k-b48k-fp8"} 0.0
 # HELP vllm:spec_decode_num_accepted_tokens_created Number of accepted tokens.
 # TYPE vllm:spec_decode_num_accepted_tokens_created gauge
-vllm:spec_decode_num_accepted_tokens_created{engine="0",model_name="azampatti/Qwen3.8-Flash-Next-FP4-Local-AZ-524k-b48k-fp8"} 1.7952963349983816e+09
+vllm:spec_decode_num_accepted_tokens_created{engine="0",model_name="azampatti/Qwen3.8-Flash-Next-FP4-Local-AZ-524k-b48k-fp8"} 1.7953000440747414e+09
 # HELP vllm:spec_decode_num_accepted_tokens_per_pos_total Accepted tokens per draft position.
 # TYPE vllm:spec_decode_num_accepted_tokens_per_pos_total counter
 vllm:spec_decode_num_accepted_tokens_per_pos_total{engine="0",model_name="azampatti/Qwen3.8-Flash-Next-FP4-Local-AZ-524k-b48k-fp8",position="0"} 0.0
@@ -72,40 +72,40 @@ vllm:spec_decode_num_accepted_tokens_per_pos_total{engine="0",model_name="azampa
 vllm:spec_decode_num_accepted_tokens_per_pos_total{engine="0",model_name="azampatti/Qwen3.8-Flash-Next-FP4-Local-AZ-524k-b48k-fp8",position="15"} 0.0
 # HELP vllm:spec_decode_num_accepted_tokens_per_pos_created Accepted tokens per draft position.
 # TYPE vllm:spec_decode_num_accepted_tokens_per_pos_created gauge
-vllm:spec_decode_num_accepted_tokens_per_pos_created{engine="0",model_name="azampatti/Qwen3.8-Flash-Next-FP4-Local-AZ-524k-b48k-fp8",position="0"} 1.7952963349984872e+09
-vllm:spec_decode_num_accepted_tokens_per_pos_created{engine="0",model_name="azampatti/Qwen3.8-Flash-Next-FP4-Local-AZ-524k-b48k-fp8",position="1"} 1.7952963349984903e+09
-vllm:spec_decode_num_accepted_tokens_per_pos_created{engine="0",model_name="azampatti/Qwen3.8-Flash-Next-FP4-Local-AZ-524k-b48k-fp8",position="2"} 1.7952963349984932e+09
-vllm:spec_decode_num_accepted_tokens_per_pos_created{engine="0",model_name="azampatti/Qwen3.8-Flash-Next-FP4-Local-AZ-524k-b48k-fp8",position="3"} 1.7952963349984956e+09
-vllm:spec_decode_num_accepted_tokens_per_pos_created{engine="0",model_name="azampatti/Qwen3.8-Flash-Next-FP4-Local-AZ-524k-b48k-fp8",position="4"} 1.7952963349984982e+09
-vllm:spec_decode_num_accepted_tokens_per_pos_created{engine="0",model_name="azampatti/Qwen3.8-Flash-Next-FP4-Local-AZ-524k-b48k-fp8",position="5"} 1.7952963349985006e+09
-vllm:spec_decode_num_accepted_tokens_per_pos_created{engine="0",model_name="azampatti/Qwen3.8-Flash-Next-FP4-Local-AZ-524k-b48k-fp8",position="6"} 1.7952963349985032e+09
-vllm:spec_decode_num_accepted_tokens_per_pos_created{engine="0",model_name="azampatti/Qwen3.8-Flash-Next-FP4-Local-AZ-524k-b48k-fp8",position="7"} 1.7952963349985054e+09
-vllm:spec_decode_num_accepted_tokens_per_pos_created{engine="0",model_name="azampatti/Qwen3.8-Flash-Next-FP4-Local-AZ-524k-b48k-fp8",position="8"} 1.795296334998508e+09
-vllm:spec_decode_num_accepted_tokens_per_pos_created{engine="0",model_name="azampatti/Qwen3.8-Flash-Next-FP4-Local-AZ-524k-b48k-fp8",position="9"} 1.7952963349985106e+09
-vllm:spec_decode_num_accepted_tokens_per_pos_created{engine="0",model_name="azampatti/Qwen3.8-Flash-Next-FP4-Local-AZ-524k-b48k-fp8",position="10"} 1.7952963349985132e+09
-vllm:spec_decode_num_accepted_tokens_per_pos_created{engine="0",model_name="azampatti/Qwen3.8-Flash-Next-FP4-Local-AZ-524k-b48k-fp8",position="11"} 1.795296334998516e+09
-vllm:spec_decode_num_accepted_tokens_per_pos_created{engine="0",model_name="azampatti/Qwen3.8-Flash-Next-FP4-Local-AZ-524k-b48k-fp8",position="12"} 1.7952963349985182e+09
-vllm:spec_decode_num_accepted_tokens_per_pos_created{engine="0",model_name="azampatti/Qwen3.8-Flash-Next-FP4-Local-AZ-524k-b48k-fp8",position="13"} 1.7952963349985206e+09
-vllm:spec_decode_num_accepted_tokens_per_pos_created{engine="0",model_name="azampatti/Qwen3.8-Flash-Next-FP4-Local-AZ-524k-b48k-fp8",position="14"} 1.795296334998523e+09
-vllm:spec_decode_num_accepted_tokens_per_pos_created{engine="0",model_name="azampatti/Qwen3.8-Flash-Next-FP4-Local-AZ-524k-b48k-fp8",position="15"} 1.7952963349985251e+09
+vllm:spec_decode_num_accepted_tokens_per_pos_created{engine="0",model_name="azampatti/Qwen3.8-Flash-Next-FP4-Local-AZ-524k-b48k-fp8",position="0"} 1.7953000440748663e+09
+vllm:spec_decode_num_accepted_tokens_per_pos_created{engine="0",model_name="azampatti/Qwen3.8-Flash-Next-FP4-Local-AZ-524k-b48k-fp8",position="1"} 1.7953000440748694e+09
+vllm:spec_decode_num_accepted_tokens_per_pos_created{engine="0",model_name="azampatti/Qwen3.8-Flash-Next-FP4-Local-AZ-524k-b48k-fp8",position="2"} 1.7953000440748725e+09
+vllm:spec_decode_num_accepted_tokens_per_pos_created{engine="0",model_name="azampatti/Qwen3.8-Flash-Next-FP4-Local-AZ-524k-b48k-fp8",position="3"} 1.795300044074875e+09
+vllm:spec_decode_num_accepted_tokens_per_pos_created{engine="0",model_name="azampatti/Qwen3.8-Flash-Next-FP4-Local-AZ-524k-b48k-fp8",position="4"} 1.795300044074878e+09
+vllm:spec_decode_num_accepted_tokens_per_pos_created{engine="0",model_name="azampatti/Qwen3.8-Flash-Next-FP4-Local-AZ-524k-b48k-fp8",position="5"} 1.7953000440748806e+09
+vllm:spec_decode_num_accepted_tokens_per_pos_created{engine="0",model_name="azampatti/Qwen3.8-Flash-Next-FP4-Local-AZ-524k-b48k-fp8",position="6"} 1.795300044074883e+09
+vllm:spec_decode_num_accepted_tokens_per_pos_created{engine="0",model_name="azampatti/Qwen3.8-Flash-Next-FP4-Local-AZ-524k-b48k-fp8",position="7"} 1.7953000440748854e+09
+vllm:spec_decode_num_accepted_tokens_per_pos_created{engine="0",model_name="azampatti/Qwen3.8-Flash-Next-FP4-Local-AZ-524k-b48k-fp8",position="8"} 1.7953000440748878e+09
+vllm:spec_decode_num_accepted_tokens_per_pos_created{engine="0",model_name="azampatti/Qwen3.8-Flash-Next-FP4-Local-AZ-524k-b48k-fp8",position="9"} 1.7953000440748906e+09
+vllm:spec_decode_num_accepted_tokens_per_pos_created{engine="0",model_name="azampatti/Qwen3.8-Flash-Next-FP4-Local-AZ-524k-b48k-fp8",position="10"} 1.7953000440748928e+09
+vllm:spec_decode_num_accepted_tokens_per_pos_created{engine="0",model_name="azampatti/Qwen3.8-Flash-Next-FP4-Local-AZ-524k-b48k-fp8",position="11"} 1.7953000440748956e+09
+vllm:spec_decode_num_accepted_tokens_per_pos_created{engine="0",model_name="azampatti/Qwen3.8-Flash-Next-FP4-Local-AZ-524k-b48k-fp8",position="12"} 1.795300044074898e+09
+vllm:spec_decode_num_accepted_tokens_per_pos_created{engine="0",model_name="azampatti/Qwen3.8-Flash-Next-FP4-Local-AZ-524k-b48k-fp8",position="13"} 1.7953000440749006e+09
+vllm:spec_decode_num_accepted_tokens_per_pos_created{engine="0",model_name="azampatti/Qwen3.8-Flash-Next-FP4-Local-AZ-524k-b48k-fp8",position="14"} 1.7953000440749032e+09
+vllm:spec_decode_num_accepted_tokens_per_pos_created{engine="0",model_name="azampatti/Qwen3.8-Flash-Next-FP4-Local-AZ-524k-b48k-fp8",position="15"} 1.7953000440749059e+09
 # HELP vllm:estimated_flops_per_gpu_total Estimated number of floating point operations per GPU (for Model Flops Utilization calculations).
 # TYPE vllm:estimated_flops_per_gpu_total counter
 vllm:estimated_flops_per_gpu_total{engine="0",model_name="azampatti/Qwen3.8-Flash-Next-FP4-Local-AZ-524k-b48k-fp8"} 0.0
 # HELP vllm:estimated_flops_per_gpu_created Estimated number of floating point operations per GPU (for Model Flops Utilization calculations).
 # TYPE vllm:estimated_flops_per_gpu_created gauge
-vllm:estimated_flops_per_gpu_created{engine="0",model_name="azampatti/Qwen3.8-Flash-Next-FP4-Local-AZ-524k-b48k-fp8"} 1.795296334998538e+09
+vllm:estimated_flops_per_gpu_created{engine="0",model_name="azampatti/Qwen3.8-Flash-Next-FP4-Local-AZ-524k-b48k-fp8"} 1.795300044074918e+09
 # HELP vllm:estimated_read_bytes_per_gpu_total Estimated number of bytes read from memory per GPU (for Model Flops Utilization calculations).
 # TYPE vllm:estimated_read_bytes_per_gpu_total counter
 vllm:estimated_read_bytes_per_gpu_total{engine="0",model_name="azampatti/Qwen3.8-Flash-Next-FP4-Local-AZ-524k-b48k-fp8"} 0.0
 # HELP vllm:estimated_read_bytes_per_gpu_created Estimated number of bytes read from memory per GPU (for Model Flops Utilization calculations).
 # TYPE vllm:estimated_read_bytes_per_gpu_created gauge
-vllm:estimated_read_bytes_per_gpu_created{engine="0",model_name="azampatti/Qwen3.8-Flash-Next-FP4-Local-AZ-524k-b48k-fp8"} 1.7952963349985452e+09
+vllm:estimated_read_bytes_per_gpu_created{engine="0",model_name="azampatti/Qwen3.8-Flash-Next-FP4-Local-AZ-524k-b48k-fp8"} 1.7953000440749257e+09
 # HELP vllm:estimated_write_bytes_per_gpu_total Estimated number of bytes written to memory per GPU (for Model Flops Utilization calculations).
 # TYPE vllm:estimated_write_bytes_per_gpu_total counter
 vllm:estimated_write_bytes_per_gpu_total{engine="0",model_name="azampatti/Qwen3.8-Flash-Next-FP4-Local-AZ-524k-b48k-fp8"} 0.0
 # HELP vllm:estimated_write_bytes_per_gpu_created Estimated number of bytes written to memory per GPU (for Model Flops Utilization calculations).
 # TYPE vllm:estimated_write_bytes_per_gpu_created gauge
-vllm:estimated_write_bytes_per_gpu_created{engine="0",model_name="azampatti/Qwen3.8-Flash-Next-FP4-Local-AZ-524k-b48k-fp8"} 1.795296334998551e+09
+vllm:estimated_write_bytes_per_gpu_created{engine="0",model_name="azampatti/Qwen3.8-Flash-Next-FP4-Local-AZ-524k-b48k-fp8"} 1.7953000440749316e+09
 # HELP vllm:num_requests_running Number of requests in model execution batches.
 # TYPE vllm:num_requests_running gauge
 vllm:num_requests_running{engine="0",model_name="azampatti/Qwen3.8-Flash-Next-FP4-Local-AZ-524k-b48k-fp8"} 0.0
@@ -129,49 +129,49 @@ vllm:kv_cache_usage_perc{engine="0",model_name="azampatti/Qwen3.8-Flash-Next-FP4
 vllm:prefix_cache_queries_total{engine="0",model_name="azampatti/Qwen3.8-Flash-Next-FP4-Local-AZ-524k-b48k-fp8"} 0.0
 # HELP vllm:prefix_cache_queries_created Prefix cache queries, in terms of number of queried tokens.
 # TYPE vllm:prefix_cache_queries_created gauge
-vllm:prefix_cache_queries_created{engine="0",model_name="azampatti/Qwen3.8-Flash-Next-FP4-Local-AZ-524k-b48k-fp8"} 1.7952963349986327e+09
+vllm:prefix_cache_queries_created{engine="0",model_name="azampatti/Qwen3.8-Flash-Next-FP4-Local-AZ-524k-b48k-fp8"} 1.795300044075015e+09
 # HELP vllm:prefix_cache_hits_total Prefix cache hits, in terms of number of cached tokens.
 # TYPE vllm:prefix_cache_hits_total counter
 vllm:prefix_cache_hits_total{engine="0",model_name="azampatti/Qwen3.8-Flash-Next-FP4-Local-AZ-524k-b48k-fp8"} 0.0
 # HELP vllm:prefix_cache_hits_created Prefix cache hits, in terms of number of cached tokens.
 # TYPE vllm:prefix_cache_hits_created gauge
-vllm:prefix_cache_hits_created{engine="0",model_name="azampatti/Qwen3.8-Flash-Next-FP4-Local-AZ-524k-b48k-fp8"} 1.7952963349986386e+09
+vllm:prefix_cache_hits_created{engine="0",model_name="azampatti/Qwen3.8-Flash-Next-FP4-Local-AZ-524k-b48k-fp8"} 1.7953000440750215e+09
 # HELP vllm:external_prefix_cache_queries_total External prefix cache queries from KV connector cross-instance cache sharing, in terms of number of queried tokens.
 # TYPE vllm:external_prefix_cache_queries_total counter
 vllm:external_prefix_cache_queries_total{engine="0",model_name="azampatti/Qwen3.8-Flash-Next-FP4-Local-AZ-524k-b48k-fp8"} 0.0
 # HELP vllm:external_prefix_cache_queries_created External prefix cache queries from KV connector cross-instance cache sharing, in terms of number of queried tokens.
 # TYPE vllm:external_prefix_cache_queries_created gauge
-vllm:external_prefix_cache_queries_created{engine="0",model_name="azampatti/Qwen3.8-Flash-Next-FP4-Local-AZ-524k-b48k-fp8"} 1.7952963349986446e+09
+vllm:external_prefix_cache_queries_created{engine="0",model_name="azampatti/Qwen3.8-Flash-Next-FP4-Local-AZ-524k-b48k-fp8"} 1.795300044075028e+09
 # HELP vllm:external_prefix_cache_hits_total External prefix cache hits from KV connector cross-instance cache sharing, in terms of number of cached tokens.
 # TYPE vllm:external_prefix_cache_hits_total counter
 vllm:external_prefix_cache_hits_total{engine="0",model_name="azampatti/Qwen3.8-Flash-Next-FP4-Local-AZ-524k-b48k-fp8"} 0.0
 # HELP vllm:external_prefix_cache_hits_created External prefix cache hits from KV connector cross-instance cache sharing, in terms of number of cached tokens.
 # TYPE vllm:external_prefix_cache_hits_created gauge
-vllm:external_prefix_cache_hits_created{engine="0",model_name="azampatti/Qwen3.8-Flash-Next-FP4-Local-AZ-524k-b48k-fp8"} 1.7952963349986508e+09
+vllm:external_prefix_cache_hits_created{engine="0",model_name="azampatti/Qwen3.8-Flash-Next-FP4-Local-AZ-524k-b48k-fp8"} 1.795300044075034e+09
 # HELP vllm:mm_cache_queries_total Multi-modal cache queries, in terms of number of queried items.
 # TYPE vllm:mm_cache_queries_total counter
 vllm:mm_cache_queries_total{engine="0",model_name="azampatti/Qwen3.8-Flash-Next-FP4-Local-AZ-524k-b48k-fp8"} 0.0
 # HELP vllm:mm_cache_queries_created Multi-modal cache queries, in terms of number of queried items.
 # TYPE vllm:mm_cache_queries_created gauge
-vllm:mm_cache_queries_created{engine="0",model_name="azampatti/Qwen3.8-Flash-Next-FP4-Local-AZ-524k-b48k-fp8"} 1.7952963349986567e+09
+vllm:mm_cache_queries_created{engine="0",model_name="azampatti/Qwen3.8-Flash-Next-FP4-Local-AZ-524k-b48k-fp8"} 1.79530004407504e+09
 # HELP vllm:mm_cache_hits_total Multi-modal cache hits, in terms of number of cached items.
 # TYPE vllm:mm_cache_hits_total counter
 vllm:mm_cache_hits_total{engine="0",model_name="azampatti/Qwen3.8-Flash-Next-FP4-Local-AZ-524k-b48k-fp8"} 0.0
 # HELP vllm:mm_cache_hits_created Multi-modal cache hits, in terms of number of cached items.
 # TYPE vllm:mm_cache_hits_created gauge
-vllm:mm_cache_hits_created{engine="0",model_name="azampatti/Qwen3.8-Flash-Next-FP4-Local-AZ-524k-b48k-fp8"} 1.7952963349986627e+09
+vllm:mm_cache_hits_created{engine="0",model_name="azampatti/Qwen3.8-Flash-Next-FP4-Local-AZ-524k-b48k-fp8"} 1.795300044075046e+09
 # HELP vllm:num_preemptions_total Cumulative number of preemption from the engine.
 # TYPE vllm:num_preemptions_total counter
 vllm:num_preemptions_total{engine="0",model_name="azampatti/Qwen3.8-Flash-Next-FP4-Local-AZ-524k-b48k-fp8"} 0.0
 # HELP vllm:num_preemptions_created Cumulative number of preemption from the engine.
 # TYPE vllm:num_preemptions_created gauge
-vllm:num_preemptions_created{engine="0",model_name="azampatti/Qwen3.8-Flash-Next-FP4-Local-AZ-524k-b48k-fp8"} 1.7952963349986694e+09
+vllm:num_preemptions_created{engine="0",model_name="azampatti/Qwen3.8-Flash-Next-FP4-Local-AZ-524k-b48k-fp8"} 1.7953000440750525e+09
 # HELP vllm:prompt_tokens_total Number of prefill tokens processed.
 # TYPE vllm:prompt_tokens_total counter
 vllm:prompt_tokens_total{engine="0",model_name="azampatti/Qwen3.8-Flash-Next-FP4-Local-AZ-524k-b48k-fp8"} 0.0
 # HELP vllm:prompt_tokens_created Number of prefill tokens processed.
 # TYPE vllm:prompt_tokens_created gauge
-vllm:prompt_tokens_created{engine="0",model_name="azampatti/Qwen3.8-Flash-Next-FP4-Local-AZ-524k-b48k-fp8"} 1.7952963349986763e+09
+vllm:prompt_tokens_created{engine="0",model_name="azampatti/Qwen3.8-Flash-Next-FP4-Local-AZ-524k-b48k-fp8"} 1.795300044075059e+09
 # HELP vllm:prompt_tokens_by_source_total Number of prompt tokens by source.
 # TYPE vllm:prompt_tokens_by_source_total counter
 vllm:prompt_tokens_by_source_total{engine="0",model_name="azampatti/Qwen3.8-Flash-Next-FP4-Local-AZ-524k-b48k-fp8",source="local_compute"} 0.0
@@ -179,15 +179,15 @@ vllm:prompt_tokens_by_source_total{engine="0",model_name="azampatti/Qwen3.8-Flas
 vllm:prompt_tokens_by_source_total{engine="0",model_name="azampatti/Qwen3.8-Flash-Next-FP4-Local-AZ-524k-b48k-fp8",source="external_kv_transfer"} 0.0
 # HELP vllm:prompt_tokens_by_source_created Number of prompt tokens by source.
 # TYPE vllm:prompt_tokens_by_source_created gauge
-vllm:prompt_tokens_by_source_created{engine="0",model_name="azampatti/Qwen3.8-Flash-Next-FP4-Local-AZ-524k-b48k-fp8",source="local_compute"} 1.7952963349986842e+09
-vllm:prompt_tokens_by_source_created{engine="0",model_name="azampatti/Qwen3.8-Flash-Next-FP4-Local-AZ-524k-b48k-fp8",source="local_cache_hit"} 1.795296334998687e+09
-vllm:prompt_tokens_by_source_created{engine="0",model_name="azampatti/Qwen3.8-Flash-Next-FP4-Local-AZ-524k-b48k-fp8",source="external_kv_transfer"} 1.7952963349986892e+09
+vllm:prompt_tokens_by_source_created{engine="0",model_name="azampatti/Qwen3.8-Flash-Next-FP4-Local-AZ-524k-b48k-fp8",source="local_compute"} 1.7953000440750673e+09
+vllm:prompt_tokens_by_source_created{engine="0",model_name="azampatti/Qwen3.8-Flash-Next-FP4-Local-AZ-524k-b48k-fp8",source="local_cache_hit"} 1.79530004407507e+09
+vllm:prompt_tokens_by_source_created{engine="0",model_name="azampatti/Qwen3.8-Flash-Next-FP4-Local-AZ-524k-b48k-fp8",source="external_kv_transfer"} 1.7953000440750728e+09
 # HELP vllm:prompt_tokens_cached_total Number of cached prompt tokens (local + external).
 # TYPE vllm:prompt_tokens_cached_total counter
 vllm:prompt_tokens_cached_total{engine="0",model_name="azampatti/Qwen3.8-Flash-Next-FP4-Local-AZ-524k-b48k-fp8"} 0.0
 # HELP vllm:prompt_tokens_cached_created Number of cached prompt tokens (local + external).
 # TYPE vllm:prompt_tokens_cached_created gauge
-vllm:prompt_tokens_cached_created{engine="0",model_name="azampatti/Qwen3.8-Flash-Next-FP4-Local-AZ-524k-b48k-fp8"} 1.795296334998695e+09
+vllm:prompt_tokens_cached_created{engine="0",model_name="azampatti/Qwen3.8-Flash-Next-FP4-Local-AZ-524k-b48k-fp8"} 1.7953000440750787e+09
 # HELP vllm:prompt_tokens_cached_by_source_total Prefix-cache hit tokens by the cache tier that supplied them: device (local HBM), host (offloaded to DRAM), disk, p2p (transferred from another vLLM instance) or external_unspecified. Counted at admission; sums to vllm:prefix_cache_hits + vllm:external_prefix_cache_hits.
 # TYPE vllm:prompt_tokens_cached_by_source_total counter
 vllm:prompt_tokens_cached_by_source_total{engine="0",model_name="azampatti/Qwen3.8-Flash-Next-FP4-Local-AZ-524k-b48k-fp8",source="device"} 0.0
@@ -197,17 +197,17 @@ vllm:prompt_tokens_cached_by_source_total{engine="0",model_name="azampatti/Qwen3
 vllm:prompt_tokens_cached_by_source_total{engine="0",model_name="azampatti/Qwen3.8-Flash-Next-FP4-Local-AZ-524k-b48k-fp8",source="external_unspecified"} 0.0
 # HELP vllm:prompt_tokens_cached_by_source_created Prefix-cache hit tokens by the cache tier that supplied them: device (local HBM), host (offloaded to DRAM), disk, p2p (transferred from another vLLM instance) or external_unspecified. Counted at admission; sums to vllm:prefix_cache_hits + vllm:external_prefix_cache_hits.
 # TYPE vllm:prompt_tokens_cached_by_source_created gauge
-vllm:prompt_tokens_cached_by_source_created{engine="0",model_name="azampatti/Qwen3.8-Flash-Next-FP4-Local-AZ-524k-b48k-fp8",source="device"} 1.7952963349987056e+09
-vllm:prompt_tokens_cached_by_source_created{engine="0",model_name="azampatti/Qwen3.8-Flash-Next-FP4-Local-AZ-524k-b48k-fp8",source="host"} 1.7952963349987094e+09
-vllm:prompt_tokens_cached_by_source_created{engine="0",model_name="azampatti/Qwen3.8-Flash-Next-FP4-Local-AZ-524k-b48k-fp8",source="p2p"} 1.7952963349987123e+09
-vllm:prompt_tokens_cached_by_source_created{engine="0",model_name="azampatti/Qwen3.8-Flash-Next-FP4-Local-AZ-524k-b48k-fp8",source="disk"} 1.7952963349987152e+09
-vllm:prompt_tokens_cached_by_source_created{engine="0",model_name="azampatti/Qwen3.8-Flash-Next-FP4-Local-AZ-524k-b48k-fp8",source="external_unspecified"} 1.7952963349987185e+09
+vllm:prompt_tokens_cached_by_source_created{engine="0",model_name="azampatti/Qwen3.8-Flash-Next-FP4-Local-AZ-524k-b48k-fp8",source="device"} 1.7953000440750897e+09
+vllm:prompt_tokens_cached_by_source_created{engine="0",model_name="azampatti/Qwen3.8-Flash-Next-FP4-Local-AZ-524k-b48k-fp8",source="host"} 1.795300044075093e+09
+vllm:prompt_tokens_cached_by_source_created{engine="0",model_name="azampatti/Qwen3.8-Flash-Next-FP4-Local-AZ-524k-b48k-fp8",source="p2p"} 1.7953000440750961e+09
+vllm:prompt_tokens_cached_by_source_created{engine="0",model_name="azampatti/Qwen3.8-Flash-Next-FP4-Local-AZ-524k-b48k-fp8",source="disk"} 1.7953000440750995e+09
+vllm:prompt_tokens_cached_by_source_created{engine="0",model_name="azampatti/Qwen3.8-Flash-Next-FP4-Local-AZ-524k-b48k-fp8",source="external_unspecified"} 1.7953000440751026e+09
 # HELP vllm:generation_tokens_total Number of generation tokens processed.
 # TYPE vllm:generation_tokens_total counter
 vllm:generation_tokens_total{engine="0",model_name="azampatti/Qwen3.8-Flash-Next-FP4-Local-AZ-524k-b48k-fp8"} 0.0
 # HELP vllm:generation_tokens_created Number of generation tokens processed.
 # TYPE vllm:generation_tokens_created gauge
-vllm:generation_tokens_created{engine="0",model_name="azampatti/Qwen3.8-Flash-Next-FP4-Local-AZ-524k-b48k-fp8"} 1.7952963349987245e+09
+vllm:generation_tokens_created{engine="0",model_name="azampatti/Qwen3.8-Flash-Next-FP4-Local-AZ-524k-b48k-fp8"} 1.7953000440751083e+09
 # HELP vllm:request_success_total Count of successfully processed requests.
 # TYPE vllm:request_success_total counter
 vllm:request_success_total{engine="0",finished_reason="stop",model_name="azampatti/Qwen3.8-Flash-Next-FP4-Local-AZ-524k-b48k-fp8"} 0.0
@@ -217,19 +217,19 @@ vllm:request_success_total{engine="0",finished_reason="error",model_name="azampa
 vllm:request_success_total{engine="0",finished_reason="repetition",model_name="azampatti/Qwen3.8-Flash-Next-FP4-Local-AZ-524k-b48k-fp8"} 0.0
 # HELP vllm:request_success_created Count of successfully processed requests.
 # TYPE vllm:request_success_created gauge
-vllm:request_success_created{engine="0",finished_reason="stop",model_name="azampatti/Qwen3.8-Flash-Next-FP4-Local-AZ-524k-b48k-fp8"} 1.7952963349987338e+09
-vllm:request_success_created{engine="0",finished_reason="length",model_name="azampatti/Qwen3.8-Flash-Next-FP4-Local-AZ-524k-b48k-fp8"} 1.7952963349987373e+09
-vllm:request_success_created{engine="0",finished_reason="abort",model_name="azampatti/Qwen3.8-Flash-Next-FP4-Local-AZ-524k-b48k-fp8"} 1.7952963349987404e+09
-vllm:request_success_created{engine="0",finished_reason="error",model_name="azampatti/Qwen3.8-Flash-Next-FP4-Local-AZ-524k-b48k-fp8"} 1.7952963349987497e+09
-vllm:request_success_created{engine="0",finished_reason="repetition",model_name="azampatti/Qwen3.8-Flash-Next-FP4-Local-AZ-524k-b48k-fp8"} 1.7952963349987528e+09
+vllm:request_success_created{engine="0",finished_reason="stop",model_name="azampatti/Qwen3.8-Flash-Next-FP4-Local-AZ-524k-b48k-fp8"} 1.7953000440751176e+09
+vllm:request_success_created{engine="0",finished_reason="length",model_name="azampatti/Qwen3.8-Flash-Next-FP4-Local-AZ-524k-b48k-fp8"} 1.795300044075121e+09
+vllm:request_success_created{engine="0",finished_reason="abort",model_name="azampatti/Qwen3.8-Flash-Next-FP4-Local-AZ-524k-b48k-fp8"} 1.795300044075124e+09
+vllm:request_success_created{engine="0",finished_reason="error",model_name="azampatti/Qwen3.8-Flash-Next-FP4-Local-AZ-524k-b48k-fp8"} 1.7953000440751274e+09
+vllm:request_success_created{engine="0",finished_reason="repetition",model_name="azampatti/Qwen3.8-Flash-Next-FP4-Local-AZ-524k-b48k-fp8"} 1.7953000440751305e+09
 # HELP vllm:admission_rejections_total Number of admission attempts rejected by a queue limit, by reason.
 # TYPE vllm:admission_rejections_total counter
 vllm:admission_rejections_total{model_name="azampatti/Qwen3.8-Flash-Next-FP4-Local-AZ-524k-b48k-fp8",reason="max_num_queued_reqs"} 0.0
 vllm:admission_rejections_total{model_name="azampatti/Qwen3.8-Flash-Next-FP4-Local-AZ-524k-b48k-fp8",reason="max_num_queued_tokens"} 0.0
 # HELP vllm:admission_rejections_created Number of admission attempts rejected by a queue limit, by reason.
 # TYPE vllm:admission_rejections_created gauge
-vllm:admission_rejections_created{model_name="azampatti/Qwen3.8-Flash-Next-FP4-Local-AZ-524k-b48k-fp8",reason="max_num_queued_reqs"} 1.7952963349987695e+09
-vllm:admission_rejections_created{model_name="azampatti/Qwen3.8-Flash-Next-FP4-Local-AZ-524k-b48k-fp8",reason="max_num_queued_tokens"} 1.795296334998772e+09
+vllm:admission_rejections_created{model_name="azampatti/Qwen3.8-Flash-Next-FP4-Local-AZ-524k-b48k-fp8",reason="max_num_queued_reqs"} 1.7953000440751457e+09
+vllm:admission_rejections_created{model_name="azampatti/Qwen3.8-Flash-Next-FP4-Local-AZ-524k-b48k-fp8",reason="max_num_queued_tokens"} 1.7953000440751483e+09
 # HELP vllm:request_prompt_tokens Number of prefill tokens processed.
 # TYPE vllm:request_prompt_tokens histogram
 vllm:request_prompt_tokens_bucket{engine="0",le="1.0",model_name="azampatti/Qwen3.8-Flash-Next-FP4-Local-AZ-524k-b48k-fp8"} 0.0
@@ -255,7 +255,7 @@ vllm:request_prompt_tokens_count{engine="0",model_name="azampatti/Qwen3.8-Flash-
 vllm:request_prompt_tokens_sum{engine="0",model_name="azampatti/Qwen3.8-Flash-Next-FP4-Local-AZ-524k-b48k-fp8"} 0.0
 # HELP vllm:request_prompt_tokens_created Number of prefill tokens processed.
 # TYPE vllm:request_prompt_tokens_created gauge
-vllm:request_prompt_tokens_created{engine="0",model_name="azampatti/Qwen3.8-Flash-Next-FP4-Local-AZ-524k-b48k-fp8"} 1.7952963349987915e+09
+vllm:request_prompt_tokens_created{engine="0",model_name="azampatti/Qwen3.8-Flash-Next-FP4-Local-AZ-524k-b48k-fp8"} 1.7953000440751667e+09
 # HELP vllm:request_generation_tokens Number of generation tokens processed.
 # TYPE vllm:request_generation_tokens histogram
 vllm:request_generation_tokens_bucket{engine="0",le="1.0",model_name="azampatti/Qwen3.8-Flash-Next-FP4-Local-AZ-524k-b48k-fp8"} 0.0
@@ -281,7 +281,7 @@ vllm:request_generation_tokens_count{engine="0",model_name="azampatti/Qwen3.8-Fl
 vllm:request_generation_tokens_sum{engine="0",model_name="azampatti/Qwen3.8-Flash-Next-FP4-Local-AZ-524k-b48k-fp8"} 0.0
 # HELP vllm:request_generation_tokens_created Number of generation tokens processed.
 # TYPE vllm:request_generation_tokens_created gauge
-vllm:request_generation_tokens_created{engine="0",model_name="azampatti/Qwen3.8-Flash-Next-FP4-Local-AZ-524k-b48k-fp8"} 1.7952963349988225e+09
+vllm:request_generation_tokens_created{engine="0",model_name="azampatti/Qwen3.8-Flash-Next-FP4-Local-AZ-524k-b48k-fp8"} 1.7953000440751958e+09
 # HELP vllm:iteration_tokens_total Histogram of number of tokens per engine_step.
 # TYPE vllm:iteration_tokens_total histogram
 vllm:iteration_tokens_total_bucket{engine="0",le="1.0",model_name="azampatti/Qwen3.8-Flash-Next-FP4-Local-AZ-524k-b48k-fp8"} 0.0
@@ -302,7 +302,7 @@ vllm:iteration_tokens_total_count{engine="0",model_name="azampatti/Qwen3.8-Flash
 vllm:iteration_tokens_total_sum{engine="0",model_name="azampatti/Qwen3.8-Flash-Next-FP4-Local-AZ-524k-b48k-fp8"} 0.0
 # HELP vllm:iteration_tokens_total_created Histogram of number of tokens per engine_step.
 # TYPE vllm:iteration_tokens_total_created gauge
-vllm:iteration_tokens_total_created{engine="0",model_name="azampatti/Qwen3.8-Flash-Next-FP4-Local-AZ-524k-b48k-fp8"} 1.7952963349988432e+09
+vllm:iteration_tokens_total_created{engine="0",model_name="azampatti/Qwen3.8-Flash-Next-FP4-Local-AZ-524k-b48k-fp8"} 1.7953000440752158e+09
 # HELP vllm:request_max_num_generation_tokens Histogram of maximum number of requested generation tokens.
 # TYPE vllm:request_max_num_generation_tokens histogram
 vllm:request_max_num_generation_tokens_bucket{engine="0",le="1.0",model_name="azampatti/Qwen3.8-Flash-Next-FP4-Local-AZ-524k-b48k-fp8"} 0.0
@@ -328,7 +328,7 @@ vllm:request_max_num_generation_tokens_count{engine="0",model_name="azampatti/Qw
 vllm:request_max_num_generation_tokens_sum{engine="0",model_name="azampatti/Qwen3.8-Flash-Next-FP4-Local-AZ-524k-b48k-fp8"} 0.0
 # HELP vllm:request_max_num_generation_tokens_created Histogram of maximum number of requested generation tokens.
 # TYPE vllm:request_max_num_generation_tokens_created gauge
-vllm:request_max_num_generation_tokens_created{engine="0",model_name="azampatti/Qwen3.8-Flash-Next-FP4-Local-AZ-524k-b48k-fp8"} 1.795296334998861e+09
+vllm:request_max_num_generation_tokens_created{engine="0",model_name="azampatti/Qwen3.8-Flash-Next-FP4-Local-AZ-524k-b48k-fp8"} 1.795300044075232e+09
 # HELP vllm:request_params_n Histogram of the n request parameter.
 # TYPE vllm:request_params_n histogram
 vllm:request_params_n_bucket{engine="0",le="1.0",model_name="azampatti/Qwen3.8-Flash-Next-FP4-Local-AZ-524k-b48k-fp8"} 0.0
@@ -341,7 +341,7 @@ vllm:request_params_n_count{engine="0",model_name="azampatti/Qwen3.8-Flash-Next-
 vllm:request_params_n_sum{engine="0",model_name="azampatti/Qwen3.8-Flash-Next-FP4-Local-AZ-524k-b48k-fp8"} 0.0
 # HELP vllm:request_params_n_created Histogram of the n request parameter.
 # TYPE vllm:request_params_n_created gauge
-vllm:request_params_n_created{engine="0",model_name="azampatti/Qwen3.8-Flash-Next-FP4-Local-AZ-524k-b48k-fp8"} 1.7952963349988813e+09
+vllm:request_params_n_created{engine="0",model_name="azampatti/Qwen3.8-Flash-Next-FP4-Local-AZ-524k-b48k-fp8"} 1.7953000440752494e+09
 # HELP vllm:request_params_max_tokens Histogram of the max_tokens request parameter.
 # TYPE vllm:request_params_max_tokens histogram
 vllm:request_params_max_tokens_bucket{engine="0",le="1.0",model_name="azampatti/Qwen3.8-Flash-Next-FP4-Local-AZ-524k-b48k-fp8"} 0.0
@@ -367,7 +367,7 @@ vllm:request_params_max_tokens_count{engine="0",model_name="azampatti/Qwen3.8-Fl
 vllm:request_params_max_tokens_sum{engine="0",model_name="azampatti/Qwen3.8-Flash-Next-FP4-Local-AZ-524k-b48k-fp8"} 0.0
 # HELP vllm:request_params_max_tokens_created Histogram of the max_tokens request parameter.
 # TYPE vllm:request_params_max_tokens_created gauge
-vllm:request_params_max_tokens_created{engine="0",model_name="azampatti/Qwen3.8-Flash-Next-FP4-Local-AZ-524k-b48k-fp8"} 1.795296334998894e+09
+vllm:request_params_max_tokens_created{engine="0",model_name="azampatti/Qwen3.8-Flash-Next-FP4-Local-AZ-524k-b48k-fp8"} 1.7953000440752614e+09
 # HELP vllm:time_to_first_token_seconds Histogram of time to first token in seconds.
 # TYPE vllm:time_to_first_token_seconds histogram
 vllm:time_to_first_token_seconds_bucket{engine="0",le="0.001",model_name="azampatti/Qwen3.8-Flash-Next-FP4-Local-AZ-524k-b48k-fp8"} 0.0
@@ -397,7 +397,7 @@ vllm:time_to_first_token_seconds_count{engine="0",model_name="azampatti/Qwen3.8-
 vllm:time_to_first_token_seconds_sum{engine="0",model_name="azampatti/Qwen3.8-Flash-Next-FP4-Local-AZ-524k-b48k-fp8"} 0.0
 # HELP vllm:time_to_first_token_seconds_created Histogram of time to first token in seconds.
 # TYPE vllm:time_to_first_token_seconds_created gauge
-vllm:time_to_first_token_seconds_created{engine="0",model_name="azampatti/Qwen3.8-Flash-Next-FP4-Local-AZ-524k-b48k-fp8"} 1.7952963349989135e+09
+vllm:time_to_first_token_seconds_created{engine="0",model_name="azampatti/Qwen3.8-Flash-Next-FP4-Local-AZ-524k-b48k-fp8"} 1.79530004407528e+09
 # HELP vllm:inter_token_latency_seconds Histogram of inter-token latency in seconds.
 # TYPE vllm:inter_token_latency_seconds histogram
 vllm:inter_token_latency_seconds_bucket{engine="0",le="0.01",model_name="azampatti/Qwen3.8-Flash-Next-FP4-Local-AZ-524k-b48k-fp8"} 0.0
@@ -424,7 +424,7 @@ vllm:inter_token_latency_seconds_count{engine="0",model_name="azampatti/Qwen3.8-
 vllm:inter_token_latency_seconds_sum{engine="0",model_name="azampatti/Qwen3.8-Flash-Next-FP4-Local-AZ-524k-b48k-fp8"} 0.0
 # HELP vllm:inter_token_latency_seconds_created Histogram of inter-token latency in seconds.
 # TYPE vllm:inter_token_latency_seconds_created gauge
-vllm:inter_token_latency_seconds_created{engine="0",model_name="azampatti/Qwen3.8-Flash-Next-FP4-Local-AZ-524k-b48k-fp8"} 1.7952963349989386e+09
+vllm:inter_token_latency_seconds_created{engine="0",model_name="azampatti/Qwen3.8-Flash-Next-FP4-Local-AZ-524k-b48k-fp8"} 1.7953000440753024e+09
 # HELP vllm:request_time_per_output_token_seconds Histogram of time_per_output_token_seconds per request.
 # TYPE vllm:request_time_per_output_token_seconds histogram
 vllm:request_time_per_output_token_seconds_bucket{engine="0",le="0.01",model_name="azampatti/Qwen3.8-Flash-Next-FP4-Local-AZ-524k-b48k-fp8"} 0.0
@@ -451,7 +451,7 @@ vllm:request_time_per_output_token_seconds_count{engine="0",model_name="azampatt
 vllm:request_time_per_output_token_seconds_sum{engine="0",model_name="azampatti/Qwen3.8-Flash-Next-FP4-Local-AZ-524k-b48k-fp8"} 0.0
 # HELP vllm:request_time_per_output_token_seconds_created Histogram of time_per_output_token_seconds per request.
 # TYPE vllm:request_time_per_output_token_seconds_created gauge
-vllm:request_time_per_output_token_seconds_created{engine="0",model_name="azampatti/Qwen3.8-Flash-Next-FP4-Local-AZ-524k-b48k-fp8"} 1.7952963349989588e+09
+vllm:request_time_per_output_token_seconds_created{engine="0",model_name="azampatti/Qwen3.8-Flash-Next-FP4-Local-AZ-524k-b48k-fp8"} 1.7953000440753207e+09
 # HELP vllm:e2e_request_latency_seconds Histogram of e2e request latency in seconds.
 # TYPE vllm:e2e_request_latency_seconds histogram
 vllm:e2e_request_latency_seconds_bucket{engine="0",le="0.3",model_name="azampatti/Qwen3.8-Flash-Next-FP4-Local-AZ-524k-b48k-fp8"} 0.0
@@ -480,7 +480,7 @@ vllm:e2e_request_latency_seconds_count{engine="0",model_name="azampatti/Qwen3.8-
 vllm:e2e_request_latency_seconds_sum{engine="0",model_name="azampatti/Qwen3.8-Flash-Next-FP4-Local-AZ-524k-b48k-fp8"} 0.0
 # HELP vllm:e2e_request_latency_seconds_created Histogram of e2e request latency in seconds.
 # TYPE vllm:e2e_request_latency_seconds_created gauge
-vllm:e2e_request_latency_seconds_created{engine="0",model_name="azampatti/Qwen3.8-Flash-Next-FP4-Local-AZ-524k-b48k-fp8"} 1.7952963351363537e+09
+vllm:e2e_request_latency_seconds_created{engine="0",model_name="azampatti/Qwen3.8-Flash-Next-FP4-Local-AZ-524k-b48k-fp8"} 1.795300044217686e+09
 # HELP vllm:request_queue_time_seconds Histogram of time spent in WAITING phase for request.
 # TYPE vllm:request_queue_time_seconds histogram
 vllm:request_queue_time_seconds_bucket{engine="0",le="0.3",model_name="azampatti/Qwen3.8-Flash-Next-FP4-Local-AZ-524k-b48k-fp8"} 0.0
@@ -509,7 +509,7 @@ vllm:request_queue_time_seconds_count{engine="0",model_name="azampatti/Qwen3.8-F
 vllm:request_queue_time_seconds_sum{engine="0",model_name="azampatti/Qwen3.8-Flash-Next-FP4-Local-AZ-524k-b48k-fp8"} 0.0
 # HELP vllm:request_queue_time_seconds_created Histogram of time spent in WAITING phase for request.
 # TYPE vllm:request_queue_time_seconds_created gauge
-vllm:request_queue_time_seconds_created{engine="0",model_name="azampatti/Qwen3.8-Flash-Next-FP4-Local-AZ-524k-b48k-fp8"} 1.79529633513638e+09
+vllm:request_queue_time_seconds_created{engine="0",model_name="azampatti/Qwen3.8-Flash-Next-FP4-Local-AZ-524k-b48k-fp8"} 1.7953000442177138e+09
 # HELP vllm:request_inference_time_seconds Histogram of time spent in RUNNING phase for request.
 # TYPE vllm:request_inference_time_seconds histogram
 vllm:request_inference_time_seconds_bucket{engine="0",le="0.3",model_name="azampatti/Qwen3.8-Flash-Next-FP4-Local-AZ-524k-b48k-fp8"} 0.0
@@ -538,7 +538,7 @@ vllm:request_inference_time_seconds_count{engine="0",model_name="azampatti/Qwen3
 vllm:request_inference_time_seconds_sum{engine="0",model_name="azampatti/Qwen3.8-Flash-Next-FP4-Local-AZ-524k-b48k-fp8"} 0.0
 # HELP vllm:request_inference_time_seconds_created Histogram of time spent in RUNNING phase for request.
 # TYPE vllm:request_inference_time_seconds_created gauge
-vllm:request_inference_time_seconds_created{engine="0",model_name="azampatti/Qwen3.8-Flash-Next-FP4-Local-AZ-524k-b48k-fp8"} 1.7952963351364038e+09
+vllm:request_inference_time_seconds_created{engine="0",model_name="azampatti/Qwen3.8-Flash-Next-FP4-Local-AZ-524k-b48k-fp8"} 1.7953000442177377e+09
 # HELP vllm:request_prefill_time_seconds Histogram of time spent in PREFILL phase for request.
 # TYPE vllm:request_prefill_time_seconds histogram
 vllm:request_prefill_time_seconds_bucket{engine="0",le="0.3",model_name="azampatti/Qwen3.8-Flash-Next-FP4-Local-AZ-524k-b48k-fp8"} 0.0
@@ -567,7 +567,7 @@ vllm:request_prefill_time_seconds_count{engine="0",model_name="azampatti/Qwen3.8
 vllm:request_prefill_time_seconds_sum{engine="0",model_name="azampatti/Qwen3.8-Flash-Next-FP4-Local-AZ-524k-b48k-fp8"} 0.0
 # HELP vllm:request_prefill_time_seconds_created Histogram of time spent in PREFILL phase for request.
 # TYPE vllm:request_prefill_time_seconds_created gauge
-vllm:request_prefill_time_seconds_created{engine="0",model_name="azampatti/Qwen3.8-Flash-Next-FP4-Local-AZ-524k-b48k-fp8"} 1.795296335136426e+09
+vllm:request_prefill_time_seconds_created{engine="0",model_name="azampatti/Qwen3.8-Flash-Next-FP4-Local-AZ-524k-b48k-fp8"} 1.795300044217766e+09
 # HELP vllm:request_decode_time_seconds Histogram of time spent in DECODE phase for request.
 # TYPE vllm:request_decode_time_seconds histogram
 vllm:request_decode_time_seconds_bucket{engine="0",le="0.3",model_name="azampatti/Qwen3.8-Flash-Next-FP4-Local-AZ-524k-b48k-fp8"} 0.0
@@ -596,7 +596,7 @@ vllm:request_decode_time_seconds_count{engine="0",model_name="azampatti/Qwen3.8-
 vllm:request_decode_time_seconds_sum{engine="0",model_name="azampatti/Qwen3.8-Flash-Next-FP4-Local-AZ-524k-b48k-fp8"} 0.0
 # HELP vllm:request_decode_time_seconds_created Histogram of time spent in DECODE phase for request.
 # TYPE vllm:request_decode_time_seconds_created gauge
-vllm:request_decode_time_seconds_created{engine="0",model_name="azampatti/Qwen3.8-Flash-Next-FP4-Local-AZ-524k-b48k-fp8"} 1.7952963351364512e+09
+vllm:request_decode_time_seconds_created{engine="0",model_name="azampatti/Qwen3.8-Flash-Next-FP4-Local-AZ-524k-b48k-fp8"} 1.7953000442177892e+09
 # HELP vllm:request_num_preemptions Histogram of the number of times a request was preempted.
 # TYPE vllm:request_num_preemptions histogram
 vllm:request_num_preemptions_bucket{engine="0",le="1.0",model_name="azampatti/Qwen3.8-Flash-Next-FP4-Local-AZ-524k-b48k-fp8"} 0.0
@@ -611,7 +611,7 @@ vllm:request_num_preemptions_count{engine="0",model_name="azampatti/Qwen3.8-Flas
 vllm:request_num_preemptions_sum{engine="0",model_name="azampatti/Qwen3.8-Flash-Next-FP4-Local-AZ-524k-b48k-fp8"} 0.0
 # HELP vllm:request_num_preemptions_created Histogram of the number of times a request was preempted.
 # TYPE vllm:request_num_preemptions_created gauge
-vllm:request_num_preemptions_created{engine="0",model_name="azampatti/Qwen3.8-Flash-Next-FP4-Local-AZ-524k-b48k-fp8"} 1.7952963351364741e+09
+vllm:request_num_preemptions_created{engine="0",model_name="azampatti/Qwen3.8-Flash-Next-FP4-Local-AZ-524k-b48k-fp8"} 1.7953000442178102e+09
 # HELP vllm:request_prefill_kv_computed_tokens Histogram of new KV tokens computed during prefill (excluding cached tokens).
 # TYPE vllm:request_prefill_kv_computed_tokens histogram
 vllm:request_prefill_kv_computed_tokens_bucket{engine="0",le="1.0",model_name="azampatti/Qwen3.8-Flash-Next-FP4-Local-AZ-524k-b48k-fp8"} 0.0
@@ -637,7 +637,7 @@ vllm:request_prefill_kv_computed_tokens_count{engine="0",model_name="azampatti/Q
 vllm:request_prefill_kv_computed_tokens_sum{engine="0",model_name="azampatti/Qwen3.8-Flash-Next-FP4-Local-AZ-524k-b48k-fp8"} 0.0
 # HELP vllm:request_prefill_kv_computed_tokens_created Histogram of new KV tokens computed during prefill (excluding cached tokens).
 # TYPE vllm:request_prefill_kv_computed_tokens_created gauge
-vllm:request_prefill_kv_computed_tokens_created{engine="0",model_name="azampatti/Qwen3.8-Flash-Next-FP4-Local-AZ-524k-b48k-fp8"} 1.795296335136491e+09
+vllm:request_prefill_kv_computed_tokens_created{engine="0",model_name="azampatti/Qwen3.8-Flash-Next-FP4-Local-AZ-524k-b48k-fp8"} 1.7953000442178252e+09
 # HELP vllm:cache_config_info Information of the LLMEngine CacheConfig
 # TYPE vllm:cache_config_info gauge
 vllm:cache_config_info{_block_size_resolved="True",block_size="3520",cache_dtype="fp8",cache_hit_alignment_tokens="None",effective_attention_block_size="3520",enable_mamba_shared_prefix_checkpoint="False",enable_prefix_caching="True",engine="0",gpu_memory_utilization="0.9",hash_block_size="None",is_attention_free="False",kv_cache_dtype_skip_layers="[]",kv_cache_layout="None",kv_cache_max_concurrency="1.9814814814814814",kv_cache_memory_bytes="16000000000",kv_cache_size_tokens="1038866",kv_offloading_backend="native",kv_offloading_size="None",kv_sharing_fast_prefill="False",mamba_block_size="3520",mamba_cache_dtype="auto",mamba_cache_mode="align",mamba_page_size_padded="None",mamba_ssm_cache_dtype="bfloat16",num_cpu_blocks="None",num_gpu_blocks="321",num_gpu_blocks_override="None",prefix_cache_retention_interval="0",prefix_caching_hash_algo="sha256",prefix_match_unit="64",replayssm_buffer_len="16",skip_page_size_padded="None",sliding_window="None",swa_bounded_replay="True",use_recoverssm="True",use_replayssm="True",user_specified_block_size="True"} 1.0
@@ -646,21 +646,21 @@ vllm:cache_config_info{_block_size_resolved="True",block_size="3520",cache_dtype
 http_requests_total{handler="/v1/models",method="GET",status="2xx"} 1.0
 # HELP http_requests_created Total number of requests by method, status and handler.
 # TYPE http_requests_created gauge
-http_requests_created{handler="/v1/models",method="GET",status="2xx"} 1.7952963383592997e+09
+http_requests_created{handler="/v1/models",method="GET",status="2xx"} 1.795300048500407e+09
 # HELP http_request_size_bytes Content length of incoming requests by handler. Only value of header is respected. Otherwise ignored. No percentile calculated. 
 # TYPE http_request_size_bytes summary
 http_request_size_bytes_count{handler="/v1/models"} 1.0
 http_request_size_bytes_sum{handler="/v1/models"} 0.0
 # HELP http_request_size_bytes_created Content length of incoming requests by handler. Only value of header is respected. Otherwise ignored. No percentile calculated. 
 # TYPE http_request_size_bytes_created gauge
-http_request_size_bytes_created{handler="/v1/models"} 1.7952963383593156e+09
+http_request_size_bytes_created{handler="/v1/models"} 1.7953000485004246e+09
 # HELP http_response_size_bytes Content length of outgoing responses by handler. Only value of header is respected. Otherwise ignored. No percentile calculated. 
 # TYPE http_response_size_bytes summary
 http_response_size_bytes_count{handler="/v1/models"} 1.0
 http_response_size_bytes_sum{handler="/v1/models"} 625.0
 # HELP http_response_size_bytes_created Content length of outgoing responses by handler. Only value of header is respected. Otherwise ignored. No percentile calculated. 
 # TYPE http_response_size_bytes_created gauge
-http_response_size_bytes_created{handler="/v1/models"} 1.795296338359326e+09
+http_response_size_bytes_created{handler="/v1/models"} 1.795300048500436e+09
 # HELP http_request_duration_highr_seconds Latency with many buckets but no API specific labels. Made for more accurate percentile calculations. 
 # TYPE http_request_duration_highr_seconds histogram
 http_request_duration_highr_seconds_bucket{le="0.01"} 1.0
@@ -686,10 +686,10 @@ http_request_duration_highr_seconds_bucket{le="30.0"} 1.0
 http_request_duration_highr_seconds_bucket{le="60.0"} 1.0
 http_request_duration_highr_seconds_bucket{le="+Inf"} 1.0
 http_request_duration_highr_seconds_count 1.0
-http_request_duration_highr_seconds_sum 0.00043726299963964266
+http_request_duration_highr_seconds_sum 0.0006875990002299659
 # HELP http_request_duration_highr_seconds_created Latency with many buckets but no API specific labels. Made for more accurate percentile calculations. 
 # TYPE http_request_duration_highr_seconds_created gauge
-http_request_duration_highr_seconds_created 1.7952963352001228e+09
+http_request_duration_highr_seconds_created 1.7953000443870041e+09
 # HELP http_request_duration_seconds Latency with only few buckets by handler. Made to be only used if aggregation by handler is important. 
 # TYPE http_request_duration_seconds histogram
 http_request_duration_seconds_bucket{handler="/v1/models",le="0.1",method="GET"} 1.0
@@ -697,10 +697,10 @@ http_request_duration_seconds_bucket{handler="/v1/models",le="0.5",method="GET"}
 http_request_duration_seconds_bucket{handler="/v1/models",le="1.0",method="GET"} 1.0
 http_request_duration_seconds_bucket{handler="/v1/models",le="+Inf",method="GET"} 1.0
 http_request_duration_seconds_count{handler="/v1/models",method="GET"} 1.0
-http_request_duration_seconds_sum{handler="/v1/models",method="GET"} 0.00043726299963964266
+http_request_duration_seconds_sum{handler="/v1/models",method="GET"} 0.0006875990002299659
 # HELP http_request_duration_seconds_created Latency with only few buckets by handler. Made to be only used if aggregation by handler is important. 
 # TYPE http_request_duration_seconds_created gauge
-http_request_duration_seconds_created{handler="/v1/models",method="GET"} 1.795296338359345e+09
+http_request_duration_seconds_created{handler="/v1/models",method="GET"} 1.7953000485004554e+09
 # HELP vllm:tool_call_parser_invocations_total Total number of ToolParser invocations. Non-streaming increments once per choice; streaming increments once per delta.
 # TYPE vllm:tool_call_parser_invocations_total counter
 vllm:tool_call_parser_invocations_total{mode="streaming",model_name="azampatti/Qwen3.8-Flash-Next-FP4-Local-AZ-524k-b48k-fp8",outcome="tool_call",request_type="chat_completions"} 0.0
@@ -717,15 +717,15 @@ vllm:tool_call_parser_invocations_total{mode="non_streaming",model_name="azampat
 vllm:tool_call_parser_invocations_total{mode="non_streaming",model_name="azampatti/Qwen3.8-Flash-Next-FP4-Local-AZ-524k-b48k-fp8",outcome="no_tool_call",request_type="other"} 0.0
 # HELP vllm:tool_call_parser_invocations_created Total number of ToolParser invocations. Non-streaming increments once per choice; streaming increments once per delta.
 # TYPE vllm:tool_call_parser_invocations_created gauge
-vllm:tool_call_parser_invocations_created{mode="streaming",model_name="azampatti/Qwen3.8-Flash-Next-FP4-Local-AZ-524k-b48k-fp8",outcome="tool_call",request_type="chat_completions"} 1.7952963352003527e+09
-vllm:tool_call_parser_invocations_created{mode="streaming",model_name="azampatti/Qwen3.8-Flash-Next-FP4-Local-AZ-524k-b48k-fp8",outcome="tool_call",request_type="responses"} 1.795296335200358e+09
-vllm:tool_call_parser_invocations_created{mode="streaming",model_name="azampatti/Qwen3.8-Flash-Next-FP4-Local-AZ-524k-b48k-fp8",outcome="tool_call",request_type="other"} 1.7952963352003615e+09
-vllm:tool_call_parser_invocations_created{mode="streaming",model_name="azampatti/Qwen3.8-Flash-Next-FP4-Local-AZ-524k-b48k-fp8",outcome="no_tool_call",request_type="chat_completions"} 1.7952963352003648e+09
-vllm:tool_call_parser_invocations_created{mode="streaming",model_name="azampatti/Qwen3.8-Flash-Next-FP4-Local-AZ-524k-b48k-fp8",outcome="no_tool_call",request_type="responses"} 1.7952963352003682e+09
-vllm:tool_call_parser_invocations_created{mode="streaming",model_name="azampatti/Qwen3.8-Flash-Next-FP4-Local-AZ-524k-b48k-fp8",outcome="no_tool_call",request_type="other"} 1.7952963352003713e+09
-vllm:tool_call_parser_invocations_created{mode="non_streaming",model_name="azampatti/Qwen3.8-Flash-Next-FP4-Local-AZ-524k-b48k-fp8",outcome="tool_call",request_type="chat_completions"} 1.7952963352003744e+09
-vllm:tool_call_parser_invocations_created{mode="non_streaming",model_name="azampatti/Qwen3.8-Flash-Next-FP4-Local-AZ-524k-b48k-fp8",outcome="tool_call",request_type="responses"} 1.795296335200377e+09
-vllm:tool_call_parser_invocations_created{mode="non_streaming",model_name="azampatti/Qwen3.8-Flash-Next-FP4-Local-AZ-524k-b48k-fp8",outcome="tool_call",request_type="other"} 1.7952963352003798e+09
-vllm:tool_call_parser_invocations_created{mode="non_streaming",model_name="azampatti/Qwen3.8-Flash-Next-FP4-Local-AZ-524k-b48k-fp8",outcome="no_tool_call",request_type="chat_completions"} 1.795296335200383e+09
-vllm:tool_call_parser_invocations_created{mode="non_streaming",model_name="azampatti/Qwen3.8-Flash-Next-FP4-Local-AZ-524k-b48k-fp8",outcome="no_tool_call",request_type="responses"} 1.795296335200386e+09
-vllm:tool_call_parser_invocations_created{mode="non_streaming",model_name="azampatti/Qwen3.8-Flash-Next-FP4-Local-AZ-524k-b48k-fp8",outcome="no_tool_call",request_type="other"} 1.7952963352003894e+09
+vllm:tool_call_parser_invocations_created{mode="streaming",model_name="azampatti/Qwen3.8-Flash-Next-FP4-Local-AZ-524k-b48k-fp8",outcome="tool_call",request_type="chat_completions"} 1.7953000443872573e+09
+vllm:tool_call_parser_invocations_created{mode="streaming",model_name="azampatti/Qwen3.8-Flash-Next-FP4-Local-AZ-524k-b48k-fp8",outcome="tool_call",request_type="responses"} 1.795300044387262e+09
+vllm:tool_call_parser_invocations_created{mode="streaming",model_name="azampatti/Qwen3.8-Flash-Next-FP4-Local-AZ-524k-b48k-fp8",outcome="tool_call",request_type="other"} 1.7953000443872654e+09
+vllm:tool_call_parser_invocations_created{mode="streaming",model_name="azampatti/Qwen3.8-Flash-Next-FP4-Local-AZ-524k-b48k-fp8",outcome="no_tool_call",request_type="chat_completions"} 1.7953000443872688e+09
+vllm:tool_call_parser_invocations_created{mode="streaming",model_name="azampatti/Qwen3.8-Flash-Next-FP4-Local-AZ-524k-b48k-fp8",outcome="no_tool_call",request_type="responses"} 1.7953000443872716e+09
+vllm:tool_call_parser_invocations_created{mode="streaming",model_name="azampatti/Qwen3.8-Flash-Next-FP4-Local-AZ-524k-b48k-fp8",outcome="no_tool_call",request_type="other"} 1.7953000443872747e+09
+vllm:tool_call_parser_invocations_created{mode="non_streaming",model_name="azampatti/Qwen3.8-Flash-Next-FP4-Local-AZ-524k-b48k-fp8",outcome="tool_call",request_type="chat_completions"} 1.7953000443872778e+09
+vllm:tool_call_parser_invocations_created{mode="non_streaming",model_name="azampatti/Qwen3.8-Flash-Next-FP4-Local-AZ-524k-b48k-fp8",outcome="tool_call",request_type="responses"} 1.795300044387281e+09
+vllm:tool_call_parser_invocations_created{mode="non_streaming",model_name="azampatti/Qwen3.8-Flash-Next-FP4-Local-AZ-524k-b48k-fp8",outcome="tool_call",request_type="other"} 1.7953000443872836e+09
+vllm:tool_call_parser_invocations_created{mode="non_streaming",model_name="azampatti/Qwen3.8-Flash-Next-FP4-Local-AZ-524k-b48k-fp8",outcome="no_tool_call",request_type="chat_completions"} 1.7953000443872862e+09
+vllm:tool_call_parser_invocations_created{mode="non_streaming",model_name="azampatti/Qwen3.8-Flash-Next-FP4-Local-AZ-524k-b48k-fp8",outcome="no_tool_call",request_type="responses"} 1.7953000443872895e+09
+vllm:tool_call_parser_invocations_created{mode="non_streaming",model_name="azampatti/Qwen3.8-Flash-Next-FP4-Local-AZ-524k-b48k-fp8",outcome="no_tool_call",request_type="other"} 1.7953000443872926e+09

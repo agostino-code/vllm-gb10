@@ -1,0 +1,122 @@
+# ══════════════════════════════════════════════════════════════════════════
+# az-256k-fleet — FLEET at full native 256k: 4-5 sub-agents, 262,144 each
+# Model   azampatti/Qwen3.8-Flash-Next-FP4-Local-AZ
+# Stack   myllmbox/qwen38-flash-next-vllm:v5.4
+# Launch  ./run.sh recipes/az-256k-fleet.yaml
+#
+# The direct answer to "sub-agents, each with a real 256k window". 262,144 is
+# the checkpoint TRAINED context, so there is NO YaRN here (no hf-overrides):
+# recall at full depth is as good as this model gets. VERIFIED 2026-11-22 (run
+# t-today): the 259,433-token needle is RECALLED OK on all three 256k variants.
+#
+# Measured (run t-today, quick profile):
+#   KV pool            1,384,355 tokens = 5.28x a 256k stream (4 full seats + slack, 5 fit)
+#   needle             259,433 tokens, RECALL OK
+#   C=4 throughput     71.3 tok/s total, ~18/stream
+#   decode single      59.2 tok/s   TTFT C=1: 106 ms
+#   prefill            2,530 tok/s (8192 chunk)
+#   boot               ~358 s
+#
+# KNOWN LIMITATION — the 2.6s concurrency barrier. At C=N (all seats firing at
+# once) every request shows an identical ~2.6-2.7s time-to-first-token, vs 106
+# ms at C=1 and 335 ms for az-standard-seats8 at C=8. Reproduced on all three
+# 256k variants, does NOT amortise across waves, and is NOT the prefill path
+# (prefill TTFT is normal). It is a concurrent-admission stall unique to this
+# family; the only thing that differs from the working configs is the absent
+# rope override. Fine for a few long-running agents (C<=2: no barrier); a
+# liability when all seats fire in lockstep. Next test to clear it: re-add a
+# factor-1.0 rope override to a 256k copy and re-run C=N.
+#
+# fp8 KV is the enabler: it halves KV bytes so 4-5 full 256k seats fit in 23 GB
+# (bf16 would need 32 GB and only reach 3.79x). Cost ~9% decode (measured on
+# 524k fp8). For 8 seats at 94k each with no barrier, use az-standard-seats8.
+# ══════════════════════════════════════════════════════════════════════════
+
+server:
+  image: myllmbox/qwen38-flash-next-vllm:v5.4
+  docker_args: --security-opt seccomp=unconfined   # required by the image's PLE table reader
+  cpuset: "5-9,15-19"                              # GB10's 10 Cortex-X925 3.9 GHz cores (+2-3 %)
+  model: azampatti/Qwen3.8-Flash-Next-FP4-Local-AZ
+  port: 8000
+  cache_dir: ./cache
+
+env:
+  # --- the n-gram (PLE) table, off the GPU and off the critical path -------
+  MBX_PLE_MMAP: "1"
+  MBX_PLE_MMAP_MODE: "nvme"
+  MBX_PLE_MMAP_PREWARM: "0"      # lazy: prewarming costs ~48 GB of page-cache pressure while weights load
+  MBX_PLE_ASYNC: "1"             # table reads stay off the critical path so decode never leaves CUDA graphs
+  MBX_PLE_PREFILL_CKPT: "1"      # resume agent turns from the cache (vLLM #60050)
+
+  # --- speculative decoding -------------------------------------------------
+  MBX_DEPTH_MODE: dynamic        # draft depth follows the live request count
+  MBX_DEPTH_MIN: "3"
+  MBX_DEPTH_WINDOW: "48"
+  MBX_DEPTH_PROMOTE: "60,45"
+  MBX_DEPTH_DEMOTE: "25,15"
+  MBX_DEPTH_CEIL: "[4 -> 8, 6 -> 7, 12 -> 6, 14 -> 5]"
+  MBX_DEPTH_SYNCFREE: "1"        # depth bookkeeping stays on the GPU
+  MBX_DRAFT_HEAD: "1"            # NVFP4 copy of the output head: 0.36 GB read per draft instead of 1.27 GB
+
+  # --- kernels / loader -----------------------------------------------------
+  MBX_LOADER_PREPARE: "0"
+  MBX_LOADER_EMPTY_CACHE: "1"
+  MBX_MARLIN_CSF: "1"            # NVFP4 expert scales stay compressed on the GPU
+  MBX_CSF_VISUAL_BF16: "0"
+  MBX_MXFP8_A16: "0"
+  VLLM_DISABLED_KERNELS: FlashInferCutedslMxfp8LinearKernel,FlashInferTrtllmMxfp8LinearKernel,DeepGemmMxfp8BmmLinearKernel,HummingMxfp8LinearKernel
+  VLLM_USE_BREAKABLE_CUDAGRAPH: "1"
+  VLLM_MARLIN_USE_ATOMIC_ADD: "1"
+  TORCH_CUDA_ARCH_LIST: "12.1a"
+  FLASHINFER_CUDA_ARCH_LIST: "12.1a"
+  TRITON_CACHE_DIR: /cache/triton
+  PYTORCH_CUDA_ALLOC_CONF: expandable_segments:True
+  MALLOC_MMAP_THRESHOLD_: "65536"
+  MALLOC_TRIM_THRESHOLD_: "131072"
+  PYTHONUNBUFFERED: "1"
+
+vllm:
+  served-model-name: azampatti/Qwen3.8-Flash-Next-FP4-Local-AZ-256k4-fp8
+  load-format: mbx
+  distributed-executor-backend: mp
+  moe-backend: marlin
+  kernel-config: '{"linear_backend_per_quant":{"mxfp8":"b12x"}}'
+  engram-config: '{"cpu_offload": false}'
+
+  # --- memory ---------------------------------------------------------------
+  gpu-memory-utilization: 0.88
+  kv-cache-memory: "23000000000"    # 23 GB fp8 = ~1.53M tokens = 5.85x a 256k stream
+  kv-cache-dtype: fp8               # THE POINT: fp8 halves bytes/token at this context size
+  mamba-ssm-cache-dtype: bfloat16   # GDN recurrent state in bf16 (+10 % pool)
+
+  # --- context --------------------------------------------------------------
+  max-model-len: 262144
+  # no hf-overrides: 262,144 is the checkpoint's NATIVE context — no YaRN, no
+  # extrapolation. This is the whole point of the 256k fleet: full-quality recall.
+
+
+  # --- scheduling -----------------------------------------------------------
+  max-num-seqs: 4
+  max-num-batched-tokens: 8192
+  block-size: 3456                  # QSA ring = K+4 = 16 must divide it (it does, 216x), and 64 (prefill checkpoints) too
+  prefix-match-unit: 64
+  enable-prefix-caching: true
+  enable-prompt-tokens-details: true
+  async-scheduling: true
+  use-replayssm: true               # RecoverSSM (vLLM #58863)
+  compilation-config: '{"cudagraph_mode":"FULL_AND_PIECEWISE","cudagraph_capture_sizes":[1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,18,20,21,24,25,27,30,32,35,39,40,44,48,49,54,60,64,70,75,80,90,96]}'
+
+  # --- tools / reasoning ----------------------------------------------------
+  enable-auto-tool-choice: true
+  tool-call-parser: qwen3_xml
+  reasoning-parser: qwen3
+  override-generation-config: '{"temperature": 0.6, "presence_penalty": 0.1, "top_p": 0.95}'
+  # NOTE: stock vLLM ignores presence_penalty in --override-generation-config
+  # unless the image carries the patch that applies it. Verify with:
+  #   ./check.sh --penalty     before believing this line does anything.
+
+  # --- speculative decoding (exactly one, always) ---------------------------
+  speculative-config: '{"method":"mtp","num_speculative_tokens":12,"rejection_sample_method":"block","draft_sample_method":"probabilistic"}'
+  # Depth <= 3 makes this image fail at CUDA-graph capture ("min bootable
+  # speculative depth is 4"). Static depth must be emulated as MIN=CEIL=K,
+  # PROMOTE=101, DEMOTE=0.

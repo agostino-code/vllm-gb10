@@ -1,0 +1,117 @@
+# ══════════════════════════════════════════════════════════════════════════
+# az-786k-single — MAX CONTEXT: one stream, 786,432 tokens, YaRN 3.0
+# Model   azampatti/Qwen3.8-Flash-Next-FP4-Local-AZ
+# Stack   myllmbox/qwen38-flash-next-vllm:v5.4
+# Launch  presets/run_az_786k.sh   (or: ./run.sh recipes/az-786k-single.yaml)
+#
+# The widest context measured on this box, and the answer to "how far past
+# native does it hold". Native is 262,144; the 524k recipe is YaRN 2.0. This
+# is YaRN 3.0 (factor 3.0, original_max 262,144). VERIFIED 2026-11-22 (run
+# t-today): the engine ACCEPTS factor 3.0 (boot log "Using max model len
+# 786432", "factor 3.0") and the 778,048-token needle at 45% depth is RECALLED
+# OK. YaRN extrapolation to 3x works on this checkpoint.
+#
+# Measured (run t-today, full profile):
+#   KV pool            892,616 tokens = 1.14x a full 786k request (one stream)
+#   needle             778,048 tokens, RECALL OK
+#   prefill            2,120 tok/s   -> ~6 min to first token on a full 780k prompt
+#   decode single      59.9 tok/s (json-heavy quick run)
+#   TTFT C=1           352 ms (short prompt)
+#   boot               358 s
+#
+# One stream only: the 26 GB KV pool is 1.14x a full request, so a second 786k
+# stream does not fit. For two long streams use az-524k-single (1.46x). If you
+# need TWO full 786k streams, switch kv-cache-dtype to fp8 (the 524k fp8 test
+# measured 2.85x on the same box; 786k fp8 would give ~1.9x = two full streams).
+#
+# Prefill chunk is 16,384, not 32,768: a 32k chunk x 786k context needs ~24 GB
+# of activations (74+26+1+24 = 125 GB) and does not fit the 128 GB pool. 16k
+# halves that to 12 GB. Slower to first token, but the recall test is the point.
+# ══════════════════════════════════════════════════════════════════════════
+
+server:
+  image: myllmbox/qwen38-flash-next-vllm:v5.4
+  docker_args: --security-opt seccomp=unconfined
+  cpuset: "5-9,15-19"
+  model: azampatti/Qwen3.8-Flash-Next-FP4-Local-AZ
+  port: 8000
+  cache_dir: ./cache
+
+env:
+  # --- the n-gram (PLE) table, off the GPU and off the critical path -------
+  MBX_PLE_MMAP: "1"
+  MBX_PLE_MMAP_MODE: "nvme"
+  MBX_PLE_MMAP_PREWARM: "0"
+  MBX_PLE_ASYNC: "1"
+  MBX_PLE_PREFILL_CKPT: "1"
+
+  # --- speculative decoding -------------------------------------------------
+  # One stream: the ceiling is pinned to the full depth instead of following
+  # the request count, because there is only ever one request.
+  MBX_DEPTH_MODE: dynamic
+  MBX_DEPTH_MIN: "3"
+  MBX_DEPTH_WINDOW: "48"
+  MBX_DEPTH_PROMOTE: "60,45"
+  MBX_DEPTH_DEMOTE: "25,15"
+  MBX_DEPTH_CEIL: "[1 -> 16]"
+  MBX_DEPTH_SYNCFREE: "1"
+  MBX_DRAFT_HEAD: "1"
+
+  # --- kernels / loader -----------------------------------------------------
+  MBX_LOADER_PREPARE: "0"
+  MBX_LOADER_EMPTY_CACHE: "1"
+  MBX_MARLIN_CSF: "1"
+  MBX_CSF_VISUAL_BF16: "0"
+  MBX_MXFP8_A16: "0"
+  VLLM_DISABLED_KERNELS: FlashInferCutedslMxfp8LinearKernel,FlashInferTrtllmMxfp8LinearKernel,DeepGemmMxfp8BmmLinearKernel,HummingMxfp8LinearKernel
+  VLLM_USE_BREAKABLE_CUDAGRAPH: "1"
+  VLLM_MARLIN_USE_ATOMIC_ADD: "1"
+  TORCH_CUDA_ARCH_LIST: "12.1a"
+  FLASHINFER_CUDA_ARCH_LIST: "12.1a"
+  TRITON_CACHE_DIR: /cache/triton
+  PYTORCH_CUDA_ALLOC_CONF: expandable_segments:True
+  MALLOC_MMAP_THRESHOLD_: "65536"
+  MALLOC_TRIM_THRESHOLD_: "131072"
+  PYTHONUNBUFFERED: "1"
+
+vllm:
+  served-model-name: azampatti/Qwen3.8-Flash-Next-FP4-Local-AZ-786k
+  load-format: mbx
+  distributed-executor-backend: mp
+  moe-backend: marlin
+  kernel-config: '{"linear_backend_per_quant":{"mxfp8":"b12x"}}'
+  engram-config: '{"cpu_offload": false}'
+
+  # --- memory ---------------------------------------------------------------
+  gpu-memory-utilization: 0.90        # single stream: 0.90 is safe, 0.92 needs more free memory
+  kv-cache-memory: "26000000000"      # 26 GB bf16 = ~867k tokens = 1.10x a 786k request
+  kv-cache-dtype: auto                # bf16; fp8 would give ~1.94x the pool at ~8 % less speed
+  mamba-ssm-cache-dtype: bfloat16
+
+  # --- context --------------------------------------------------------------
+  max-model-len: 786432
+  hf-overrides: '{"text_config":{"max_position_embeddings":786432,"rope_parameters":{"rope_type":"yarn","factor":3.0,"original_max_position_embeddings":262144,"rope_theta":10000000,"partial_rotary_factor":0.25,"mrope_section":[11,11,10],"mrope_interleaved":true}}}'
+
+  # --- scheduling -----------------------------------------------------------
+  max-num-seqs: 1
+  max-num-batched-tokens: 16384   # halved from 32768: a 32k chunk x 786k context peaks ~24 GB
+                                        # of activations (74+26+1+24 = 125 GB) and does not fit; 16k -> 12 GB, fits
+  block-size: 3520
+  prefix-match-unit: 64
+  enable-prefix-caching: true
+  enable-prompt-tokens-details: true
+  async-scheduling: true
+  use-replayssm: true
+  compilation-config: '{"cudagraph_mode":"FULL_AND_PIECEWISE","cudagraph_capture_sizes":[1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,20,21,24,25,27,30,32,35,39,40,44,48,49,54,60,64,70,75,80,90,96,112,128],"pass_config":{"fuse_norm_quant":true,"fuse_act_quant":true,"fuse_attn_quant":true,"fuse_rope_kvcache_cat_mla":true}}'
+
+  # --- tools / reasoning ----------------------------------------------------
+  enable-auto-tool-choice: true
+  tool-call-parser: qwen3_xml
+  reasoning-parser: qwen3
+  override-generation-config: '{"temperature": 0.6, "presence_penalty": 0.1, "top_p": 0.95}'
+  # NOTE: stock vLLM ignores presence_penalty in --override-generation-config
+  # unless the image carries the patch that applies it. Verify with:
+  #   ./check.sh --penalty     before believing this line does anything.
+
+  # --- speculative decoding (exactly one, always) ---------------------------
+  speculative-config: '{"method":"mtp","num_speculative_tokens":16,"rejection_sample_method":"block","draft_sample_method":"probabilistic"}'

@@ -1,5 +1,5 @@
 {
-  "duration_s": 397.0,
+  "duration_s": 504.3,
   "error": null,
   "exit_codes": {
     "serve": 0,
@@ -25,7 +25,7 @@
     "--boot-timeout",
     "1500"
   ],
-  "started_at": "2026-11-21T21:46:48.430+00:00",
+  "started_at": "2026-11-21T22:52:41.357+00:00",
   "status": "done",
   "suite_command": [
     "/usr/bin/python3",
@@ -44,9 +44,10 @@
     "off",
     "--concurrency",
     "1,4",
+    "--long-smoke",
     "--long-target-tokens",
     "260000"
   ],
   "summary_path": "/home/pgx/Documenti/vllm-gb10/bench/baseline/t-today/256k-quad/summary.json",
-  "updated_at": "2026-11-21T21:53:25.425+00:00"
+  "updated_at": "2026-11-21T23:01:05.628+00:00"
 }

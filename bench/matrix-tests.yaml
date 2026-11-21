@@ -94,26 +94,7 @@ configs:
       long_smoke: true
       long_target_tokens: 520000
 
-  # ── sub-agent fleet shape ────────────────────────────────────────────────
-  # 8 seats x 93,866 KV tokens each vs the shipped 16 x 46,933: does no-eviction
-  # per seat pay for itself at the concurrency a real fleet reaches (C=4, C=8)?
-  - name: standard-seats8
-    recipe: recipes/tests/standard-seats8.yaml
-    suite:
-      concurrency: [1, 4, 8]
-      long_smoke: false
 
-  # ── beyond 524k: YaRN 3.0 ───────────────────────────────────────────────
-  # 786,432 tokens, 26 GB KV, one stream. The 780k needle at 45% depth is the
-  # referee; a boot failure in the first minutes is also an answer. Expect
-  # ~6 min to first token on the needle (780k at ~2,200 tok/s).
-  - name: 786k-single
-    recipe: recipes/tests/786k-single.yaml
-    suite:
-      concurrency: [1]
-      long_smoke: true
-      long_target_tokens: 780000
-      long_timeout: 1200
 
   # ── 256k fleet: fewer sub-agents, every seat at native full context ─────
   # 262,144 is the checkpoint's trained context: no YaRN here, so recall is
@@ -136,11 +117,8 @@ configs:
       long_smoke: true
       long_target_tokens: 260000
 
-  - name: 256k-quad-fp8
-    recipe: recipes/tests/256k-quad-fp8.yaml
-    suite:
-      concurrency: [1, 4]
-      long_smoke: true
-      long_target_tokens: 260000
+  # 256k-quad-fp8 was promoted to recipes/az-256k-fleet.yaml (in the baseline
+  # matrix). 256k-tri and 256k-quad stay here as the bf16 variants for the
+  # concurrent-admission-barrier investigation (README open test).
 
 

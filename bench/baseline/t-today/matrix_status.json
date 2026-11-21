@@ -1,8 +1,79 @@
 {
-  "configs": [],
-  "finished_at": "2026-11-21T22:16:32.166+00:00",
-  "matrix": "bench/matrix-tests.yaml",
-  "results_dir": "bench/baseline/t-today",
-  "started_at": "2026-11-21T22:16:32.166+00:00",
-  "updated_at": "2026-11-21T22:16:32.166+00:00"
+  "configs": [
+    {
+      "duration_s": 671.1,
+      "error": null,
+      "exit_codes": {
+        "serve": 0,
+        "suite": 0
+      },
+      "name": "524k-batched48k-fp8",
+      "priority": 6,
+      "recipe": "recipes/tests/524k-batched48k-fp8.yaml",
+      "run_dir": "/home/pgx/Documenti/vllm-gb10/bench/baseline/t-today/524k-batched48k-fp8",
+      "started_at": "2026-11-21T22:20:36.562+00:00",
+      "status": "done"
+    },
+    {
+      "duration_s": 761.6,
+      "error": null,
+      "exit_codes": {
+        "serve": 0,
+        "suite": 0
+      },
+      "name": "786k-single",
+      "priority": 8,
+      "recipe": "recipes/tests/786k-single.yaml",
+      "run_dir": "/home/pgx/Documenti/vllm-gb10/bench/baseline/t-today/786k-single",
+      "started_at": "2026-11-21T22:31:49.879+00:00",
+      "status": "done"
+    },
+    {
+      "duration_s": 485.9,
+      "error": null,
+      "exit_codes": {
+        "serve": 0,
+        "suite": 0
+      },
+      "name": "256k-tri",
+      "priority": 9,
+      "recipe": "recipes/tests/256k-tri.yaml",
+      "run_dir": "/home/pgx/Documenti/vllm-gb10/bench/baseline/t-today/256k-tri",
+      "started_at": "2026-11-21T22:44:33.478+00:00",
+      "status": "done"
+    },
+    {
+      "duration_s": 504.3,
+      "error": null,
+      "exit_codes": {
+        "serve": 0,
+        "suite": 0
+      },
+      "name": "256k-quad",
+      "priority": 10,
+      "recipe": "recipes/tests/256k-quad.yaml",
+      "run_dir": "/home/pgx/Documenti/vllm-gb10/bench/baseline/t-today/256k-quad",
+      "started_at": "2026-11-21T22:52:41.357+00:00",
+      "status": "done"
+    },
+    {
+      "duration_s": 497.3,
+      "error": null,
+      "exit_codes": {
+        "serve": 0,
+        "suite": 0
+      },
+      "name": "256k-quad-fp8",
+      "priority": 11,
+      "recipe": "recipes/tests/256k-quad-fp8.yaml",
+      "run_dir": "/home/pgx/Documenti/vllm-gb10/bench/baseline/t-today/256k-quad-fp8",
+      "started_at": "2026-11-21T23:01:07.793+00:00",
+      "status": "done"
+    }
+  ],
+  "finished_at": "2026-11-21T23:09:27.123+00:00",
+  "matrix": "bench/baseline/t-today.matrix.yaml",
+  "results_dir": "/home/pgx/Documenti/vllm-gb10/bench/baseline/t-today",
+  "started_at": "2026-11-21T22:20:36.525+00:00",
+  "updated_at": "2026-11-21T23:09:27.123+00:00"
 }

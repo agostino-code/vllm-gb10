@@ -54,6 +54,7 @@ configs:
   suite:
     concurrency:
     - 1
+    long_smoke: true
     long_target_tokens: 520000
 - name: standard-seats8
   recipe: recipes/tests/standard-seats8.yaml
@@ -68,6 +69,7 @@ configs:
   suite:
     concurrency:
     - 1
+    long_smoke: true
     long_target_tokens: 780000
     long_timeout: 1200
 - name: 256k-tri
@@ -76,6 +78,7 @@ configs:
     concurrency:
     - 1
     - 3
+    long_smoke: true
     long_target_tokens: 260000
 - name: 256k-quad
   recipe: recipes/tests/256k-quad.yaml
@@ -83,6 +86,7 @@ configs:
     concurrency:
     - 1
     - 4
+    long_smoke: true
     long_target_tokens: 260000
 - name: 256k-quad-fp8
   recipe: recipes/tests/256k-quad-fp8.yaml
@@ -90,4 +94,5 @@ configs:
     concurrency:
     - 1
     - 4
+    long_smoke: true
     long_target_tokens: 260000

@@ -1,4 +1,4 @@
-# bench/matrix.yaml — the four shipped configurations, ready to measure.
+# bench/matrix.yaml — the seven shipped configurations, ready to measure.
 #
 #   python3 bench/check_recipes.py bench/matrix.yaml            # static preflight, no GPU
 #   python3 bench/run_matrix.py --matrix bench/matrix.yaml --dry-run
@@ -68,6 +68,36 @@ configs:
       include_16: false
       long_target_tokens: 520000   # 99.2% of the ceiling: room for the 32-token answer + builder variance
     notes: abliterated checkpoint at 524k single stream
+
+  # ── the three configs promoted from the 2026-11-21/22 candidate run ───────
+  - name: az-786k-single
+    recipe: recipes/az-786k-single.yaml
+    priority: 50
+    suite_profile: full
+    suite:
+      concurrency: [1]
+      include_16: false
+      long_smoke: true
+      long_target_tokens: 780000   # 99.2% of the 786,432 ceiling
+      long_timeout: 1200           # ~6 min to first token on a 780k prefill
+    notes: MAX CONTEXT — YaRN 3.0, 786,432 tokens, 778k needle verified OK
+
+  - name: az-standard-seats8
+    recipe: recipes/az-standard-seats8.yaml
+    priority: 60
+    suite_profile: full
+    notes: FLEET — 8 sub-agents x 93,866 KV each, 335 ms TTFT at C=8, no barrier
+
+  - name: az-256k-fleet
+    recipe: recipes/az-256k-fleet.yaml
+    priority: 70
+    suite_profile: full
+    suite:
+      concurrency: [1, 4]
+      long_smoke: true
+      long_target_tokens: 260000   # 256k native, recall verified
+    notes: FLEET at full native 256k — 4-5 seats x 262,144, fp8 KV; KNOWN 2.6 s
+      concurrent-admission barrier at C=N (see recipe header); fine at C<=2
 
   # ── how to run an experiment without adding a file ────────────────────────
   # The knobs live in the recipe, so a variant is an override, not a copy:

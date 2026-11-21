@@ -1,17 +1,23 @@
 # Qwen3.8-Flash-Next on one DGX Spark (GB10)
 
 A measurement-driven serving stack for two checkpoints of Qwen3.8-Flash-Next on a single
-NVIDIA DGX Spark (GB10, 128 GB unified memory): the shipped **myllmbox v5.4** configuration,
-and a tuned **524k-context single-stream** configuration.
+NVIDIA DGX Spark (GB10, 128 GB unified memory). Seven configurations, each measured on this
+box, one recipe each — pick by what you are doing:
 
-Four commands. Two checkpoints, two configurations, one recipe each.
+| I want | config | context each | how |
+|---|---|---|---|
+| the safe default / max throughput | **az-standard** | 47k × 16 seats | `./presets/run_az_standard.sh` |
+| **a sub-agent fleet, low latency** | **az-standard-seats8** | 94k × 8 seats | `./presets/run_az_seats8.sh` |
+| **a sub-agent fleet, 256k each** | **az-256k-fleet** | 256k × 4–5 seats | `./run.sh recipes/az-256k-fleet.yaml` |
+| **one agent, maximum context** | **az-786k-single** | 786k × 1 stream | `./presets/run_az_786k.sh` |
+| one long agent, two mid streams | az-524k-single | 524k × 1 (1.46× pool) | `./presets/run_az_524k.sh` |
+| any of the above, no refusals | `uncensored-*` | same | `./presets/run_uncensored_*.sh` ⚠ |
 
-```bash
-./presets/run_az_standard.sh          # AZ checkpoint, shipped best
-./presets/run_az_524k.sh              # AZ checkpoint, 524k context, one stream
-./presets/run_uncensored_standard.sh  # abliterated checkpoint, shipped best   ⚠ no guardrails
-./presets/run_uncensored_524k.sh      # abliterated checkpoint, 524k single    ⚠ no guardrails
-```
+The three fleet/long-context configs were promoted from a 12-candidate measurement run
+(2026-11-21/22); the numbers behind every row are in **[BASELINE.md](BASELINE.md)**. Two caveats
+are documented honestly: `az-256k-fleet` has a ~2.6 s concurrent-admission barrier (fine at
+≤2 agents), and the abliterated checkpoint costs ~25 % at C=8 — use it single-stream, not as a
+fleet. Details in [Which config for what](#which-config-for-what).
 
 Everything here was measured on this box with the harness in [`bench/`](bench/README.md) and the
 gate in [`quality/`](quality/). The full study — 30+ configurations, controlled A/B/A runs, quality
@@ -25,18 +31,18 @@ the serving image, the recipe format and the tuned defaults come from
 setup/check discipline and the alternative b12x lineage from
 [azampatti/Qwen3.8-Flash-Next-Int4-FAST](https://github.com/azampatti/Qwen3.8-Flash-Next-Int4-FAST);
 the b12x stack itself from [eugr/spark-vllm-docker](https://github.com/eugr/spark-vllm-docker).
-This repository adds the measurements, the harness, the 524k configuration and the reasoning —
-full attribution in [Credits](#credits-and-licensing).
+This repository adds the measurements, the harness, the 524k/786k/fleet configurations and the
+reasoning — full attribution in [Credits](#credits-and-licensing).
 
 ---
 
 ## Table of contents
 
-- [Why these four and nothing else](#why-these-four-and-nothing-else)
+- [Why these seven and nothing else](#why-these-seven-and-nothing-else)
 - [Requirements](#requirements)
 - [Quick start](#quick-start)
 - [Getting the baseline](#getting-the-baseline)
-- [The two configurations](#the-two-configurations)
+- [Which config for what](#which-config-for-what)
 - [The two checkpoints](#the-two-checkpoints)
 - [How the weights are loaded](#how-the-weights-are-loaded)
 - [Repository layout](#repository-layout)
@@ -51,25 +57,29 @@ full attribution in [Credits](#credits-and-licensing).
 
 ---
 
-## Why these four and nothing else
+## Why these seven and nothing else
 
-This repo used to carry ~40 recipes. The study said:
+This repo used to carry ~40 recipes. The study and the 2026-11-21/22 candidate run kept seven,
+each for a measured reason:
 
-- **The shipped myllmbox v5.4 recipe is already the best configuration measured.** Twenty-plus
-  depth / drafter / KV / chat-template variants were tested and none beat it beyond the
-  ±10–15 % run-to-run noise of a shared host.
-- **K=4 is not faster than K=12.** Controlled sustained-load A/B/A: both 198.5 tok/s at C=8.
-  It only halves the draft compute, so it was dropped.
-- **The 10-expert draft folder is not a win.** The extra drafter cost cancels the acceptance gain.
-  Dropped, and `draft-lab/` with it.
-- **Runtime steering does not work on this checkpoint family.** Refusal 82 % → 82 % at λ = ±1 on
-  all 96 residual writers. The fix is weights, not hooks: use the abliterated checkpoint.
-  `steering/` is gone.
-- **fp8 KV buys context, not speed.** −8 % decode. It is one `set:` override in the matrix, not a
-  shipped preset.
+- **az-standard** — the shipped myllmbox v5.4 recipe is the best single config measured.
+  Twenty-plus depth / drafter / KV / chat-template variants were tested; none beat it beyond the
+  ±10–15 % noise of a shared host.
+- **az-standard-seats8** — for a sub-agent fleet, 8 seats × 94k beats 16 × 47k: same C=8
+  throughput (174.9 vs 172), 335 ms TTFT, but no seat preempts another. One knob from standard.
+- **az-256k-fleet** — the only way to give every agent a full native 256k window (4–5 seats,
+  recall verified). fp8 KV is what makes the pool fit. Carries a documented 2.6 s barrier.
+- **az-786k-single** — YaRN 3.0 works: 786k context, 778k needle recalled. The max-context config.
+- **az-524k-single** — the middle long-context point; its 1.46× pool is what fits two ~380k
+  streams, which 786k (1.14×) cannot.
+- **uncensored-standard / uncensored-524k-single** — the abliterated checkpoint, for when you
+  need 0 % refusals. Costs ~25 % at C=8, so single-stream, not a fleet.
 
-What survived is the two things you actually use, on the two checkpoints you actually have.
-Everything else is a `set:` override away in [`bench/matrix.yaml`](bench/matrix.yaml).
+Dropped by measurement, each still a `set:` override away: **K=4** (not faster than K=12 —
+198.5 tok/s both at C=8, just less draft compute); the **10-expert draft folder** (cost cancels
+the acceptance gain); **runtime steering** (refusal 82 %→82 % at λ=±1 — the fix is weights, not
+hooks); **fp8 KV as a preset** (buys context, −8 % decode — it is a knob, except where it is the
+enabler, i.e. az-256k-fleet).
 
 ## Requirements
 
@@ -106,7 +116,7 @@ or a corrupted index, and it checks for both.
 
 ## Getting the baseline
 
-One command measures all four configurations and prints a block you can paste back here:
+One command measures all seven configurations and prints a block you can paste back here:
 
 ```bash
 ./bench/baseline.py
@@ -114,7 +124,7 @@ One command measures all four configurations and prints a block you can paste ba
 
 It boots each config in its own container, runs the suite and the quality gate, tears it down,
 moves to the next, and writes `BASELINE.md` at the repo root. Full profile is roughly 40 minutes
-for the four; `--profile quick` is about a tenth of that and is enough to spot a regression.
+for the seven; `--profile quick` is a fraction of that and is enough to spot a regression.
 
 Before you run it:
 
@@ -135,39 +145,48 @@ The report is designed to be pasted: summary table, decode by content, the concu
 accepted-tokens-per-position depth curve, prefill, the quality battery, and the exact
 configuration used — plus a pointer to the raw `summary.json` per config.
 
-## The two configurations
+## Which config for what
 
-Same image, same kernels, same drafter. They differ only where the goal differs.
+All seven share the image, kernels and drafter. They differ only in the KV/context/seat trade-off,
+so pick by the one number you care about: **context per concurrent agent**.
 
-| | **standard** | **524k-single** |
-|---|---|---|
-| purpose | many streams, the shipped best | one agent, the whole box |
-| `max-model-len` | 409,600 (YaRN 1.5625) | **524,288** (YaRN 2.0) |
-| `max-num-seqs` | 16 | **1** |
-| `max-num-batched-tokens` | 8,192 | **32,768** |
-| `gpu-memory-utilization` | 0.88 | **0.90** |
-| `block-size` | 3,456 | **3,520** |
-| `prefix-match-unit` | 64 | 64 |
-| `cudagraph_capture_sizes` | to 96 | to 96 **+17, 112, 128** |
-| `pass_config` fusions | default | **norm/act/attn quant + rope_kvcache_cat_mla** |
-| speculative depth | K=12, dynamic ladder | **K=16**, ceiling pinned `[1 -> 16]` |
-| KV pool | 750,933 tokens (1.83× a 400k request) | **767,013** tokens (**1.46× a 524k request**, measured) |
+The KV pool is the budget. Measured on this box: **29,986 bytes/token bf16**, half that in fp8.
+Every seat needs `context × 29,986` bytes of pool reserved. That single fact decides everything:
 
-`block-size` differs by 64 tokens for a hard reason, not a tuning preference: the QSA drafter
-ring has capacity **K+4** and the engine refuses to boot unless it divides the block size
-(`QSA ring capacity 20 must divide the attention block size 3456`, measured). At K=12 the ring
-is 16 and 3,456 is legal; at K=16 the ring is 20, so 3,520 = 20×176 = 64×55. The first cut of
-the 524k recipe used 860/32 inherited from the container it replaced; the 2026-11-21 baseline
-measured the cost — the engine reserved the same 23 GB and returned 604,947 KV tokens, because
-each of the 703 small blocks pays a per-block state charge (visible as group pages `13760` vs
-`3520` in the boot log). With 3,520 the same 23 GB yield **767,013 tokens = 1.46×** a full
-524,288-token request, confirmed in the boot log of both checkpoints.
+| config | seats | context each | KV pool | C=N TTFT | when |
+|---|---|---|---|---|---|
+| az-standard | 16 | 47k | 750,933 (1.83× a 400k) | 335 ms | many short-lived agents, max throughput |
+| az-standard-seats8 | 8 | 94k | 750,933 | 335 ms | **fleet default** — every realistic agent fits, no eviction |
+| az-256k-fleet | 4–5 | **262,144 (native)** | 1,384,355 fp8 (5.28×) | **2.6 s ⚠** | agents that genuinely need 256k each |
+| az-524k-single | 1 | 524,288 | 767,013 (1.46×) | 267 ms | one long agent; 1.46× also fits two ~380k |
+| az-786k-single | 1 | **786,432** | 892,616 (1.14×) | 352 ms | **max context**; 6 min to first token on a full prompt |
 
-The 23 GiB bf16 KV pool is what makes the 524k configuration fit at all. Do not lower
-`kv-cache-memory` there.
+**The fleet decision.** For sub-agents, more seats with less context each is faster and has no
+latency cliff: 8 seats × 94k (seats8) gives 175 tok/s at 335 ms TTFT, while 4 seats × 256k
+(256k-fleet) gives 71 tok/s and a 2.6 s barrier when all seats fire together. Only pay for 256k
+per seat if an agent actually holds a 256k window — otherwise seats8 is strictly better. The
+256k-fleet barrier is reproduced and unexplained (see [open tests](#open-questions-and-next-
+tests)); it does not appear at ≤2 concurrent agents, so a few long-running agents are fine.
 
-Both configurations exist for both checkpoints, which is the point: `standard` is the reference
-measured preset, `524k-single` is the tuned one.
+**The max-context decision.** 786k is YaRN 3.0 and the 778k needle is verified — extrapolation
+to 3× works on this checkpoint. But its 1.14× pool is one stream only. For two long streams,
+524k's 1.46× fits two ~380k sessions, or 786k-on-fp8 would give two full 786k (not yet measured).
+
+### The knobs that are not free
+
+`block-size` differs between standard (3,456) and the 524k/786k configs (3,520) for a hard
+reason: the QSA drafter ring has capacity **K+4** and the engine refuses to boot unless it
+divides the block size (`QSA ring capacity 20 must divide the attention block size 3456`,
+measured). At K=12 the ring is 16 and 3,456 is legal; at K=16 the ring is 20, so 3,520 =
+20×176 = 64×55. The first cut of the 524k recipe used 860/32 inherited from the container it
+replaced, which cost 19 % of the KV pool (604,947 tokens — each of 703 small blocks pays a
+per-block state charge, visible as group pages `13760` vs `3520`); 3,520 yields the full
+767,013. The 23 GiB KV pool is what makes 524k fit — do not lower `kv-cache-memory` there.
+
+The 524k/786k configs also raise `max-num-batched-tokens` (32,768 / 16,384), pin the depth
+ceiling to the full budget for one stream, and add fusion passes — all documented inline in each
+recipe. `az-standard-seats8` and `az-256k-fleet` change only seats (and KV dtype/size for the
+latter); they inherit the standard's kernels untouched.
 
 ## The two checkpoints
 
@@ -186,9 +205,9 @@ detail in the report):
 | | AZ | uncensored |
 |---|---|---|
 | refusal rate, 50 held-out harmful prompts | 78–82 % | **0 %** |
-| quality gate (full) | 0.9714 | 0.9643 (524k variant: **0.9786**, best of all four) |
-| decode, single stream | 64.1 tok/s | 63.9 tok/s |
-| C=8 | 172.4 tok/s | 140.3 tok/s |
+| quality gate (full) | 0.9714 | 0.9643 (524k variant: **0.9714**, matching AZ) |
+| decode, single stream | 63.3 tok/s | 63.3 tok/s |
+| C=8 | 163 tok/s | 136 tok/s (−17 %, the abba block confirms it is real, not drift) |
 
 The uncensored preset needs one extra env knob, `MBX_QSA_UNFUSE_INDEXER=1`, which is set in its
 recipe. This checkpoint stores `q/k/v` under mixed schemes (int8 on 12 of 48 layers, bf16 on the
@@ -227,38 +246,38 @@ view.sh · stop.sh · tune-host.sh
 
 recipes/
   az-standard.yaml                 the shipped myllmbox v5.4 recipe — the measured best
+  az-standard-seats8.yaml          FLEET: 8 seats x 94k, low latency
+  az-256k-fleet.yaml               FLEET: 4-5 seats x 256k native, fp8 KV (2.6s barrier)
   az-524k-single.yaml              524k context, one stream
+  az-786k-single.yaml              MAX CONTEXT: 786k, YaRN 3.0, needle verified
   uncensored-standard.yaml         abliterated checkpoint, shipped settings
   uncensored-524k-single.yaml      abliterated checkpoint, 524k single stream
-  tests/                           candidate variants, one knob each — see below
-    524k-pmu32.yaml                  open test #2: is the 524k TTFT the prefix unit?
-    524k-dual.yaml                   open test #6: two long seats on one box
-    524k-fp8kv.yaml                  open test #6b: fp8 KV, two full 524k streams
-    524k-batched48k-fp8.yaml         open test #7: largest feasible chunk (64k OOM'd)
-    standard-seats8.yaml             sub-agent fleet shape: 8 seats x 94k KV each
-    256k-tri.yaml                    3 seats x 262,144 native, 26 GB bf16
-    256k-quad.yaml                   4 seats x 262,144 native, 32 GB bf16 (tight)
-    256k-quad-fp8.yaml               4 seats x 262,144 native, 23 GB fp8 (room for 5)
-    786k-single.yaml                 YaRN 3.0: how far past native does it hold?
+  tests/                           still-open candidates, one knob each — see below
+    524k-pmu32.yaml                  answered #2: 524k TTFT was the prefix unit
+    524k-dual.yaml                   answered #6: two long seats (shape bug at K=16 fixed)
+    524k-fp8kv.yaml                  answered #6b: fp8 KV = 2.85x pool
+    524k-batched48k-fp8.yaml         answered #7: 64k OOM'd, 48k is the ceiling
+    256k-tri.yaml                    3 seats x 256k bf16 — barrier investigation
+    256k-quad.yaml                   4 seats x 256k bf16 — barrier investigation
 presets/
-  run_az_standard.sh  run_az_524k.sh
+  run_az_standard.sh  run_az_seats8.sh  run_az_524k.sh  run_az_786k.sh
   run_uncensored_standard.sh  run_uncensored_524k.sh
   run_az_b12x.sh                 the alternative stack
 
 bench/                       the reproducible benchmark harness (stdlib only)
-  baseline.py              THE ENTRY POINT: boot all four configs, measure, print one pasteable report
+  baseline.py              THE ENTRY POINT: boot all shipped configs, measure, print one pasteable report
   serve.py                 recipe -> docker manifest, health wait, boot time, meta.json
   suite.py                 the measurement suite: decode / concurrency / prefill / needle / spec
   run_matrix.py            sequential, resumable matrix runner (what baseline.py drives)
   aggregate.py             results -> RESULTS.md + summary.csv + ranking
   check_recipes.py         static preflight, no GPU
-  matrix.yaml              the four shipped configs, ready to measure
-  matrix-tests.yaml        the open questions as a run (the recipes/tests/ variants + A/B/A)
+  matrix.yaml              the seven shipped configs, ready to measure
+  matrix-tests.yaml        the still-open candidates + the A/B/A that settled the uncensored gap
 quality/                     deterministic capability + long-context gate (133 offline tests)
 tools/                       mtp_drafter_check.sh, verify_cache.py
 eugr-b12x/                   the alternative eugr b12x launcher (plain docker run)
 eugr-stack/                  git submodule -> github.com/eugr/spark-vllm-docker (keep at upstream tip)
-BASELINE.md                  the current numbers, all four configs, pasteable
+BASELINE.md                  the current numbers, all seven configs, pasteable
 BENCHMARK-REPORT.md          the study behind the shipped configs: methodology, constraints, negative results
 LICENSE                      MIT for this code; model weights and images keep their own terms
 ```
@@ -290,20 +309,27 @@ CHAT_TEMPLATE=/path/to/template.jinja ./presets/run_az_standard.sh   # empty = t
 
 ## Measured results
 
-**The current numbers are in [`BASELINE.md`](BASELINE.md)** — one pasteable view of all four
+**The current numbers are in [`BASELINE.md`](BASELINE.md)** — one pasteable view of all seven
 configurations, rebuilt from the raw results with `./bench/baseline.py --report <dirs>`. As
-measured 2026-11-21 on this box (image `v5.4`, bc42593a5bbf, full profile + full quality):
+measured 2026-11-21/22 on this box (image `v5.4`, bc42593a5bbf; the four core at full profile +
+full quality, the three promoted at the candidate run's quick profile — a fresh
+`./bench/baseline.py` now re-measures all seven at full quality):
 
-| config | decode | C=1 | C=8 | TTFT | KV pool | quality | 524k needle |
+| config | decode | C=1 | C=N | TTFT C=1 | KV pool | quality | needle |
 |---|---|---|---|---|---|---|---|
-| az-standard | 64.1 | 56.6 | 172.4 | 130 ms | 750,933 | 0.9714 | 96k OK |
-| az-524k-single | 63.4 | 55.6 | — | 266 ms | 767,013 | 0.9714 | **518k OK** |
-| uncensored-standard | 63.9 | 55.9 | 140.3 | 154 ms | 750,933 | 0.9643 | 96k OK |
-| uncensored-524k-single | 63.3 | 54.6 | — | 287 ms | 767,013 | **0.9786** | **518k OK** |
+| az-standard | 63.3 | 55.5 | 163 @C8 | 141 ms | 750,933 | 0.9714 | 96k OK |
+| az-standard-seats8 | 60.9 | 47.2 | 174.9 @C8 | 104 ms | 750,933 | — | — |
+| az-256k-fleet | 58.0 | 45.8 | 71.3 @C4 | 106 ms | 1,384,355 fp8 | — | **259k OK** |
+| az-524k-single | 63.7 | 53.8 | — | 267 ms | 767,013 | 0.9643 | **518k OK** |
+| az-786k-single | 60.7 | 42.4 | — | 352 ms | 892,616 | — | **778k OK** |
+| uncensored-standard | 63.3 | 57.2 | 136 @C8 | 157 ms | 750,933 | 0.9643 | 96k OK |
+| uncensored-524k-single | 63.7 | 54.5 | — | 287 ms | 767,013 | **0.9714** | **518k OK** |
 
-The two 524k configs cost ~1 % decode versus standard and give 524,288 real context with a
-verified needle at 518k tokens (2,216 tok/s prefill, 234 s to first token). The abliteration
-costs nothing measurable — the uncensored 524k config posted the best quality of the four.
+Three headline findings from the full candidate run: **YaRN 3.0 works** (786k, 778k needle
+recalled); **fp8 KV gives 2.85–5.28× the pool** for ~9 % decode (what makes the 256k fleet fit);
+and the **abliterated checkpoint costs ~25 % at C=8** (the abba block, zero drift) — so it is a
+single-stream choice, not a fleet one. The 256k-fleet's 2.6 s concurrent barrier is documented in
+its recipe and tracked below.
 
 Methodology, in one paragraph: each configuration boots its own container; the harness records the
 image digest, the exact argv/env/mounts, boot seconds, the full server log, per-request JSONL, the
@@ -338,90 +364,58 @@ methodology and A/B/A tables: [`BENCHMARK-REPORT.md`](BENCHMARK-REPORT.md)):
 | depth 5 / 6 / 9 | 50.7 / 55.7 / 50.7 — inside noise |
 
 The depth story in one line: **the accepted-token curve dies after position 2 on every drafter
-tested** (confirmed again on all four configs in the 2026-11-21 baseline: p0–p2 carry 93–94 % of
+tested** (confirmed again on every config in the 2026-11-21/22 baseline: p0–p2 carry 93–94 % of
 accepted tokens, p5 and beyond are zero), so more than ~4 drafts per step only adds compute —
 and depth 4 and depth 12 are throughput-equal because the fused multi-step drafter makes the
 extra drafts nearly free.
 
 ## Open questions and next tests
 
-Four are now **answered** (marked below) by the `t-today` candidate run; the rest are wired and
-ready. The candidates are in `recipes/tests/` (one knob changed each, hypothesis in the header)
-and the run plan — including the order-swapped A/B/A that settled the uncensored gap — is
-`bench/matrix-tests.yaml`:
+The 2026-11-21/22 candidate run **settled six questions and promoted three configs**. What is
+answered, and what is still open:
+
+### Settled by measurement (do not re-litigate without new evidence)
+
+- **The uncensored C=8 gap is real (−25 %).** The abba block booted az-standard first and last:
+  177.1 and 177.4 (0.2 % apart, zero drift), uncensored between them 132.0. It is the unfused
+  indexer (`MBX_QSA_UNFUSE_INDEXER=1`) biting at batch, free at C=1. → abliterated is a
+  single-stream choice, not a fleet one.
+- **The 524k TTFT penalty was the 64-unit prefix match** (pmu32 → 130 ms, exactly standard's),
+  but 32 costs TPOT/decode in return — neither dominates, so 524k keeps 64.
+- **fp8 KV = 2.85–5.28× the pool for ~9 % decode** (measured at 524k and 256k). It is the enabler
+  for the 256k fleet.
+- **Prefill chunking is memory-bound.** A 64k chunk × 524k context needs ~32 GB of activations
+  and OOM-froze the box; 48k on fp8 is the ceiling (524k-batched48k-fp8).
+- **YaRN 3.0 works.** 786k boots (engine accepts factor 3.0) and the 778k needle is recalled.
+  Promoted to az-786k-single.
+- **`instruction` 0.80 is honest** — the model cannot count (12→13 words, "ab"×20→×10), identical
+  everywhere, a real capability signal not a harness bug.
+
+### Still open
+
+1. **The 256k-fleet 2.6 s concurrent-admission barrier.** At C=N (all seats firing together)
+   every 256k request shows an identical ~2.6–2.7 s TTFT, vs 106 ms at C=1 and 335 ms for
+   seats8 at C=8. Reproduced on all three 256k variants, does not amortise across waves, is not
+   the prefill path. The only thing unique to the family is the **absent rope override**. Next
+   test: a 256k copy with a factor-1.0 rope override, re-run C=N — if the barrier vanishes, the
+   no-override path is the cause and the fix is one line.
+2. **`524k-dual` per-seat cost.** The K=16 2-seat shape bug is fixed (depth 8), but the honest
+   C=2 number needs a re-run of the fixed recipe (in matrix-tests).
+3. **`presence_penalty` via `--override-generation-config` may be a no-op** on stock vLLM. Test:
+   repetition probe with/without at temperature 0.6.
+4. **The 1k prefill sample is a cold-start artifact** (single sample, TTFT up to 3 s). Harness
+   fix: warm-up + median of 3 before the prefill phase.
+5. **eugr b12x against the new baseline.** The old "~30 % slower" used pre-refactor numbers
+   (157 at C=8); standard now measures 163–175. Re-run
+   `./bench/baseline.py --attach http://127.0.0.1:8000 --only az-standard` against b12x before
+   repeating it.
+
+To run the still-open candidates (the promoted configs moved to the baseline matrix):
 
 ```bash
-python3 bench/run_matrix.py --matrix bench/matrix-tests.yaml            # all twelve
-python3 bench/run_matrix.py --matrix bench/matrix-tests.yaml --only abba-1   # or one
-python3 bench/aggregate.py --results-dir bench/results/tests-20261121   # compare
+python3 bench/run_matrix.py --matrix bench/matrix-tests.yaml            # candidates + A/B/A
+python3 bench/run_matrix.py --matrix bench/matrix-tests.yaml --only 524k-dual   # or one
 ```
-
-Quality is off in the test matrix (capability equivalence is established; only speed, latency
-and capacity are in question) and the profile is quick: the whole file is ~12 boots, ~90 minutes.
-Compare the numbers against `BASELINE.md` — same harness, same box, same day.
-
-1. **The uncensored C=8 gap is REAL — the abba block settled it (run t-today).** Same
-   az-standard recipe booted first and last: **C=8 = 177.1 (abba-1) and 177.4 (abba-2)**,
-   within 0.2 % of each other, so there is no thermal/host drift across the window. The
-   uncensored config booted between them measured **C=8 = 132.0** — a 25 % deficit that is a
-   property of the config, not of when it ran. Cause, as suspected: `MBX_QSA_UNFUSE_INDEXER=1`
-   unfuses the indexer projection (more kernel launches per step), which is free at C=1
-   (uncensored decode 61.9 vs az 62.3, identical) and bites only at batch. This is the price
-   of the abliterated checkpoint under concurrency; a single-user uncensored server does not
-   pay it. No fix to test — it is inherent to the checkpoint; the choice is AZ-for-fleet vs
-   uncensored-for-single-stream.
-2. **The 524k TTFT penalty (+136 ms at C=1, 266 vs 130) is unattributed.** Three candidate
-2. **The 524k TTFT penalty was the 64-unit prefix match — but 32 is not free (run t-today).**
-   `524k-pmu32` (prefix-match-unit 64 → 32, one variable) measured **TTFT 130 ms, exactly the
-   standard recipe's 130** — the 64-unit match was the whole +136 ms. The catch: TPOT rose to
-   22.2 ms (from 18.8) and C=1 fell to 44.7 (from 55.6), because a 32-unit match means more,
-   smaller cache blocks and more per-token bookkeeping. The shipped 64 trades TTFT for decode;
-   32 trades decode for TTFT — neither dominates. The single quick run means the decode delta
-   needs a full-profile confirmation before shipping either way; the TTFT attribution is settled.
-3. **The 1k prefill sample is a cold-start artifact** (475/263/344/1108/1267 across runs of
-   configs that should be identical; a single sample, TTFT up to 3 s). Fix the harness:
-   warm-up request before the prefill phase, then median of 3. Until then, read the 1k column
-   as noise.
-4. **~~`instruction` 0.80 — investigated and closed, it is honest.~~** Two of ten tasks fail on
-   every config and every run because the model cannot count: `instr-01` ("exactly 12 words")
-   answers 13, `instr-09` ("repeat 'ab' exactly 20 times") outputs `ab`×10 — both with
-   `finish_reason=stop` and no truncation. Already documented in `quality/README.md` as
-   baseline behaviour identical in M0. Keep the 0.80: it is a real capability signal, not a
-   harness bug.
-5. **`presence_penalty` via `--override-generation-config` may be a no-op** on stock vLLM
-   (open since the study). Test: repetition probe with and without, compare `repetition` score.
-6. **A second seat on 524k — partially answered (run t-today).** `524k-fp8kv` booted and
-   measured exactly as predicted: **pool 1,491,955 tokens = 2.85×** a full 524k request, so
-   two *full* bf16-killer streams fit; decode 57.6 vs the 63.4 of bf16 (−9 %, close to the
-   study's −8 %). `524k-dual` did **not** boot: two seats at K=16 hit a drafter shape bug
-   (`draft buffer 2×16 vs expected 2×17`, hidden 2560). The recipe now drops 2-seat depth to
-   8 (the standard ladder value, compiles clean) — re-run to get the honest C=2 per-seat cost.
-7. **Prefill chunking is memory-bound, not bandwidth-bound (settled by an OOM).** The
-   64k-chunk candidate (`524k-batched64k`) froze the box on 2026-11-21: a 64k chunk × 524k
-   context needs ~32 GB of activations (the QSA indexer scores every query token against the
-   whole context), so 74 weights + 23 KV + 32 act = 129 GB > 128 GB. The largest feasible
-   chunk is ~49k and only on fp8 KV — that is the new `524k-batched48k-fp8`, kept to measure
-   whether a 1.5× chunk still helps the 520k prefill (directional, two variables changed).
-8. **eugr b12x against the new baseline.** The old comparison used the pre-refactor numbers
-   (157 at C=8); the standard config now measures 172.4. Re-run
-   `./bench/baseline.py --attach http://127.0.0.1:8000 --only az-standard` against b12x before
-   repeating the "~30 % slower" claim.
-9. **Sub-agent fleet shape.** 16 seats is the wrong trade for an agent harness: the 750,933-token
-   pool gives 16 × 46,933, so one long agent turn preempts its siblings and reprefills. Three
-   shapes are in the matrix, at three points of the context/seat trade-off:
-   - `standard-seats8`: 8 × 93,866 — realistic sessions (60–80k) fit without eviction;
-   - **`256k-tri` / `256k-quad` / `256k-quad-fp8`: 3–4 seats at the full native 262,144** —
-     no YaRN at all, so every seat recalls at trained quality. The KV arithmetic is measured
-     (29,986 B/token bf16): 26 GB → 3.31×, 32 GB → 4.07× (tight: ~7 GiB activation headroom,
-     an OOM at profile is the answer "4 seats want fp8"), 23 GB fp8 → ~5.5× (4 seats + slack,
-     5 fit, at the known fp8 decode cost — re-measured here at K=12, not reused from the study).
-   - `524k-dual`: two *long* seats, the other end of the trade.
-10. **Beyond 524k: YaRN 3.0 (`786k-single`).** Native is 262,144; the shipped 524k is factor 2.0
-    with a verified 518k needle. Factor 3.0 (786,432) fits the memory math — 26 GB KV buys
-    ~867k tokens = 1.10× a full request, and the 524k boot logged ~13 GiB of headroom — but
-    YaRN without fine-tuning degrades past ~2×, so the 780k needle at 45% depth is the referee.
-    A boot failure is also an answer (position tables or the QSA indexer may cap the factor).
-    If it holds, fp8 KV stacks to ~1.7M tokens = two full 786k streams.
 
 ## Benchmark harness (`bench/`)
 
@@ -430,7 +424,7 @@ measurement suite and the quality gate on each, tears it down, and prints one co
 you can paste straight into a conversation.
 
 ```bash
-./bench/baseline.py                      # all four configs, full profile + full quality
+./bench/baseline.py                      # all seven configs, full profile + full quality
 ./bench/baseline.py --profile quick      # fast pass (~10 min total instead of ~40)
 ./bench/baseline.py --only az-standard   # one config (repeatable)
 ./bench/baseline.py --dry-run            # show the plan, change nothing

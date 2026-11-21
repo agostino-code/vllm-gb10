@@ -4,11 +4,11 @@
     "container_port": 8000,
     "gpu": "all",
     "host_port": 8000,
-    "id": "0c891a873082e76abded10fdce5ad56c3a911a084b088a4c21bcd18d4c499a7f",
+    "id": "4fc1e0e1f9b6154014298583120dcb9412a122bd3eb90858f309d55f25d68f3b",
     "name": "bench-524k-batched48k-fp8",
     "runtime": "docker"
   },
-  "created_at": "2026-11-21T21:18:59.261+00:00",
+  "created_at": "2026-11-21T22:20:36.620+00:00",
   "host": {
     "docker_version": "29.6.2",
     "machine": "aarch64",
@@ -241,7 +241,7 @@
     "server_log": "server.log",
     "startup": {
       "block_size": 3520,
-      "graph_capture_s": 7.0,
+      "graph_capture_s": 8.0,
       "kv_cache_blocks": 295,
       "kv_cache_max_concurrency": 1.98,
       "kv_cache_max_concurrency_tokens": 524288,
@@ -253,8 +253,8 @@
       "ple_table_detail": "128 shards x 2500012 rows, 26.82 GiB, prewarm=0, 0.4s",
       "ple_table_path": "/home/pgx/.cache/huggingface/hub/models--azampatti--Qwen3.8-Flash-Next-FP4-Local-AZ/snapshots/5d927eabd4e4766a69bf12f7a1387b01d936a78f",
       "served_model": "azampatti/Qwen3.8-Flash-Next-FP4-Local-AZ-524k-b48k-fp8",
-      "weights_load_s": 5.41,
-      "weights_load_s_total": 189.04
+      "weights_load_s": 5.29,
+      "weights_load_s_total": 192.45999999999998
     }
   },
   "model": {
@@ -284,12 +284,12 @@
   },
   "status": "running",
   "timing": {
-    "boot_seconds": 396.662,
-    "container_created_at": "2026-11-21T21:18:59.399778809Z",
-    "container_started_at": "2026-11-21T21:18:59.545+00:00",
-    "poll_count": 197,
-    "ready_at": "2026-11-21T21:25:36.276+00:00",
-    "requested_at": "2026-11-21T21:18:59.273+00:00"
+    "boot_seconds": 409.037,
+    "container_created_at": "2026-11-21T22:20:36.81553817Z",
+    "container_started_at": "2026-11-21T22:20:37.245+00:00",
+    "poll_count": 203,
+    "ready_at": "2026-11-21T22:27:26.365+00:00",
+    "requested_at": "2026-11-21T22:20:36.636+00:00"
   },
   "vllm": {
     "arguments": [
