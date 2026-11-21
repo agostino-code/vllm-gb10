@@ -13,8 +13,8 @@ Validates, without touching docker or the GPU:
     option keys are known
 
   python3 bench/check_recipes.py                 # scan default recipe dirs
-  python3 bench/check_recipes.py matrix/matrix.yaml
-  python3 bench/check_recipes.py recipes/x.yaml draft-lab/recipes/*.yaml
+  python3 bench/check_recipes.py bench/matrix.yaml
+  python3 bench/check_recipes.py recipes/x.yaml eugr-b12x/*.yaml
 """
 from __future__ import annotations
 
@@ -30,8 +30,6 @@ import serve as S  # noqa: E402
 
 DEFAULT_GLOBS = [
     "recipes/*.yaml",
-    "matrix/recipes/*.yaml",
-    "draft-lab/recipes/*.yaml",
     "eugr-b12x/*.yaml",
 ]
 

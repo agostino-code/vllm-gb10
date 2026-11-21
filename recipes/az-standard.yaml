@@ -1,0 +1,114 @@
+# ══════════════════════════════════════════════════════════════════════════
+# az-standard — the shipped myllmbox v5.4 recipe, unchanged
+# ══════════════════════════════════════════════════════════════════════════
+# Model   azampatti/Qwen3.8-Flash-Next-FP4-Local-AZ  (NVIDIA FP4-Local re-routed
+#         at 5 of 512 experts/token, widened shared expert 1280, ~102 GB)
+# Stack   myllmbox/qwen38-flash-next-vllm:v5.4  (vLLM 0.32 + RecoverSSM +
+#         dynamic draft depth + NVFP4 draft head)
+# Launch  presets/run_az_standard.sh     (or: ./run.sh recipes/az-standard.yaml)
+#
+# This is the best configuration measured on this box. The 2026-11 preset study
+# (BENCHMARK-REPORT.md) tested 30+ depth / drafter / KV / template variants and
+# none beat it beyond the ±10-15 % run-to-run noise of a shared host.
+#
+# Measured (full profile, thinking off, temperature 0):
+#   decode single stream  53.3 tok/s median  (70.1 on pure code)
+#   C=8 / C=16            142.0 / 198.2 tok/s  · 198.5 / 292.4 sustained 60 s
+#   prefill 1k/8k/32k     1108 / 2341 / 2260 tok/s
+#   TTFT 1k prompt        181 ms p50
+#   spec decode           17.0 % acceptance, 3.04 tokens/step at depth 12
+#   KV pool               750,933 tokens (1.83x a 400k request)
+#   quality gate          0.9667 quick · 3/3 strict needle at 32k/128k/262k
+#   boot                  356 s warm
+#
+# Do not "optimise" these without re-measuring. The ones that cost you real
+# throughput if flipped: MBX_DRAFT_HEAD=0 (-19 % decode), a non-stock chat
+# template (-8 %), KV dtype fp8 (-8 %, buys context instead).
+# ══════════════════════════════════════════════════════════════════════════
+
+server:
+  image: myllmbox/qwen38-flash-next-vllm:v5.4
+  docker_args: --security-opt seccomp=unconfined   # required by the image's PLE table reader
+  cpuset: "5-9,15-19"                              # GB10's 10 Cortex-X925 3.9 GHz cores (+2-3 %)
+  model: azampatti/Qwen3.8-Flash-Next-FP4-Local-AZ
+  port: 8000
+  cache_dir: ./cache
+
+env:
+  # --- the n-gram (PLE) table, off the GPU and off the critical path -------
+  MBX_PLE_MMAP: "1"
+  MBX_PLE_MMAP_MODE: "nvme"
+  MBX_PLE_MMAP_PREWARM: "0"      # lazy: prewarming costs ~48 GB of page-cache pressure while weights load
+  MBX_PLE_ASYNC: "1"             # table reads stay off the critical path so decode never leaves CUDA graphs
+  MBX_PLE_PREFILL_CKPT: "1"      # resume agent turns from the cache (vLLM #60050)
+
+  # --- speculative decoding -------------------------------------------------
+  MBX_DEPTH_MODE: dynamic        # draft depth follows the live request count
+  MBX_DEPTH_MIN: "3"
+  MBX_DEPTH_WINDOW: "48"
+  MBX_DEPTH_PROMOTE: "60,45"
+  MBX_DEPTH_DEMOTE: "25,15"
+  MBX_DEPTH_CEIL: "[4 -> 8, 6 -> 7, 12 -> 6, 14 -> 5]"
+  MBX_DEPTH_SYNCFREE: "1"        # depth bookkeeping stays on the GPU
+  MBX_DRAFT_HEAD: "1"            # NVFP4 copy of the output head: 0.36 GB read per draft instead of 1.27 GB
+
+  # --- kernels / loader -----------------------------------------------------
+  MBX_LOADER_PREPARE: "0"
+  MBX_LOADER_EMPTY_CACHE: "1"
+  MBX_MARLIN_CSF: "1"            # NVFP4 expert scales stay compressed on the GPU
+  MBX_CSF_VISUAL_BF16: "0"
+  MBX_MXFP8_A16: "0"
+  VLLM_DISABLED_KERNELS: FlashInferCutedslMxfp8LinearKernel,FlashInferTrtllmMxfp8LinearKernel,DeepGemmMxfp8BmmLinearKernel,HummingMxfp8LinearKernel
+  VLLM_USE_BREAKABLE_CUDAGRAPH: "1"
+  VLLM_MARLIN_USE_ATOMIC_ADD: "1"
+  TORCH_CUDA_ARCH_LIST: "12.1a"
+  FLASHINFER_CUDA_ARCH_LIST: "12.1a"
+  TRITON_CACHE_DIR: /cache/triton
+  PYTORCH_CUDA_ALLOC_CONF: expandable_segments:True
+  MALLOC_MMAP_THRESHOLD_: "65536"
+  MALLOC_TRIM_THRESHOLD_: "131072"
+  PYTHONUNBUFFERED: "1"
+
+vllm:
+  served-model-name: azampatti/Qwen3.8-Flash-Next-FP4-Local-AZ
+  load-format: mbx
+  distributed-executor-backend: mp
+  moe-backend: marlin
+  kernel-config: '{"linear_backend_per_quant":{"mxfp8":"b12x"}}'
+  engram-config: '{"cpu_offload": false}'
+
+  # --- memory ---------------------------------------------------------------
+  gpu-memory-utilization: 0.88
+  kv-cache-memory: "23000000000"    # 23 GiB bf16 = 750,933 tokens = 16 streams
+  kv-cache-dtype: auto              # bf16: fp8 KV doubles the pool but costs ~8 % decode
+  mamba-ssm-cache-dtype: bfloat16   # GDN recurrent state in bf16 (+10 % pool)
+
+  # --- context --------------------------------------------------------------
+  max-model-len: 409600
+  hf-overrides: '{"text_config":{"max_position_embeddings":409600,"rope_parameters":{"rope_type":"yarn","factor":1.5625,"original_max_position_embeddings":262144,"rope_theta":10000000,"partial_rotary_factor":0.25,"mrope_section":[11,11,10],"mrope_interleaved":true}}}'
+
+  # --- scheduling -----------------------------------------------------------
+  max-num-seqs: 16
+  max-num-batched-tokens: 8192
+  block-size: 3456                  # multiple of 16 (ring at K=12) and 64 (prefill checkpoints)
+  prefix-match-unit: 64
+  enable-prefix-caching: true
+  enable-prompt-tokens-details: true
+  async-scheduling: true
+  use-replayssm: true               # RecoverSSM (vLLM #58863)
+  compilation-config: '{"cudagraph_mode":"FULL_AND_PIECEWISE","cudagraph_capture_sizes":[1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,18,20,21,24,25,27,30,32,35,39,40,44,48,49,54,60,64,70,75,80,90,96]}'
+
+  # --- tools / reasoning ----------------------------------------------------
+  enable-auto-tool-choice: true
+  tool-call-parser: qwen3_xml
+  reasoning-parser: qwen3
+  override-generation-config: '{"temperature": 0.6, "presence_penalty": 0.1, "top_p": 0.95}'
+  # NOTE: stock vLLM ignores presence_penalty in --override-generation-config
+  # unless the image carries the patch that applies it. Verify with:
+  #   ./check.sh --penalty     before believing this line does anything.
+
+  # --- speculative decoding (exactly one, always) ---------------------------
+  speculative-config: '{"method":"mtp","num_speculative_tokens":12,"rejection_sample_method":"block","draft_sample_method":"probabilistic"}'
+  # Depth <= 3 makes this image fail at CUDA-graph capture ("min bootable
+  # speculative depth is 4"). Static depth must be emulated as MIN=CEIL=K,
+  # PROMOTE=101, DEMOTE=0.

@@ -1,0 +1,115 @@
+# ══════════════════════════════════════════════════════════════════════════
+# uncensored-standard — abliterated checkpoint, the shipped myllmbox settings
+# ══════════════════════════════════════════════════════════════════════════
+# Model   myllmbox/Qwen3.8-Flash-Next-hibrid48-uncensored   (GATED: accept the
+#         agreement on its HF page, then `hf auth login`)
+# Stack   myllmbox/qwen38-flash-next-vllm:v5.4
+# Launch  presets/run_uncensored_standard.sh
+#
+# ⚠ NO GUARDRAILS. Research / red-team / private local use only, at your own
+# risk and your own moderation.
+#
+# Refusal removal lives in the WEIGHTS here. Runtime projection of a measured
+# refusal direction does not work on this checkpoint family: 82 % -> 82 % at
+# lambda = ±1 across all 96 residual writers, and the model refuses even when
+# forced to open with a compliance sentence, so there is no single decision
+# point to steer. Large strengths only produce repetition loops. This is what
+# the old steering/ machinery tried and failed at; the checkpoint is the fix.
+#
+# Measured against az-standard.yaml:
+#   refusal rate, 50 held-out harmful prompts   0 %     (base: 78-82 %)
+#   quality gate (quick)                        0.9667  (base: 0.9667 — unchanged)
+#   decode single stream                        52.8 tok/s (base: 53.3)
+#   C=8 throughput                              134.5 tok/s (base: 142.0)
+#
+# Same 5-of-512 architecture as the AZ checkpoint, so the recipe is the
+# shipped one with two differences:
+#   MBX_QSA_UNFUSE_INDEXER=1   this checkpoint is compressed-tensors with
+#                              q/k/v under mixed schemes (int8 on 12 of 48
+#                              layers, bf16 on the rest). The image unfuses the
+#                              indexer projection natively with this flag and
+#                              keeps q_proj/k_proj/v_proj fused. Do NOT replace
+#                              it with the old UNFUSE_QKV model patch: dropping
+#                              the whole qkv_proj fusion was the repetition-loop
+#                              cause, and it is why that patch was removed.
+#   served-model-name          kept as the base model's name, which is what the
+#                              measured numbers were taken with.
+# ══════════════════════════════════════════════════════════════════════════
+
+server:
+  image: myllmbox/qwen38-flash-next-vllm:v5.4
+  docker_args: --security-opt seccomp=unconfined
+  cpuset: "5-9,15-19"
+  model: myllmbox/Qwen3.8-Flash-Next-hibrid48-uncensored
+  port: 8000
+  cache_dir: ./cache
+
+env:
+  MBX_QSA_UNFUSE_INDEXER: "1"      # see the header: indexer only, qkv stays fused
+
+  MBX_PLE_MMAP: "1"
+  MBX_PLE_MMAP_MODE: "nvme"
+  MBX_PLE_MMAP_PREWARM: "0"
+  MBX_PLE_ASYNC: "1"
+  MBX_PLE_PREFILL_CKPT: "1"
+
+  MBX_DEPTH_MODE: dynamic
+  MBX_DEPTH_MIN: "3"
+  MBX_DEPTH_WINDOW: "48"
+  MBX_DEPTH_PROMOTE: "60,45"
+  MBX_DEPTH_DEMOTE: "25,15"
+  MBX_DEPTH_CEIL: "[4 -> 8, 6 -> 7, 12 -> 6, 14 -> 5]"
+  MBX_DEPTH_SYNCFREE: "1"
+  MBX_DRAFT_HEAD: "1"
+
+  MBX_LOADER_PREPARE: "0"
+  MBX_LOADER_EMPTY_CACHE: "1"
+  MBX_MARLIN_CSF: "1"
+  MBX_CSF_VISUAL_BF16: "0"
+  MBX_MXFP8_A16: "0"
+  VLLM_DISABLED_KERNELS: FlashInferCutedslMxfp8LinearKernel,FlashInferTrtllmMxfp8LinearKernel,DeepGemmMxfp8BmmLinearKernel,HummingMxfp8LinearKernel
+  VLLM_USE_BREAKABLE_CUDAGRAPH: "1"
+  VLLM_MARLIN_USE_ATOMIC_ADD: "1"
+  TORCH_CUDA_ARCH_LIST: "12.1a"
+  FLASHINFER_CUDA_ARCH_LIST: "12.1a"
+  TRITON_CACHE_DIR: /cache/triton
+  PYTORCH_CUDA_ALLOC_CONF: expandable_segments:True
+  MALLOC_MMAP_THRESHOLD_: "65536"
+  MALLOC_TRIM_THRESHOLD_: "131072"
+  PYTHONUNBUFFERED: "1"
+
+vllm:
+  served-model-name: Qwen/Qwen3.8-Flash-Next
+  load-format: mbx
+  distributed-executor-backend: mp
+  moe-backend: marlin
+  kernel-config: '{"linear_backend_per_quant":{"mxfp8":"b12x"}}'
+  engram-config: '{"cpu_offload": false}'
+
+  gpu-memory-utilization: 0.88
+  kv-cache-memory: "23000000000"
+  kv-cache-dtype: auto
+  mamba-ssm-cache-dtype: bfloat16
+
+  max-model-len: 409600
+  hf-overrides: '{"text_config":{"max_position_embeddings":409600,"rope_parameters":{"rope_type":"yarn","factor":1.5625,"original_max_position_embeddings":262144,"rope_theta":10000000,"partial_rotary_factor":0.25,"mrope_section":[11,11,10],"mrope_interleaved":true}}}'
+
+  max-num-seqs: 16
+  max-num-batched-tokens: 8192
+  block-size: 3456
+  prefix-match-unit: 64
+  enable-prefix-caching: true
+  enable-prompt-tokens-details: true
+  async-scheduling: true
+  use-replayssm: true
+  compilation-config: '{"cudagraph_mode":"FULL_AND_PIECEWISE","cudagraph_capture_sizes":[1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,18,20,21,24,25,27,30,32,35,39,40,44,48,49,54,60,64,70,75,80,90,96]}'
+
+  enable-auto-tool-choice: true
+  tool-call-parser: qwen3_xml
+  reasoning-parser: qwen3
+  override-generation-config: '{"temperature": 0.6, "presence_penalty": 0.1, "top_p": 0.95}'
+  # NOTE: stock vLLM ignores presence_penalty in --override-generation-config
+  # unless the image carries the patch that applies it. Verify with:
+  #   ./check.sh --penalty     before believing this line does anything.
+
+  speculative-config: '{"method":"mtp","num_speculative_tokens":12,"rejection_sample_method":"block","draft_sample_method":"probabilistic"}'

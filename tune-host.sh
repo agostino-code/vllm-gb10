@@ -1,37 +1,40 @@
 #!/usr/bin/env bash
-# tune-host.sh — Host optimization for NVIDIA DGX Spark / GB10
+# tune-host.sh — one-time host tuning for the NVIDIA DGX Spark (GB10).
 #
-# Sets vm.compaction_proactiveness = 0 in /etc/sysctl.d/99-gb10-compaction.conf
+# WHY vm.compaction_proactiveness=0:
+#   On GB10 the GPU and the CPU share one physical pool. The kernel's background
+#   page compactor migrates pages to build contiguous blocks, and every migrated
+#   page is first unmapped from the GPU — that is the source of the periodic
+#   4-5 s freezes (~10 % throughput) on this box. Setting it to 0 disables
+#   background migration while direct compaction on allocation failure stays on.
 #
-# WHY: On DGX Spark (GB10 unified memory), the kernel's background page compactor
-# migrates pages to build large contiguous blocks. Because GPU and CPU share the
-# same physical memory pool, every migrated page is first unmapped from the GPU.
-# This causes periodic 4-5 second freezes every ~37 seconds (~10% throughput loss).
-# Setting vm.compaction_proactiveness = 0 disables this background migration,
-# eliminating the freezes while direct compaction on real allocation failure remains active.
+# WHY the other two:
+#   zone_reclaim_mode=0   never reclaim a remote zone to satisfy a local alloc
+#   THP=never             avoids page-cache churn under large sequential reads
+#
+# All three are applied in one root shell, and the first is persisted in
+# /etc/sysctl.d so it survives a reboot. The other two are runtime-only by
+# design (THP is re-enabled at boot); persist them yourself if you want.
 set -euo pipefail
 
-CMD='printf "vm.compaction_proactiveness = 0\n" > /etc/sysctl.d/99-gb10-compaction.conf && sysctl -q vm.compaction_proactiveness=0 && echo "  ✓ vm.compaction_proactiveness=$(cat /proc/sys/vm/compaction_proactiveness) (persisted)"'
 now=$(cat /proc/sys/vm/compaction_proactiveness 2>/dev/null || echo "?")
 echo "current: vm.compaction_proactiveness=${now}   (want 0)"
+
 if [ "$now" = "0" ]; then
-  echo "✓ already set to 0 — nothing to do"
+  echo "✓ already 0 — nothing to do"
   exit 0
 fi
 
-echo
-echo "This will run AS ROOT (sudo):"
-echo "  sudo bash -c '$CMD'"
-echo
-read -rp "Proceed? [y/N] " ans
-if [[ ! "${ans:-N}" =~ ^[Yy]$ ]]; then
-  echo "aborted — nothing changed"
-  exit 0
-fi
+read -rp "Apply as root (sudo)? [y/N] " ans
+[[ "${ans:-N}" =~ ^[Yy]$ ]] || { echo "aborted — nothing changed"; exit 0; }
 
-sudo bash -c "$CMD"
-echo "Done. Active now (no restart needed) and persists across reboots."
-
-# ds4-inspired memory governor tuning
-sysctl -w vm.zone_reclaim_mode=0
-echo never > /sys/kernel/mm/transparent_hugepage/enabled
+sudo bash -c '
+  printf "vm.compaction_proactiveness = 0\n" > /etc/sysctl.d/99-gb10-compaction.conf
+  sysctl -q vm.compaction_proactiveness=0
+  sysctl -q vm.zone_reclaim_mode=0
+  echo never > /sys/kernel/mm/transparent_hugepage/enabled
+  echo "  ✓ vm.compaction_proactiveness=$(cat /proc/sys/vm/compaction_proactiveness) (persisted)"
+  echo "  ✓ vm.zone_reclaim_mode=$(cat /proc/sys/vm/zone_reclaim_mode)"
+  echo "  ✓ transparent hugepage: $(cat /sys/kernel/mm/transparent_hugepage/enabled | tr -d "[]")"
+'
+echo "Done. Active now; only compaction_proactiveness persists across reboots."

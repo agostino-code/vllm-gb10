@@ -1,20 +1,22 @@
 #!/usr/bin/env bash
-# view.sh — Live stats and log monitor for the running serve
+# view.sh — follow the engine log and show where the server is.
+#
+#   ./view.sh
+#
+# The port is read from the running container's own binding, not from a recipe
+# that may not be the one that was launched.
 set -euo pipefail
 cd "$(dirname "$0")"
-
 source ./config.env
-NAME="qwen38-flash-next"
-docker ps --filter "name=$NAME" --format '{{.Names}}' | grep -q "^$NAME$" || NAME="qwen38-flash"
 
-S="$(docker ps --filter "name=$NAME" --format '{{.Status}}')"
-[ -n "$S" ] || { echo "· Server container is not running (start it with ./run.sh $DEFAULT_RECIPE)"; exit 1; }
+NAME="${CONTAINER:-qwen38-flash-next}"
+docker ps --format '{{.Names}}' | grep -qx "$NAME" || {
+  echo "· '$NAME' is not running. Start one with ./presets/run_az_standard.sh" >&2; exit 1; }
 
-PORT=8000
-if [ -f "recipes/$DEFAULT_RECIPE" ]; then
-  PORT="$(awk '$1=="port:"{print $2; exit}' "recipes/$DEFAULT_RECIPE" 2>/dev/null || echo 8000)"
-fi
-
-H="$(curl -s -m 3 -o /dev/null -w '%{http_code}' "http://127.0.0.1:${PORT}/health" 2>/dev/null || echo "offline")"
-echo "· $NAME: $S — health HTTP $H — API http://127.0.0.1:${PORT}/v1   (Ctrl-C detaches)"
-exec docker logs -f --tail 30 "$NAME"
+# The container's own binding wins over config.env's PORT default.
+BOUND="$(docker port "$NAME" 8000/tcp 2>/dev/null | head -1 | awk -F: '{print $NF}')"
+PORT="${BOUND:-$PORT}"
+H="$(curl -s -m 3 -o /dev/null -w '%{http_code}' "http://127.0.0.1:$PORT/health" 2>/dev/null || echo offline)"
+echo "· $NAME  $(docker ps --filter name=^${NAME}$ --format '{{.Status}}')  health $H  API http://127.0.0.1:$PORT/v1"
+echo "  (Ctrl-C detaches; the server keeps running)"
+exec docker logs -f --tail 40 "$NAME"

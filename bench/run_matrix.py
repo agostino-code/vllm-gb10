@@ -9,8 +9,8 @@ configs are skipped unless ``--force`` is given, and a stale container from a
 crashed run is cleaned up before retrying.
 
   python3 bench/run_matrix.py --matrix bench/matrix.yaml --dry-run
-  python3 bench/run_matrix.py --matrix matrix/matrix.yaml --only az-ref
-  python3 bench/run_matrix.py --matrix matrix/matrix.yaml          # long: use nohup/background
+  python3 bench/run_matrix.py --matrix bench/matrix.yaml --only az-standard
+  python3 bench/run_matrix.py --matrix bench/matrix.yaml          # long: use nohup/background
 
 Never run two model servers at once: configs are strictly sequential and the
 runner waits for the port/container to be free before each boot.

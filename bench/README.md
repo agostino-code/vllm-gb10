@@ -48,7 +48,7 @@ python3 bench/suite.py --base-url http://127.0.0.1:8000 \
 ### Launch a container yourself, measure, stop
 
 ```bash
-python3 bench/serve.py up --recipe matrix/recipes/az-ref.yaml \
+python3 bench/serve.py up --recipe recipes/az-standard.yaml \
     --run-id az-ref --config-id az-ref --boot-timeout 1500
 python3 bench/suite.py --base-url http://127.0.0.1:8000 \
     --run-dir bench/results/az-ref --config-id az-ref --profile full
@@ -64,18 +64,18 @@ container and marks the manifest stopped.
 
 ```bash
 # validate everything first: recipes parse, no duplicate spec flags, mounts OK
-python3 bench/check_recipes.py matrix/matrix.yaml
+python3 bench/check_recipes.py bench/matrix.yaml
 
 # print the exact commands, launch nothing
-python3 bench/run_matrix.py --matrix matrix/matrix.yaml --dry-run
+python3 bench/run_matrix.py --matrix bench/matrix.yaml --dry-run
 
 # real run — launch it in a background job; it takes boot+suite per config sequentially
-nohup python3 bench/run_matrix.py --matrix matrix/matrix.yaml > bench/results/matrix.out 2>&1 &
+nohup python3 bench/run_matrix.py --matrix bench/matrix.yaml > bench/results/matrix.out 2>&1 &
 
 # resume / slice
-python3 bench/run_matrix.py --matrix matrix/matrix.yaml --only az-ref
-python3 bench/run_matrix.py --matrix matrix/matrix.yaml --start-at az-seqs8
-python3 bench/run_matrix.py --matrix matrix/matrix.yaml --force        # redo done configs
+python3 bench/run_matrix.py --matrix bench/matrix.yaml --only az-standard
+python3 bench/run_matrix.py --matrix bench/matrix.yaml --start-at az-524k-single
+python3 bench/run_matrix.py --matrix bench/matrix.yaml --force        # redo done configs
 ```
 
 Runner behaviour:
@@ -317,18 +317,18 @@ defaults:
 
 configs:
   - name: az-ref                    # required, unique, [A-Za-z0-9_.-]+
-    recipe: matrix/recipes/az-ref.yaml   # required, repo-relative
+    recipe: recipes/az-standard.yaml   # required, repo-relative
     priority: 10                    # lower first (default: file order)
     image: myllmbox/qwen38-flash-next-vllm:v5.4   # optional override
     port: 8000                      # optional override
-    chat_template: matrix/templates/medium_chat_template.jinja
+    chat_template: bench/templates/medium_chat_template.jinja
     set:                            # recipe overrides: <section>.<key>: value
       vllm.max-num-seqs: "8"
       vllm.kv-cache-dtype: "fp8"
       server.cpuset: "0-9"
     env:                            # container env override/add
       MBX_DEPTH_MODE: static
-    mounts: ["/home/pgx/Documenti/vllm-gb10/draft-lab/drafts/k3:/drafts/k3:ro"]
+    mounts: ["/absolute/path/to/drafts/k3:/drafts/k3:ro"]
     docker_args: ["--shm-size=16g"]
     extra_args: ""                  # raw extra vllm argv (advanced, not deduplicated)
     suite_profile: quick            # per-config profile
@@ -402,7 +402,7 @@ python3 bench/suite.py --base-url http://127.0.0.1:18002 --run-dir /tmp/mockrun3
 Expected: all phases `ok`, `client_to_server_token_ratio ≈ 1.0`,
 `tokens_per_step` derived, no crashes and no duplicate `requests.jsonl` lines
 with missing metrics. Static recipe preflight: `python3 bench/check_recipes.py`
-(all recipes in the repo) and `python3 bench/check_recipes.py matrix/matrix.yaml`
+(all recipes in the repo) and `python3 bench/check_recipes.py bench/matrix.yaml`
 (validates every matrix entry, including the exactly-one-speculative-config
 invariant). Matrix resume logic can be tested without a GPU by pre-seeding a
 `results/<name>/status.json` with `{"status": "done"}`.

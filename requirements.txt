@@ -1,5 +1,4 @@
-torch
-safetensors
-numpy
-requests
-EOF
+# The only host-side dependency: fetching and verifying checkpoints from the
+# Hugging Face hub. Everything else (bench/, quality/, tools/) is stdlib-only,
+# and the serving stack runs entirely inside the container.
+huggingface_hub

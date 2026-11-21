@@ -1,7 +1,19 @@
 #!/usr/bin/env bash
-# stop.sh — Stop and remove the serve container
+# stop.sh — stop and remove the serving container. Weights and caches stay.
+#
+#   ./stop.sh              stop the container named by CONTAINER (default qwen38-flash-next)
+#   ./stop.sh <name>       stop a specific container
 set -euo pipefail
-docker rm -f qwen38-flash-next-proxy >/dev/null 2>&1 || true
-docker rm -f qwen38-flash-next >/dev/null 2>&1 && echo "✓ stopped qwen38-flash-next" || true
-docker rm -f qwen38-flash >/dev/null 2>&1 && echo "✓ stopped qwen38-flash" || true
-echo "· server stopped (weights and caches remain intact)"
+cd "$(dirname "$0")"
+source ./config.env
+
+if [ $# -ge 1 ]; then
+  NAME="$1"
+  docker rm -f "$NAME" >/dev/null 2>&1 && echo "✓ stopped $NAME" || echo "· $NAME was not running"
+  exit 0
+fi
+
+for NAME in "${CONTAINER:-qwen38-flash-next}" "${CONTAINER:-qwen38-flash-next}-proxy"; do
+  docker rm -f "$NAME" >/dev/null 2>&1 && echo "✓ stopped $NAME" || true
+done
+echo "· server stopped (weights and caches intact)"

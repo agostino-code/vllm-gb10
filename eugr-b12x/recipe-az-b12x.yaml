@@ -12,7 +12,7 @@
 # The vLLM command serves a LOCAL PATH (/models/<name>), not the HF repo id, so a
 # read-only bind mount of the HF-cache snapshot is required:
 #
-#   cd eugr-stack
+#   cd ~/spark-vllm-docker
 #   ./run-recipe.sh ../eugr-b12x/recipe-az-b12x.yaml --solo \
 #     -v "$SNAP:/models/Qwen3.8-Flash-Next-FP4-Local-AZ:ro"
 #

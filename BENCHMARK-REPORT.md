@@ -12,7 +12,8 @@ is best for this model on this box?
 
 ## TL;DR — the shipped preset is already the best one measured
 
-**No tested configuration beat the shipped myllmbox v5.4 AZ recipe** (`recipes/qwen38-flash-solo-optimized.yaml`:
+**No tested configuration beat the shipped myllmbox v5.4 AZ recipe** (studied as
+`recipes/qwen38-flash-solo-optimized.yaml`, now shipped as `recipes/az-standard.yaml`:
 K=12 dynamic speculative depth, bf16 KV 23 GiB, 16 seats, block 3456, YaRN 409,600, block/probabilistic
 draft verification, NVFP4 draft head). Across ~30 runs covering depth 4–12, self-draft vs the
 10-expert draft folder, draft-head on/off, draft-logit scaling, the medium chat template, fp8 KV,
@@ -42,19 +43,19 @@ static vs dynamic depth, and the eugr b12x stack:
 - **Two image-level boot constraints** (both crash at CUDA-graph capture):
   - `MBX_DEPTH_MODE=off` (static depth) does not boot in v5.4;
   - **speculative depth ≤ 3 does not boot; 4 is the minimum** (and the default depth 12 is fine).
-- **One real configuration bug fixed:** `run.sh` appends a *second* `--speculative-config` from
-  `config.env` when `MTP != 0`; with the old default `MTP=3` this made the server unbootable on
-  this image. `config.env` now defaults to `MTP=0` (recipes carry their own speculative config),
-  and `presets/run_qwen38_best.sh` launches the shipped recipe safely.
+- **One real configuration bug fixed:** `run.sh` used to append a *second* `--speculative-config`
+  from `config.env` when `MTP != 0`; with the old default `MTP=3` that made the server unbootable
+  on this image. The knob is gone: `run.sh` no longer has any speculative flag, and every recipe
+  carries exactly one `--speculative-config`. `presets/run_az_standard.sh` launches the shipped
+  recipe.
 - **Measurement caveat (important):** this box is shared with a desktop session and agent
   processes. Single-run quick measurements vary by **±10–15 %** — enough to produce a spurious
   "+14 % from depth 4" in the first scan that did **not** reproduce in controlled A/B/A runs
   (it became −3 % in the next pair). Only same-window comparisons or sustained-load averages are
   trustworthy; that is how the conclusions above were reached.
 
-**Recommendation:** keep the shipped preset. Use `presets/run_qwen38_best.sh`.
-Choose `recipes/qwen38-k4.yaml` only if you want lower draft compute at equal throughput
-(it is not faster). For >750k-token KV capacity use `matrix/recipes/az-kvfp8-spec7.yaml`.
+**Recommendation:** keep the shipped preset. Use `presets/run_az_standard.sh`.
+For >750k-token KV capacity use the fp8-KV override in `bench/matrix.yaml` (§7.3).
 Do not use eugr b12x unless you need its lower host-memory footprint.
 
 ---
@@ -199,7 +200,7 @@ equal. Depth tuning shifts *draft compute*, not *delivered throughput*.
 | config | change | decode | C8 | quality | verdict |
 |---|---|---|---|---|---|
 | fp8 KV (`az-kvfp8-spec7`) | kv-cache-dtype fp8, K=7 | 48.8 (−8 %) | 140.2 | 0.9583 (1 math item flip) | **KV pool 1,458,424 tokens** (1.94x) — use only for context headroom |
-| medium chat template | `matrix/templates/medium_chat_template.jinja` | 49.2 (−8 %) | 139.0 | 0.9667 | no gain; rejected |
+| medium chat template | `medium_chat_template.jinja` (archived in git history) | 49.2 (−8 %) | 139.0 | 0.9667 | no gain; rejected |
 | draft scale 2 | `MBX_MTP_DRAFT_SCALE=2` | 51.8 (−3 %) | 142.9 | — | no-op at temp 0 |
 | k10 + K4 + medium | — | 50.8 | 138.3 | 0.9667 | no gain |
 
@@ -255,35 +256,51 @@ No hard-category regression in any measured configuration.
 2. **`num_speculative_tokens ≤ 3` fails the same way** — depth 4 is the minimum bootable, on both
    the static and dynamic paths (depth 0 / no speculation is fine).
 3. eugr b12x: depth ≥ 8 fails (`state_index_columns must be at most 8`) → max 7.
-4. `run.sh` + `config.env MTP=3` would append a duplicate K=3 flag and hit constraint 2; fixed by
-   defaulting `MTP=0` in `config.env` (recipes already carry one speculative-config).
+4. A duplicate `--speculative-config` (the old `run.sh` + `config.env MTP=3` behaviour) appends a
+   second K=3 flag and hits constraint 2. Removed: `run.sh` no longer emits any speculative flag,
+   so each recipe carries exactly one.
 
 ## 7. Recommendation
 
 ### 7.1 Default: keep the shipped preset
 ```bash
-presets/run_qwen38_best.sh          # safely launches the shipped recipe (MTP=0, stock template)
+presets/run_az_standard.sh                    # the shipped recipe, stock template
 # equivalent, explicit:
-MTP=0 ./run.sh recipes/qwen38-flash-solo-optimized.yaml
+./run.sh recipes/az-standard.yaml
 ```
 It is the best measured configuration on this box: ~53–55 tok/s decode, ~199 tok/s sustained at
 C=8, ~290 tok/s at C=16, 750,933-token KV pool, quality 0.9667, 128k needle OK.
 
 ### 7.2 Alternative with equal throughput, lower draft compute
-`recipes/qwen38-k4.yaml` (K=4). Measured throughput-equal to the shipped preset within noise
-(one A/B favored it by 5 %, the other disfavored it by 3 %; sustained C=8 identical). It halves
-the drafter forwards per step (~49 % vs 17 % acceptance at ~3 tokens/step), so it burns less GPU
-work for the same output — but it is **not faster**. Use it if you value the lower draft overhead
-or run in a power/thermal-constrained setting; otherwise stay with the shipped preset.
+K=4 on the same stack. Measured throughput-equal to the shipped preset within noise (one A/B
+favored it by 5 %, the other disfavored it by 3 %; sustained C=8 identical). It halves the drafter
+forwards per step (~49 % vs 17 % acceptance at ~3 tokens/step), so it burns less GPU work for the
+same output — but it is **not faster**, and it no longer ships as a preset. Reproduce it as a
+matrix override instead:
+
+```yaml
+- name: az-standard-k4
+  recipe: recipes/az-standard.yaml
+  set:
+    vllm.speculative-config: '{"method":"mtp","num_speculative_tokens":4,"rejection_sample_method":"block","draft_sample_method":"probabilistic"}'
+```
 
 ### 7.3 Long-context variant
-If you need more than ~750k tokens of KV: `matrix/recipes/az-kvfp8-spec7.yaml` (fp8 KV,
-1,458,424 tokens = 1.94x, decode −8 %, C8 near parity). Keep bf16 KV otherwise.
+If you need more than ~750k tokens of KV, the fp8-KV override gives 1,458,424 tokens (1.94×) at
+−8 % decode and near parity at C=8. Keep bf16 KV otherwise.
+
+```yaml
+- name: az-standard-fp8kv
+  recipe: recipes/az-standard.yaml
+  set:
+    vllm.kv-cache-dtype: fp8
+    vllm.speculative-config: '{"method":"mtp","num_speculative_tokens":7,"rejection_sample_method":"block","draft_sample_method":"probabilistic"}'
+```
 
 ### 7.4 eugr stack
 Only if its image or lower host-memory footprint matters: use `MTP=4`, raise
 `--gpu-memory-utilization` to 0.80–0.85, and expect ~30–35 % less throughput at C=8 than
-myllmbox. Never exceed 7 speculative tokens.
+myllmbox. Never exceed 7 speculative tokens. Launch with `./presets/run_az_b12x.sh`.
 
 ### 7.5 Do not
 - Disable `MBX_DRAFT_HEAD` (−19 %).
@@ -293,31 +310,46 @@ myllmbox. Never exceed 7 speculative tokens.
 
 ## 8. Reproduction
 
-```bash
-# preflight / dry run
-python3 bench/check_recipes.py matrix/matrix.yaml
-python3 bench/run_matrix.py --matrix matrix/matrix.yaml --dry-run
+The four shipped configurations are wired into the harness, so the headline numbers are
+reproducible with one command. The study's own variant recipes and A/B scripts are not in the
+working tree any more — they live in git history at commit `b4d304f` (`git show b4d304f:matrix/`).
 
-# screening matrices (all data behind §4.1-4.3)
-python3 bench/run_matrix.py --matrix matrix/matrix.yaml        # phase A
-python3 bench/run_matrix.py --matrix matrix/matrix-phaseB.yaml # phase B
-# controlled comparisons (the decisive runs behind §4.2)
-bash matrix/ab.sh && bash matrix/ab_load.sh
-# finalist validation (full suite + full quality + temp 0.6 + soak)
-bash matrix/finalist_phase.sh
-# aggregate
-python3 bench/aggregate.py --results-dir bench/results   # RESULTS.md + summary.csv
+```bash
+# preflight / dry run (no GPU)
+python3 bench/check_recipes.py bench/matrix.yaml
+python3 bench/run_matrix.py --matrix bench/matrix.yaml --dry-run
+
+# the four configs, sequentially and resumably
+nohup python3 bench/run_matrix.py --matrix bench/matrix.yaml > bench/results/matrix.out 2>&1 &
+
+# aggregate and rank
+python3 bench/aggregate.py --results-dir bench/results      # RESULTS.md + summary.csv
+
+# the quality gate on its own
+python3 quality/run_quality.py --mode full --output /tmp/q.json
+python3 quality/compare.py baseline.json candidate.json --noise 0
 
 # eugr stack
-cd eugr-b12x && AUTOTUNE=0 ./launch.sh --wait
-python3 ../bench/suite.py --profile quick --concurrency 1,2,4,8 ...
+./presets/run_az_b12x.sh --wait
+python3 bench/suite.py --base-url http://127.0.0.1:8000 --run-dir bench/results/b12x \
+                       --config-id b12x --profile quick
+```
+
+The controlled A/B/A protocol behind §4.2 was: boot A, boot B, boot A interleaved in the same
+window and average the pairs — because single-run rankings swing ±10–15 % on this box. Reproduce
+it by running the same config twice around a candidate:
+
+```bash
+for cfg in az-standard <candidate> az-standard; do
+  python3 bench/run_matrix.py --matrix bench/matrix.yaml --only "$cfg" --force
+done
 ```
 
 Raw results: `bench/results/` — 30+ run directories with `summary.json`, `requests.jsonl`,
 `server.log`, `meta.json`; `RESULTS.md` (auto-ranked), `summary.csv`, `summary_all.json`.
 Quality artifacts: `quality/runs/` and `bench/results/*/quality.json`.
-Supporting evidence: `matrix/FINDINGS.md` (chronological log incl. the noise reversal),
-`draft-lab/MEASURED.md`, `eugr-b12x/runs/RESULTS.md`, `bench/README.md`.
+Supporting evidence still in the tree: `eugr-b12x/runs/RESULTS.md`, `bench/README.md`,
+`bench/refs/` (the reference index and boot log used to repair a corrupted snapshot).
 
 ## 9. Limitations
 

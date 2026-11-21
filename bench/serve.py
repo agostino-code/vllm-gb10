@@ -13,7 +13,7 @@ deliberately close to run.sh so numbers stay comparable.
 
 Examples
 --------
-  python3 bench/serve.py up --recipe recipes/qwen38-flash-solo-optimized.yaml \\
+  python3 bench/serve.py up --recipe recipes/az-standard.yaml \\
       --run-id ref-solo --boot-timeout 1200
   python3 bench/serve.py up --recipe recipes/qwen38-mtp3.yaml \\
       --name bench-mtp3 --set vllm.max-num-seqs=8 --speculative-config '{"method":"mtp","num_speculative_tokens":4,"rejection_sample_method":"block"}'
@@ -141,12 +141,25 @@ def build_launch(args, recipe: dict) -> dict:
         )
     model_dir = Path(model_dir)
 
+    # Serve from the snapshot's own absolute path when it lives under the HF
+    # hub. A snapshot is a directory of *relative* symlinks into ../../blobs;
+    # bind-mounting it at /models/<name> makes those links resolve to
+    # /blobs/<sha> inside the container, which does not exist, and the weight
+    # load fails. Mounting the hub at its own host path and serving from that
+    # same absolute path makes them resolve natively. Same strategy as run.sh;
+    # verified against one shard of each checkpoint (blob symlinks and plain
+    # files under tensors/).
+    hub = (hf_home / "hub").resolve()
+    _md = model_dir.resolve()
+    under_hub = str(_md) == str(hub) or str(_md).startswith(str(hub) + "/")
+    serve_path = str(_md) if under_hub else f"/models/{local_name}"
+
     # ── vLLM argv ────────────────────────────────────────────────────────────
     if recipe["format"] == "command":
         values = {
             "host": "0.0.0.0",
             "port": 8000,
-            "model_path": f"/models/{local_name}",
+            "model_path": serve_path,
             "served_name": args.served_model_name or local_name,
         }
         defaults = raw.get("defaults") or {}
@@ -164,7 +177,7 @@ def build_launch(args, recipe: dict) -> dict:
         flags = C.set_flag(flags, "port", "8000") if C.get_flag_value(flags, "port") is not None else flags
         if args.served_model_name:
             flags = C.set_flag(flags, "served-model-name", args.served_model_name)
-        argv = ["serve", f"/models/{local_name}"] + flags
+        argv = ["serve", serve_path] + flags
 
     # ── speculative decoding: exactly one flag, replace never append ────────
     if args.speculative_config is not None and args.mtp is not None:
@@ -228,10 +241,10 @@ def build_launch(args, recipe: dict) -> dict:
         pass
 
     # ── mounts, mirrors run.sh plus the bench mount contract ────────────────
-    # Contract (needed by draft-lab): the workspace root is bind-mounted at the
-    # SAME absolute host path, read-only, so speculative-config paths such as
-    # /home/pgx/Documenti/vllm-gb10/draft-lab/drafts/<name> resolve inside the
-    # container.  The HF hub is likewise mounted at its own absolute path.
+    # Contract: the workspace root is bind-mounted at the SAME absolute host
+    # path, read-only, so a speculative-config that names a draft folder under
+    # the repo resolves inside the container. The HF hub is likewise mounted at
+    # its own absolute path, which is what makes blob symlinks resolve.
     mounts: list[tuple[str, str, str | None]] = []
     mounts.append((str(C.REPO_ROOT), str(C.REPO_ROOT), "ro"))
     mounts.append((str(hf_home / "hub"), str(hf_home / "hub"), "ro"))
@@ -317,7 +330,7 @@ def build_launch(args, recipe: dict) -> dict:
             "repo": model_repo,
             "local_name": local_name,
             "host_dir": str(model_dir),
-            "container_dir": f"/models/{local_name}",
+            "container_dir": serve_path,
             "source": model_source,
         },
         "host": C.host_facts(),
@@ -353,7 +366,7 @@ def resolve_chat_template(template: str, model_dir: Path) -> Path | None:
     if candidate.is_file():
         return candidate.resolve()
     for name in (template, f"{template}_chat_template.jinja", f"{template}.jinja"):
-        for base in (model_dir, C.REPO_ROOT, C.REPO_ROOT / "matrix" / "templates"):
+        for base in (model_dir, C.REPO_ROOT, C.REPO_ROOT / "bench" / "templates"):
             candidate = base / name
             if candidate.is_file():
                 return candidate.resolve()

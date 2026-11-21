@@ -2,17 +2,17 @@
 __pycache__/
 *.pyc
 *.pyo
+.venv/
+venv/
 
-# Model weights and large inputs (never commit)
+# Model weights and caches — never commit (weights live in the HF hub cache)
 *.pt
 *.f32
 *.safetensors
 *.gguf
-/steering/*.pt
-/steering/*.f32
 /models/
 /cache/
-/venv/
+/eugr-b12x/cache/
 
 # Runtime artifacts and experiment outputs
 *.log
@@ -23,8 +23,6 @@ __pycache__/
 !/bench/results/RESULTS.md
 !/bench/results/summary.csv
 /quality/runs/
-/draft-lab/drafts/
-/eugr-b12x/cache/
 /eugr-b12x/logs/
 /eugr-b12x/runs/*
 !/eugr-b12x/runs/RESULTS.md
@@ -32,23 +30,5 @@ __pycache__/
 
 # Local machine state
 /.backend
-/.b12x-image
 *.tmp
 .DS_Store
-
-# generated steering artifacts (rebuild with steering/build_vector.sh + install_patch.sh)
-/steering/succinct.pt
-/steering/model.py.orig
-/steering/patched_model.py
-/steering/.model_py_path
-
-# Generated steering data (rebuild with steering/build_vector.sh + build_refusal_vector.py)
-/steering/data/*.parquet
-/steering/data/*.csv
-/steering/data/*.json
-/steering/refusal.*
-/steering/capture/
-/steering/cap_*
-
-# uncensored checkpoint is downloaded by the preset, never committed
-/models--myllmbox--*/

@@ -283,7 +283,7 @@ if dead_total:
     print("  This server has the dead-drafter bug: with 3, 5, 6 or 7 requests in flight one of them loses speculative decoding")
     print("  for the rest of its answer (text stays correct, speed drops 3-5x).")
     print("  Fix for the b12x recipes of " + c(CYAN, "github.com/azampatti/Qwen3.8-Flash-Next-Int4-FAST") + " (commit 73c4fa0):")
-    print("    " + c("38;5;213", "git pull && ./eugr-setup.sh") + "        (Swift1.5: also " + c("38;5;213", "./swift15/setup.sh") + "), then restart the server.")
+    print("    " + c("38;5;213", "./setup.sh --weights") + ", then restart the server.")
     sys.exit(1)
 if phase_errors:
     print(c(YELLOW, "  RESULT: INCONCLUSIVE") + "  %d request(s) failed, so not every stream could be checked (see above). "

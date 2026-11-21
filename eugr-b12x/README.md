@@ -15,7 +15,7 @@ mounted **read-only** from the existing HF cache (no re-download).
 ## TL;DR
 
 ```bash
-cd /home/pgx/Documenti/vllm-gb10/eugr-b12x
+cd eugr-b12x
 
 ./launch.sh --dry-run     # show the exact docker argv, change nothing
 ./launch.sh --wait        # start + wait for /health, save boot log + inspect
@@ -152,24 +152,25 @@ Resolved by reading the image source (`vllm/models/qwen4_exp/nvidia/b12x_ple.py`
   `EXTRA_ARGS='--additional-config {"ple_table_memory":"ram"}'` as documented
   in `eugr-stack/recipes/README.md`.
 
-## eugr `run-recipe.sh` route (optional, for eugr tooling users)
+## eugr `run-recipe.sh` route (optional)
 
-The recipe files use the **local image tag** (`container: eugr/spark-vllm-b12x:latest`)
-because eugr's stock recipes say `vllm-node-b12x`, which does not exist on this host.
-`run-recipe.py` uses `container:` verbatim as the image tag.
+`launch.sh` is the supported path: it is plain `docker run`, so the argv is reproducible and
+diffable. The `run-recipe.sh` route needs eugr's own tooling, which this repo no longer vendors —
+the `eugr-stack/` submodule was removed because nothing in the default path uses it. To get it
+back, clone it wherever you like and point at it:
 
 ```bash
-cd /home/pgx/Documenti/vllm-gb10/eugr-stack
-SNAP=/home/pgx/.cache/huggingface/hub/models--azampatti--Qwen3.8-Flash-Next-FP4-Local-AZ/snapshots/5d927eabd4e4766a69bf12f7a1387b01d936a78f
+git clone https://github.com/eugr/spark-vllm-docker ~/spark-vllm-docker
+SNAP=$HOME/.cache/huggingface/hub/models--azampatti--Qwen3.8-Flash-Next-FP4-Local-AZ/snapshots/5d927eabd4e4766a69bf12f7a1387b01d936a78f
 
-# dry-run (no GPU, no state change)
-./run-recipe.sh ../eugr-b12x/recipe-az-b12x.yaml --dry-run --solo \
-  -v "$SNAP:/models/Qwen3.8-Flash-Next-FP4-Local-AZ:ro"
-
-# real launch (only after the Lead frees the GPU)
-./run-recipe.sh ../eugr-b12x/recipe-az-b12x.yaml --solo \
+cd ~/spark-vllm-docker
+./run-recipe.sh ../vllm-gb10/eugr-b12x/recipe-az-b12x.yaml --dry-run --solo \
   -v "$SNAP:/models/Qwen3.8-Flash-Next-FP4-Local-AZ:ro"
 ```
+
+The recipe files use the **local image tag** (`container: eugr/spark-vllm-b12x:latest`) because
+eugr's stock recipes say `vllm-node-b12x`, which does not exist on this host. `run-recipe.py`
+uses `container:` verbatim as the image tag.
 
 Caveat: `run-recipe.sh` → `launch-cluster.sh` always adds
 `-v ~/.cache/huggingface:/root/.cache/huggingface` (rw) and cache mounts from

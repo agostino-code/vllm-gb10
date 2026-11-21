@@ -122,7 +122,7 @@ def main(argv=None) -> int:
     parser.add_argument("--stop-file", default="")
     parser.add_argument("--report-existing", action="store_true",
                         help="also print results that already existed at startup")
-    parser.add_argument("--expect-matrix", default="matrix/matrix.yaml",
+    parser.add_argument("--expect-matrix", default="bench/matrix.yaml",
                         help="matrix file the status file must match (basename), so that other "
                              "run_matrix invocations sharing results_dir do not confuse the watchdog")
     args = parser.parse_args(argv)

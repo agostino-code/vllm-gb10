@@ -1,45 +1,35 @@
 #!/usr/bin/env bash
-# run.sh — Run Qwen3.8-Flash-Next on ONE DGX Spark / GB10 with vLLM 0.32 (v5.4 stack)
+# run.sh — serve one Qwen3.8-Flash-Next checkpoint on one DGX Spark (GB10).
 #
-# Configured via YAML (default: qwen38-flash-solo-optimized.yaml)
-# Usage:
-#   ./run.sh                  # runs qwen38-flash-solo-optimized.yaml
-#   ./run.sh qwen38-flash-cluster-optimized.yaml      # runs qwen38-flash-cluster-optimized.yaml
+#   ./run.sh                              # recipes/az-standard.yaml
+#   ./run.sh recipes/az-524k-single.yaml  # your long-context single-stream config
+#   ./run.sh <recipe> --dry-run           # print the exact docker argv, change nothing
+#
+# The recipe is the single source of truth: `server:` for the launch, `env:`
+# for the container environment, `vllm:` for the engine flags. run.sh adds
+# nothing to the command line beyond the mounts, the port and the model path.
+#
+# There is deliberately no MTP/CTX/KV_BYTES knob here: every recipe carries
+# exactly one --speculative-config, and the old second one was the single
+# biggest footgun in this repo (a duplicate at depth <= 3 makes the v5.4 image
+# refuse to boot at CUDA-graph capture). Use ./setup.sh to verify the box and
+# the weights; use ./check.sh to verify a running server.
 set -euo pipefail
-export DOWNLOAD_MODE="${DOWNLOAD_MODE:-cache}"
-export HF_HOME="${HF_HOME:-$HOME/.cache/huggingface}"
-export MODELS_DIR="./models"
-cd "$(dirname "$0")"; source ./config.env
+cd "$(dirname "$0")"
+source ./config.env
 
-# Dynamic KV Cache Calculation
-KV_BYTES=$(get_kv_cache_bytes)
-echo "KV Cache dinamica calcolata: $KV_BYTES bytes"
+command -v docker >/dev/null 2>&1 || { echo "✗ docker is required" >&2; exit 1; }
 
-# Parsing Steering (if provided via ENV or flag)
-if [ -n "${STEERING_KEY:-}" ]; then
-    STEERING_DATA=$(python3 -c "import json; d=json.load(open('steering/index.json')); print(f'{d[\"$STEERING_KEY\"][\"path\"]}|{d[\"$STEERING_KEY\"][\"strength\"]}')" 2>/dev/null || echo "")
-    if [ -n "$STEERING_DATA" ]; then
-        export STEERING_VECTOR_PATH=$(echo $STEERING_DATA | cut -d'|' -f1)
-        export STEERING_STRENGTH=$(echo $STEERING_DATA | cut -d'|' -f2)
-        echo "Steering attivo: $STEERING_KEY (path: $STEERING_VECTOR_PATH, strength: $STEERING_STRENGTH)"
-    else
-        echo "Errore: Steering key '$STEERING_KEY' non trovata in steering/index.json"
-        exit 1
-    fi
-fi
-
-DOWNLOAD_MODE="${DOWNLOAD_MODE:-cache}"
-export DOWNLOAD_MODE
-export HF_HOME="${HF_HOME:-$HOME/.cache/huggingface}"
-
-set -euo pipefail
-cd "$(dirname "$0")"; source ./config.env
-
-command -v docker >/dev/null || { echo "docker is required"; exit 1; }
+DRY_RUN=0
+for a in "$@"; do [ "$a" = "--dry-run" ] && DRY_RUN=1; done
 RECIPE="${1:-$DEFAULT_RECIPE}"
-[ -f "$RECIPE" ] || { echo "✗ recipe file '$RECIPE' not found"; exit 1; }
+[ "${RECIPE#*/}" = "$RECIPE" ] && [ -f "recipes/$RECIPE" ] && RECIPE="recipes/$RECIPE"
+[ -f "$RECIPE" ] || { echo "✗ recipe file '$RECIPE' not found" >&2; exit 1; }
 
-# Helper to read two-level YAML sections
+# --- recipe reader ---------------------------------------------------------
+# Two-level YAML: a section starts at column 0, keys are indented. Values are
+# taken verbatim (so JSON with commas and quotes survives); trailing `#`
+# comments outside quotes are stripped.
 rkey() {  # rkey <section> <key>
   awk -v s="$1" -v k="$2" '
     /^[A-Za-z_]/ { sec=$1; sub(":$","",sec) }
@@ -48,7 +38,7 @@ rkey() {  # rkey <section> <key>
       gsub(/^["\x27]|["\x27]$/,""); print; exit
     }' "$RECIPE"
 }
-rsection() {  # all key/value lines of a section, "key<TAB>value"
+rsection() {  # every "key<TAB>value" of a section
   awk -v s="$1" '
     /^[A-Za-z_]/ { sec=$1; sub(":$","",sec); next }
     sec==s && $1 ~ /^[A-Za-z0-9_-]+:$/ || (sec==s && /^[ ]+[A-Za-z0-9_-]+:[ ]/) {
@@ -61,175 +51,127 @@ rsection() {  # all key/value lines of a section, "key<TAB>value"
 }
 
 IMAGE="${IMAGE:-$(rkey server image)}"
-# Force override if recipe image is the default one that doesn't exist
-if [ "$IMAGE" = "qwen38-flash-dgx:a5b-int4" ]; then
-    IMAGE="myllmbox/qwen38-flash-next-vllm:v5.4"
-fi
 PORT="${PORT:-$(rkey server port)}"
 HF_REPO="${MODEL_REPO:-$(rkey server model)}"
-MODELS_DIR="${MODELS_DIR:-$(rkey server models_dir)}"
 CACHE_DIR="${CACHE_DIR:-$(rkey server cache_dir)}"
 CPUSET="$(rkey server cpuset)"
-DOCKER_ARGS="$(rkey server docker_args)"
-NAME="qwen38-flash-next"
-
+DOCKER_ARGS="$(rkey server docker_args)"   # honoured: the PLE table reader needs seccomp=unconfined
 : ${IMAGE:=myllmbox/qwen38-flash-next-vllm:v5.4}
 : ${PORT:=8000}
-: ${MODELS_DIR:=./models}
 : ${CACHE_DIR:=./cache}
+[ -n "$HF_REPO" ] || { echo "✗ no model: set server.model in $RECIPE or MODEL_REPO=..." >&2; exit 1; }
 
-mkdir -p "$MODELS_DIR" "$CACHE_DIR"
-MODELS_ABS="$(cd "$MODELS_DIR" && pwd)"
-CACHE_ABS="$(cd "$CACHE_DIR" && pwd)"
+# --- resolve the weights ---------------------------------------------------
+# The whole point: one read-only mount of the HF hub at its own path, and the
+# model served from the snapshot's absolute path. See the note in config.env.
 LOCAL_NAME="$(basename "$HF_REPO")"
-MODEL_DIR="$MODELS_ABS/$LOCAL_NAME"
-if [ "$DOWNLOAD_MODE" = "cache" ]; then
-    CACHE_MODEL_DIR="$(hf_snapshot_dir "$HF_REPO" 2>/dev/null || true)"
-    if [ -n "$CACHE_MODEL_DIR" ] && [ -f "$CACHE_MODEL_DIR/model.safetensors.index.json" ]; then
-        MODEL_DIR="$CACHE_MODEL_DIR"
+if [ "$DOWNLOAD_MODE" = cache ]; then
+  MODEL_DIR="$(hf_snapshot_dir "$HF_REPO" 2>/dev/null || true)"
+  if [ -z "$MODEL_DIR" ] || [ ! -f "$MODEL_DIR/model.safetensors.index.json" ]; then
+    echo "· $HF_REPO is not in the HF cache yet — downloading (~1-2 h the first time)"
+    if command -v hf >/dev/null 2>&1; then
+      hf download "$HF_REPO" --exclude "fast-fp8/*" --max-workers 8
+    else
+      python3 - "$HF_REPO" <<'PY'
+import sys
+from huggingface_hub import snapshot_download
+snapshot_download(sys.argv[1], ignore_patterns=["fast-fp8/*"], max_workers=8)
+PY
     fi
-fi
-
-# Check weights
-if [ ! -f "$MODEL_DIR/model.safetensors.index.json" ] || ( [ "$DOWNLOAD_MODE" != "cache" ] && [ -n "$(find "$MODEL_DIR/.cache" -name '*.incomplete' -print -quit 2>/dev/null)" ] ); then
-  echo "· Weights for $HF_REPO not complete in $MODEL_DIR"
-  echo "  Downloading..."
-  if command -v hf >/dev/null; then
-    hf download "$HF_REPO" --local-dir "$MODEL_DIR" --exclude "fast-fp8/*" --max-workers 8
-  else
-    docker run --rm -v "$MODELS_ABS:/dl" --entrypoint python3 "$IMAGE" \
-      -c "from huggingface_hub import snapshot_download; snapshot_download('$HF_REPO', local_dir='/dl/$LOCAL_NAME', ignore_patterns=['fast-fp8/*'])"
+    MODEL_DIR="$(hf_snapshot_dir "$HF_REPO" 2>/dev/null || true)"
+    [ -n "$MODEL_DIR" ] || { echo "✗ download finished but no snapshot found under $HF_HOME/hub" >&2; exit 1; }
   fi
+  SERVE_PATH="$MODEL_DIR"
+  MOUNTS=(-v "$HF_HUB_MOUNT:$HF_HUB_MOUNT:ro")
+else
+  MODEL_DIR="$MODELS_DIR/$LOCAL_NAME"
+  [ -f "$MODEL_DIR/model.safetensors.index.json" ] || {
+    echo "✗ $MODEL_DIR has no model.safetensors.index.json" >&2
+    echo "  run ./setup.sh, or use the default DOWNLOAD_MODE=cache" >&2; exit 1; }
+  SERVE_PATH="$MODEL_DIR"
+  MOUNTS=(-v "$MODEL_DIR:$MODEL_DIR:ro")
 fi
 
-# Assemble docker env & vLLM flags
+mkdir -p "$CACHE_DIR"; CACHE_ABS="$(cd "$CACHE_DIR" && pwd)"
+MOUNTS+=(-v "$CACHE_ABS:/cache")
+
+# --- container environment and engine flags --------------------------------
 ENVS=()
 while IFS=$'\t' read -r k v; do [ -n "$k" ] && ENVS+=(-e "$k=$v"); done < <(rsection env)
 
-# Cache mounts
-MOUNTS=(-v "$MODELS_ABS:/models" -v "$CACHE_ABS:/cache")
-if [ "$DOWNLOAD_MODE" = "cache" ]; then
-    MOUNTS+=(-v "$HF_HOME/hub":"$HF_HOME/hub":ro)
-fi
-MOUNTS+=(-v "$(readlink -f "$MODEL_DIR"):/models/$LOCAL_NAME")
-
-# Support INT4-AutoRound if selected
-if [ -d "$MODEL_DIR/ple-table" ]; then
-  ENVS+=(-e "MBX_PLE_FP8_DIR=/models/$LOCAL_NAME/ple-table" -e "MBX_PLE_NVME_DIR=/cache/ple-nvme-fp8")
-  python3 - "$MODEL_DIR" "/models/$LOCAL_NAME" "$CACHE_ABS/draft-k10" <<'PY' || { echo "✗ could not build draft-k10 folder"; exit 1; }
-import json, os, shutil, struct, sys
-snap, csnap, out = sys.argv[1:4]
-wm = json.load(open(os.path.join(snap, "model.safetensors.index.json")))["weight_map"]
-keep = {k: v for k, v in wm.items() if k.startswith(("mtp.", "lm_head.")) or k.endswith("embed_tokens.weight")}
-if os.path.lexists(out):
-    shutil.rmtree(out)
-os.makedirs(out)
-for f in sorted(os.listdir(snap)):
-    if f in ("config.json", "model.safetensors.index.json", "ple-table", "fast-fp8", ".cache") or \
-       (f.endswith(".safetensors") and f not in set(keep.values())):
-        continue
-    os.symlink(os.path.join(csnap, f), os.path.join(out, f))
-json.dump({"metadata": {}, "weight_map": keep}, open(os.path.join(out, "model.safetensors.index.json"), "w"))
-cfg = json.load(open(os.path.join(snap, "config.json"))); t = cfg.get("text_config", cfg)
-t["num_experts_per_tok"] = 10
-with open(os.path.join(snap, "model_extra_tensors.safetensors"), "rb") as fh:
-    h = json.loads(fh.read(struct.unpack("<Q", fh.read(8))[0]))
-w = {v["shape"][0] for k, v in h.items() if k.endswith("mlp.shared_expert.gate_proj.weight")}
-if len(w) == 1:
-    t["shared_expert_intermediate_size"] = w.pop()
-json.dump(cfg, open(os.path.join(out, "config.json"), "w"), indent=2)
-PY
-  echo "· INT4-AutoRound detected: fp8 table configured"
-fi
+# served-model-name is resolved once, from whichever source has it:
+# SERVED_NAME (env) > the recipe > the repo id. Emitting it twice is a vLLM
+# last-wins footgun, so the key is skipped in the loop and appended after.
+SERVED="${SERVED_NAME:-$(rkey vllm served-model-name)}"
+[ -n "$SERVED" ] || SERVED="$HF_REPO"
 
 FLAGS=()
 while IFS=$'\t' read -r k v; do
+  [ "$k" = "served-model-name" ] && continue
   case "$v" in
     true)        FLAGS+=("--$k");;
     false|null|"") ;;
     *)           FLAGS+=("--$k" "$v");;
   esac
 done < <(rsection vllm)
+FLAGS+=("--served-model-name" "$SERVED")
 
-# Host compaction check
-cp_now=$(cat /proc/sys/vm/compaction_proactiveness 2>/dev/null || echo "?")
-if [ "$cp_now" != "0" ]; then
-  echo "  ⚠ vm.compaction_proactiveness is $cp_now (recommended: 0). Run ./tune-host.sh to prevent memory freezes."
-fi
-
-# Chat template handling
-TPL=(); TPL_MOUNT=(); TPL_NOTE=""
-[ "$CHAT_TEMPLATE" = model ] && CHAT_TEMPLATE=""
+TPL=()
 if [ -n "$CHAT_TEMPLATE" ]; then
-  TPL_FILE="$CHAT_TEMPLATE"
-  if [ "${CHAT_TEMPLATE#*/}" = "$CHAT_TEMPLATE" ] && [ ! -f "$CHAT_TEMPLATE" ]; then
-    for cand in "$MODEL_DIR/${CHAT_TEMPLATE}_chat_template.jinja" "$MODEL_DIR/$CHAT_TEMPLATE"; do
-      [ -f "$cand" ] && { TPL_FILE="$cand"; break; }
-    done
-  fi
-  if [ -f "$TPL_FILE" ]; then
-    TPL_MOUNT=(-v "$TPL_FILE:/chat_template.jinja:ro"); TPL=(--chat-template /chat_template.jinja)
-    TPL_NOTE=", template $(basename "$TPL_FILE")"
-  else
-    echo "  ⚠ CHAT_TEMPLATE '$CHAT_TEMPLATE' not found, skipping template"
-  fi
+  [ -f "$CHAT_TEMPLATE" ] || { echo "✗ CHAT_TEMPLATE '$CHAT_TEMPLATE' is not a readable file" >&2; exit 1; }
+  TPL=(--chat-template "$CHAT_TEMPLATE")
 fi
 
-# MTP / Speculative decoding
-SPEC=(); DRAFT_NOTE=""
-if [ "${MTP:-0}" != 0 ]; then
-  # Use self-draft (same model as target) to avoid quantization issues with MTP layers
-  # This works like the original MTP=12 config
-  RS=""; [ "${REJECTION_SAMPLE:-standard}" != standard ] && RS=",\"rejection_sample_method\":\"$REJECTION_SAMPLE\""
-  [ "${DRAFT_SAMPLE:-greedy}" != greedy ] && RS="$RS,\"draft_sample_method\":\"$DRAFT_SAMPLE\""
-  SPEC=(--speculative-config "{\"method\":\"mtp\",\"num_speculative_tokens\":${MTP}$RS}")
-  DRAFT_NOTE=" (MTP=${MTP}, self-draft)"
-fi
-
-docker rm -f "$NAME" "$NAME-proxy" >/dev/null 2>&1 || true
-
-# Memory check
+# --- preflight -------------------------------------------------------------
+cp_now=$(cat /proc/sys/vm/compaction_proactiveness 2>/dev/null || echo "?")
+[ "$cp_now" = "0" ] || echo "  ⚠ vm.compaction_proactiveness is $cp_now (want 0): run ./tune-host.sh"
 avail=$(free -g | awk '/^Mem:/{print $7}')
-echo "  · memory available: ${avail}G"
+echo "  · memory available: ${avail}G   (weights + KV live in the unified pool)"
 
-# Evict page cache for safetensors before launch to prevent false OOM
-echo "  · evicting safetensors from page cache..."
-find "$MODEL_DIR" -type f -name "*.safetensors" -exec dd if={} iflag=nocache count=0 status=none \; 2>/dev/null || true
+# --- launch ----------------------------------------------------------------
+RUN=(docker run -d --name "$CONTAINER" --gpus all --ipc=host --shm-size 16g)
+[ -n "$CPUSET" ] && RUN+=(--cpuset-cpus "$CPUSET")
+[ -n "$DOCKER_ARGS" ] && RUN+=($DOCKER_ARGS)
+[ -n "$DOCKER_EXTRA_ARGS" ] && RUN+=($DOCKER_EXTRA_ARGS)
+RUN+=(-p "$PORT:8000" "${MOUNTS[@]}"
+     -e HF_HUB_OFFLINE=1 -e TRANSFORMERS_OFFLINE=1
+     -e FLASHINFER_WORKSPACE_BASE=/cache/flashinfer-workspace
+     -e VLLM_CACHE_ROOT=/cache/vllm-cache
+     "${ENVS[@]}"
+     --entrypoint vllm "$IMAGE" serve "$SERVE_PATH" --port 8000 "${FLAGS[@]}")
+[ -n "$EXTRA_ARGS" ] && RUN+=($EXTRA_ARGS)
 
-echo "· starting $NAME ($IMAGE) on port :$PORT with recipe $RECIPE"
-docker run -d --name "$NAME" --gpus all --ipc=host \
-  ${CPUSET:+--cpuset-cpus "$CPUSET"} \
-  ${DOCKER_EXTRA_ARGS} \
-  -p "$PORT:8000" \
-  "${MOUNTS[@]}" "${TPL_MOUNT[@]}" \
-  -e HF_HUB_OFFLINE=1 -e TRANSFORMERS_OFFLINE=1 \
-  -e FLASHINFER_WORKSPACE_BASE=/cache/flashinfer-workspace \
-  -e VLLM_CACHE_ROOT=/cache/vllm-cache \
-  "${ENVS[@]}" \
-  --entrypoint vllm "$IMAGE" serve "/models/$LOCAL_NAME" --port 8000 "${FLAGS[@]}" "${TPL[@]}" "${SPEC[@]}" $EXTRA_ARGS >/dev/null
+if [ "$DRY_RUN" = 1 ]; then
+  printf '%q ' "${RUN[@]}"; printf '\n'
+  exit 0
+fi
 
-echo "· streaming engine logs until healthy (Ctrl-C detaches; the server continues booting)"
-docker logs -f "$NAME" 2>&1 &
+docker rm -f "$CONTAINER" >/dev/null 2>&1 || true
+echo "· starting $CONTAINER ($IMAGE) on :$PORT from $RECIPE"
+echo "  model : $SERVE_PATH"
+echo "  recipe: $RECIPE"
+"${RUN[@]}" >/dev/null
+
+echo "· streaming engine logs until healthy (Ctrl-C detaches; the server keeps booting)"
+docker logs -f "$CONTAINER" 2>&1 &
 LOGS=$!
 trap 'kill "$LOGS" 2>/dev/null || true' EXIT INT TERM
-for i in $(seq 1 480); do
+for _ in $(seq 1 480); do
   if curl -sf -m 3 "http://127.0.0.1:$PORT/health" >/dev/null 2>&1; then
     kill "$LOGS" 2>/dev/null || true; wait "$LOGS" 2>/dev/null || true
     echo
     echo "──────────────────────────────────────────────────────────"
-    echo "✓ server booted — OpenAI-compatible API is live"
-    echo "    endpoint : http://127.0.0.1:$PORT/v1"
-    echo "    monitor  : ./view.sh"
-    echo "    stop     : ./stop.sh"
+    echo "✓ server booted — OpenAI-compatible API on http://127.0.0.1:$PORT/v1"
+    echo "  verify: ./check.sh      monitor: ./view.sh      stop: ./stop.sh"
     echo "──────────────────────────────────────────────────────────"
     exit 0
   fi
-  if ! docker ps -q --filter "name=$NAME" | grep -q .; then
+  if ! docker ps -q --filter "name=$CONTAINER" | grep -q .; then
     kill "$LOGS" 2>/dev/null || true; wait "$LOGS" 2>/dev/null || true
-    echo "✗ container exited — see logs above"
+    echo "✗ container exited — see the engine log above, then: docker logs $CONTAINER" >&2
     exit 1
   fi
   sleep 5
 done
-echo "✗ not healthy after 40 min — watch: docker logs -f $NAME"
+echo "✗ not healthy after 40 min — watch with: docker logs -f $CONTAINER" >&2
 exit 1
