@@ -49,7 +49,7 @@ configs:
       # the long-context needle at the real ceiling are what matter.
       concurrency: [1]
       include_16: false
-      long_target_tokens: 524288
+      long_target_tokens: 520000   # 99.2% of the ceiling: room for the 32-token answer + builder variance
     notes: 524k context, single stream, K=16 with the ceiling pinned to one request
 
   # ── the two uncensored configurations ─────────────────────────────────────
@@ -66,7 +66,7 @@ configs:
     suite:
       concurrency: [1]
       include_16: false
-      long_target_tokens: 524288
+      long_target_tokens: 520000   # 99.2% of the ceiling: room for the 32-token answer + builder variance
     notes: abliterated checkpoint at 524k single stream
 
   # ── how to run an experiment without adding a file ────────────────────────

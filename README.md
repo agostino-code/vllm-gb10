@@ -129,12 +129,17 @@ Same image, same kernels, same drafter. They differ only where the goal differs.
 | `max-num-seqs` | 16 | **1** |
 | `max-num-batched-tokens` | 8,192 | **32,768** |
 | `gpu-memory-utilization` | 0.88 | **0.90** |
-| `block-size` | 3,456 | **860** |
-| `prefix-match-unit` | 64 | **32** |
 | `cudagraph_capture_sizes` | to 96 | to 96 **+17, 112, 128** |
 | `pass_config` fusions | default | **norm/act/attn quant + rope_kvcache_cat_mla** |
 | speculative depth | K=12, dynamic ladder | **K=16**, ceiling pinned `[1 -> 16]` |
 | KV pool | 750,933 tokens (1.83× a 400k request) | 750,933 tokens (**1.43× a 524k request**) |
+
+`block-size` (3,456) and `prefix-match-unit` (64) are deliberately **the same in both**. The
+first cut of the 524k recipe used 860/32, inherited from the container it replaced; the
+2026-11-21 baseline measured the cost — the engine reserved the same 23 GB and returned
+604,947 KV tokens instead of 750,933 (each of the 703 small blocks pays a per-block state
+charge, visible as group pages `13760` vs `3456` in the boot log), and TTFT at C=1 was
+163 ms vs 130.
 
 The 23 GiB bf16 KV pool is what makes the 524k configuration fit at all. Do not lower
 `kv-cache-memory` there.

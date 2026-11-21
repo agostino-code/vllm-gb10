@@ -1,0 +1,10 @@
+{
+  "base_url": "http://127.0.0.1:8000",
+  "command": "suite.py --base-url http://127.0.0.1:8000 --run-dir /home/pgx/Documenti/vllm-gb10/bench/baseline/20261121T033710Z/uncensored-standard --config-id uncensored-standard --profile full --tag uncensored-standard --request-timeout 300 --retries 1 --quality full",
+  "finished_at": "2026-11-21T03:21:54.503+00:00",
+  "model": "myllmbox/Qwen3.8-Flash-Next-hibrid48-uncensored",
+  "profile": "full",
+  "run_id": "uncensored-standard",
+  "started_at": "2026-11-21T03:18:33.871+00:00",
+  "suite_version": "1.0"
+}

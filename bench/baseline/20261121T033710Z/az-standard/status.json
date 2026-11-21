@@ -1,0 +1,52 @@
+{
+  "duration_s": 1008.2,
+  "error": null,
+  "exit_codes": {
+    "serve": 0,
+    "suite": 0
+  },
+  "name": "az-standard",
+  "serve_command": [
+    "/usr/bin/python3",
+    "/home/pgx/Documenti/vllm-gb10/bench/serve.py",
+    "up",
+    "--recipe",
+    "recipes/az-standard.yaml",
+    "--name",
+    "bench-az-standard",
+    "--run-id",
+    "az-standard",
+    "--run-dir",
+    "/home/pgx/Documenti/vllm-gb10/bench/baseline/20261121T033710Z/az-standard",
+    "--config-id",
+    "az-standard",
+    "--port",
+    "8000",
+    "--boot-timeout",
+    "1500"
+  ],
+  "started_at": "2026-11-21T02:37:10.817+00:00",
+  "status": "done",
+  "suite_command": [
+    "/usr/bin/python3",
+    "/home/pgx/Documenti/vllm-gb10/bench/suite.py",
+    "--base-url",
+    "http://127.0.0.1:8000",
+    "--run-dir",
+    "/home/pgx/Documenti/vllm-gb10/bench/baseline/20261121T033710Z/az-standard",
+    "--config-id",
+    "az-standard",
+    "--profile",
+    "full",
+    "--tag",
+    "az-standard",
+    "--request-timeout",
+    "300",
+    "--retries",
+    "1",
+    "--quality",
+    "full"
+  ],
+  "summary_path": "/home/pgx/Documenti/vllm-gb10/bench/baseline/20261121T033710Z/az-standard/summary.json",
+  "updated_at": "2026-11-21T02:53:58.987+00:00"
+}

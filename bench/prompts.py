@@ -202,11 +202,15 @@ def _corpus_block() -> str:
 def make_long_prompt(target_tokens: int, nonce: str, needle_code: str | None = None) -> str:
     """Build a deterministic prompt of roughly ``target_tokens`` tokens.
 
-    English prose averages ~4 characters per token for these tokenizers, so we
-    aim at ``target_tokens * 4`` characters; the exact prompt length is read
-    back from the server's usage field.
+    The corpus averages 5.45 characters per token on this tokenizer — measured
+    on the 2026-11-21 baseline (a 524,288-token target built 2,097,152 chars and
+    the server counted 384,048 tokens; the 128k target came back at 96,293,
+    i.e. 5.46 and 5.44). The previous constant of 4 made every long-context
+    phase run ~27 % short of its label: the "524k" smoke was really a 384k
+    test. The exact prompt length is always read back from the server's usage
+    field, so this only steers how many characters we build.
     """
-    target_chars = max(256, int(target_tokens * 4))
+    target_chars = max(256, int(target_tokens * 5.45))
     nonce_line = f"[benchmark nonce {nonce}]\n"
     if needle_code:
         return _build_needle_prompt(target_chars, nonce_line, needle_code)

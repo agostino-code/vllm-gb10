@@ -17,13 +17,18 @@
 #   max-num-seqs        16     -> 1
 #   max-num-batched     8192   -> 32768
 #   gpu-memory-util     0.88   -> 0.90
-#   block-size          3456   -> 860       (divisible by 20, the QSA ring)
-#   prefix-match-unit   64     -> 32
 #   capture sizes       +17,112,128 + the four fusion passes in pass_config
 #   speculative depth   12     -> 16        with MBX_DEPTH_CEIL pinned [1 -> 16]
 #
+# block-size / prefix-match-unit stay at 3456/64, as in az-524k-single.yaml:
+# the 2026-11-21 baseline measured the old 860/32 costing 19% of the KV pool
+# (604,947 tokens instead of 750,933) for a per-block state charge on 703
+# small blocks, plus 33 ms of extra TTFT — and 860 was not even divisible by
+# the 32-unit prefix match, so the finer unit bought nothing.
+#
 # KV headroom: 23 GiB bf16 = 750,933 tokens = 1.43x a full 524,288-token
-# request. That is what makes the configuration fit; do not lower it.
+# request (with 3456 blocks; the 2026-11-21 run logged 604,947 = 1.15x with
+# the old 860). That is what makes the configuration fit; do not lower it.
 #
 # MBX_QSA_UNFUSE_INDEXER=1 is required here too — it is a property of the
 # checkpoint, not of the tuning. Keep it.
@@ -89,8 +94,8 @@ vllm:
 
   max-num-seqs: 1
   max-num-batched-tokens: 32768
-  block-size: 860
-  prefix-match-unit: 32
+  block-size: 3456
+  prefix-match-unit: 64
   enable-prefix-caching: true
   enable-prompt-tokens-details: true
   async-scheduling: true
