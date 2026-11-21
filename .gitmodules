@@ -1,0 +1,5 @@
+[submodule "eugr-stack"]
+	path = eugr-stack
+	url = https://github.com/eugr/spark-vllm-docker.git
+	branch = main
+	fetch = true

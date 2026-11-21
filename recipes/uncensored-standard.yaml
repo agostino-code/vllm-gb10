@@ -32,8 +32,12 @@
 #                              it with the old UNFUSE_QKV model patch: dropping
 #                              the whole qkv_proj fusion was the repetition-loop
 #                              cause, and it is why that patch was removed.
-#   served-model-name          kept as the base model's name, which is what the
-#                              measured numbers were taken with.
+#   served-model-name          distinct from the AZ checkpoint and from the 524k
+#                              variant, so GET /v1/models tells you at a glance
+#                              which stack you are talking to. The comparison
+#                              table in BENCHMARK-REPORT.md was measured while
+#                              this read 'Qwen/Qwen3.8-Flash-Next'; the name does
+#                              not affect throughput or quality.
 # ══════════════════════════════════════════════════════════════════════════
 
 server:
@@ -79,7 +83,7 @@ env:
   PYTHONUNBUFFERED: "1"
 
 vllm:
-  served-model-name: Qwen/Qwen3.8-Flash-Next
+  served-model-name: myllmbox/Qwen3.8-Flash-Next-hibrid48-uncensored
   load-format: mbx
   distributed-executor-backend: mp
   moe-backend: marlin

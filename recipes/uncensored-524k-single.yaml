@@ -72,7 +72,7 @@ env:
   PYTHONUNBUFFERED: "1"
 
 vllm:
-  served-model-name: Qwen/Qwen3.8-Flash-Next
+  served-model-name: myllmbox/Qwen3.8-Flash-Next-hibrid48-uncensored-524k
   load-format: mbx
   distributed-executor-backend: mp
   moe-backend: marlin

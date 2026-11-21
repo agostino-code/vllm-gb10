@@ -7,6 +7,7 @@
 #   ./setup.sh --image            pull the serving image
 #   ./setup.sh --weights [repo]   download a checkpoint into the HF cache, then verify it
 #   ./setup.sh --gate <repo>      check a gated checkpoint is accessible (used by presets)
+#   ./setup.sh --eugr             sync the eugr-stack submodule to upstream latest
 #   ./setup.sh --venv             create .venv with the one dependency we need
 #
 # WHAT IT VERIFIES, and why each one matters on this box:
@@ -148,12 +149,39 @@ PY
 }
 
 # ---------------------------------------------------------------------------
+# eugr-stack is a real submodule, not a vendored copy: it must always be the
+# upstream tip. Pinning it is what makes a b12x measurement reproducible —
+# launch.sh pulls eugr/spark-vllm-b12x:latest, which moves under you.
+sync_eugr() {
+  echo "· eugr-stack (https://github.com/eugr/spark-vllm-docker)"
+  if [ ! -e eugr-stack/.git ]; then
+    git submodule update --init --recursive eugr-stack || { bad "submodule init failed"; return 1; }
+  fi
+  local before after
+  before="$(git -C eugr-stack rev-parse HEAD 2>/dev/null || echo none)"
+  git submodule update --init --remote --rebase eugr-stack >/dev/null 2>&1 \
+    || { bad "could not reach the eugr upstream"; return 1; }
+  after="$(git -C eugr-stack rev-parse HEAD)"
+  if [ "$before" = "$after" ]; then
+    ok "already at upstream latest (${after:0:12})"
+  else
+    ok "moved ${before:0:12} -> ${after:0:12}"
+    echo "  record it: git add eugr-stack && git commit -m 'eugr-stack @ ${after:0:12}'"
+  fi
+  echo "  upstream date: $(git -C eugr-stack log -1 --format='%ci')"
+  echo "  b12x image used by launch.sh: ${B12X_IMAGE:-eugr/spark-vllm-b12x:latest}"
+  echo "  ⚠ :latest is mutable. For a reproducible b12x run, pin the digest:"
+  echo "    IMAGE=eugr/spark-vllm-b12x@sha256:<digest> ./presets/run_az_b12x.sh"
+}
+
+# ---------------------------------------------------------------------------
 MODE="${1:-all}"
 REPO_ARG="${2:-}"
 [ "$MODE" = "--check" ] && REPO_ARG="${2:-}"
 
 case "$MODE" in
   --venv) ensure_venv ;;
+  --eugr) sync_eugr ;;
   --image) pull_image "${IMAGE:-$(recipe_image)}" ;;
   --gate) [ -n "$REPO_ARG" ] || { echo "usage: ./setup.sh --gate <repo>" >&2; exit 1; }; gate "$REPO_ARG" ;;
   --weights)

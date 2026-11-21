@@ -24,6 +24,7 @@ validation, and the negative results — is in **[BENCHMARK-REPORT.md](BENCHMARK
 - [Why these four and nothing else](#why-these-four-and-nothing-else)
 - [Requirements](#requirements)
 - [Quick start](#quick-start)
+- [Getting the baseline](#getting-the-baseline)
 - [The two configurations](#the-two-configurations)
 - [The two checkpoints](#the-two-checkpoints)
 - [How the weights are loaded](#how-the-weights-are-loaded)
@@ -90,6 +91,32 @@ git clone --recursive <this repo> && cd vllm-gb10
 `./setup.sh` is idempotent: it re-checks and only does the missing work. Run it again after a
 `git pull` or when something behaves oddly — most first-boot failures are a half-finished download
 or a corrupted index, and it checks for both.
+
+## Getting the baseline
+
+One command measures all four configurations and prints a block you can paste back here:
+
+```bash
+./bench/baseline.py
+```
+
+It boots each config in its own container, runs the suite and the quality gate, tears it down,
+moves to the next, and writes `BASELINE.md` at the repo root. Full profile is roughly 40 minutes
+for the four; `--profile quick` is about a tenth of that and is enough to spot a regression.
+
+Before you run it:
+
+- **nothing else may be on the GPU.** It refuses to start if a server is running, and tells you
+  what to stop. If you want to measure a server you started yourself, without the harness
+  touching it: `./bench/baseline.py --attach http://127.0.0.1:8000`.
+- **run `./tune-host.sh` once.** The GB10 page compaction is the single biggest source of noise
+  on this box.
+- **run it twice for anything you intend to decide on.** Single runs swing ±10–15 %; only
+  same-window repeats are comparable.
+
+The report is designed to be pasted: summary table, decode by content, the concurrency ladder, the
+accepted-tokens-per-position depth curve, prefill, the quality battery, and the exact
+configuration used — plus a pointer to the raw `summary.json` per config.
 
 ## The two configurations
 
@@ -181,16 +208,18 @@ presets/
   run_az_b12x.sh                 the alternative stack
 
 bench/                       the reproducible benchmark harness (stdlib only)
+  baseline.py              THE ENTRY POINT: boot all four configs, measure, print one pasteable report
   serve.py                 recipe -> docker manifest, health wait, boot time, meta.json
   suite.py                 the measurement suite: decode / concurrency / prefill / needle / spec
-  run_matrix.py            sequential, resumable matrix runner
+  run_matrix.py            sequential, resumable matrix runner (what baseline.py drives)
   aggregate.py             results -> RESULTS.md + summary.csv + ranking
   check_recipes.py         static preflight, no GPU
   matrix.yaml              the four shipped configs, ready to measure
 quality/                     deterministic capability + long-context gate (133 offline tests)
 tools/                       mtp_drafter_check.sh, verify_cache.py
 eugr-b12x/                   the alternative eugr b12x launcher (plain docker run)
-BENCHMARK-REPORT.md          the full study: methodology, results, constraints, recommendations
+eugr-stack/                  git submodule -> github.com/eugr/spark-vllm-docker (keep at upstream tip)
+BENCHMARK-REPORT.md          the previous study: methodology, results, constraints, negative results
 ```
 
 ## Recipes and overrides
@@ -270,19 +299,41 @@ throughput-equal because the fused multi-step drafter makes the extra drafts nea
 
 ## Benchmark harness (`bench/`)
 
+The entry point is **`bench/baseline.py`**: it boots every shipped configuration, runs the
+measurement suite and the quality gate on each, tears it down, and prints one consolidated block
+you can paste straight into a conversation.
+
+```bash
+./bench/baseline.py                      # all four configs, full profile + full quality
+./bench/baseline.py --profile quick      # fast pass (~10 min total instead of ~40)
+./bench/baseline.py --only az-standard   # one config (repeatable)
+./bench/baseline.py --dry-run            # show the plan, change nothing
+./bench/baseline.py --report             # rebuild BASELINE.md from results you already have
+```
+
+It refuses to start while another model server is running — this box serves one model at a time
+and the numbers are meaningless with two. If you already have a server up and want to measure it
+without touching it:
+
+```bash
+./bench/baseline.py --attach http://127.0.0.1:8000 --only az-standard
+```
+
+Each run writes `bench/baseline/<run-id>/<config>/` (`summary.json`, `quality.json`, `meta.json`,
+`server.log`) and a single `BASELINE.md` at the repo root. That file is the pasteable artifact:
+summary table, decode-by-content, the concurrency ladder, the accepted-tokens-per-position depth
+curve, prefill, the quality battery, and the configuration actually used.
+
+The pieces it composes, if you want to drive them by hand:
+
 ```bash
 python3 bench/check_recipes.py bench/matrix.yaml          # static preflight, no GPU
 python3 bench/run_matrix.py --matrix bench/matrix.yaml --dry-run
-nohup python3 bench/run_matrix.py --matrix bench/matrix.yaml > bench/results/matrix.out 2>&1 &
 python3 bench/aggregate.py --results-dir bench/results    # RESULTS.md + summary.csv + ranking
-```
 
-Single configuration:
-
-```bash
 python3 bench/serve.py up --recipe recipes/az-524k-single.yaml --run-id my-run
 python3 bench/suite.py --base-url http://127.0.0.1:8000 --run-dir bench/results/my-run \
-                       --config-id my-run --profile quick
+                       --config-id my-run --profile quick --quality full
 python3 bench/serve.py down --name bench-az-524k-single
 ```
 
@@ -318,17 +369,37 @@ Use `--noise 0` for a finalist acceptance gate; `--noise 1` tolerates one known 
 
 ## The alternative eugr b12x stack
 
+`eugr-stack/` is a **real git submodule** of
+[eugr/spark-vllm-docker](https://github.com/eugr/spark-vllm-docker), not a vendored copy. Keep it
+at the upstream tip:
+
 ```bash
-./presets/run_az_b12x.sh                     # MTP=4, fp8 KV, util 0.80, autotune off
-MTP=6 ./presets/run_az_b12x.sh
-./presets/run_az_b12x.sh --dry-run
+./setup.sh --eugr        # sync eugr-stack to upstream latest and print the SHA
+git add eugr-stack && git commit -m "eugr-stack @ <sha>"
+```
+
+The workflow we intend for it, once the myllmbox baseline is validated: take the winning
+configuration from `BASELINE.md` and run the same measurement on b12x, so the comparison is
+like-for-like on one box.
+
+```bash
+./setup.sh --eugr                                    # pin the upstream SHA first
+./presets/run_az_b12x.sh --wait                      # boot b12x
+./bench/baseline.py --attach http://127.0.0.1:8000   # measure it without touching the container
 ./presets/run_az_b12x.sh --stop
 ```
 
-Quality is identical (0.9667) and host-RAM pressure is lower (no ~31 GB PLE table map), but it is
-**~30 % slower at C=8** (99.9 vs 142.0 tok/s) and the b12x GDN kernel caps speculative depth at 7.
-Use it when its image fits your workflow, not for speed. Details in
-[`eugr-b12x/README.md`](eugr-b12x/README.md).
+Two things to know before you trust a b12x number:
+
+- `launch.sh` pulls `eugr/spark-vllm-b12x:latest`, which is **mutable**. For a reproducible run,
+  pin the digest: `IMAGE=eugr/spark-vllm-b12x@sha256:<digest> ./presets/run_az_b12x.sh`.
+- The b12x GDN kernel caps speculative depth at **7** (`state_index_columns must be at most 8`),
+  so the 524k single-stream configuration at K=16 cannot be reproduced there — that one is
+  myllmbox-only. The standard configuration at K=4/K=7 can.
+
+Measured on this box with `AUTOTUNE=0` (autotune costs ~55–65 min on first boot): quality
+identical at 0.9667, host-RAM pressure lower (no ~31 GB PLE table map), but **~30 % slower at
+C=8** (99.9 vs 142.0 tok/s). Details in [`eugr-b12x/README.md`](eugr-b12x/README.md).
 
 ## Troubleshooting
 
