@@ -175,6 +175,9 @@ def build_suite_command(args, defaults: dict, config: dict, run_dir: Path) -> li
     port = str(config.get("port") or defaults.get("port") or C.DEFAULT_PORT)
     profile = str(config.get("suite_profile") or defaults.get("suite_profile") or "full")
     suite = merge_suite(defaults, config)
+    # YAML 1.1 parses unquoted off/on as booleans; the suite wants the words.
+    if isinstance(suite.get("quality"), bool):
+        suite = {**suite, "quality": "full" if suite["quality"] else "off"}
     cmd = [
         sys.executable, str(Path(args.suite_py).resolve()),
         "--base-url", f"http://127.0.0.1:{port}",

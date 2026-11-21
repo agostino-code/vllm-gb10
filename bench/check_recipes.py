@@ -30,6 +30,7 @@ import serve as S  # noqa: E402
 
 DEFAULT_GLOBS = [
     "recipes/*.yaml",
+    "recipes/tests/*.yaml",
     "eugr-b12x/*.yaml",
 ]
 

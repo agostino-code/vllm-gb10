@@ -1,0 +1,89 @@
+# ══════════════════════════════════════════════════════════════════════════
+# matrix-tests — the open questions from the 2026-11-21 baseline, as a run
+# ══════════════════════════════════════════════════════════════════════════
+# Not the baseline: this file answers the seven open tests in README.md with
+# the minimum GPU time. Quality is off everywhere — capability equivalence is
+# already established for every one of these variants; only speed/latency/
+# capacity are in question. Run:
+#
+#   python3 bench/run_matrix.py --matrix bench/matrix-tests.yaml
+#   python3 bench/run_matrix.py --matrix bench/matrix-tests.yaml --only uncensored-standard
+#
+# and read the answers:
+#   abba-1/abba-2 vs uncensored-standard  -> is the C=8 gap real or run order?
+#   524k-pmu32    vs az-524k-single       -> is the TTFT penalty the prefix unit?
+#   524k-dual     C=1 vs C=2              -> cost of the second long seat
+#   524k-fp8kv    boot log + decode       -> pool ~1.5M? decode delta at K=16?
+#   524k-batched64k  520k needle prefill  -> chunking or bandwidth ceiling?
+#
+# Compare against BASELINE.md (same harness, same box, same day).
+# ══════════════════════════════════════════════════════════════════════════
+
+defaults:
+  results_dir: bench/results/tests-20261121
+  suite_profile: quick
+  suite:
+    quality: "off"
+  stop_server: true
+  per_config_timeout_s: 2400
+
+configs:
+  # ── open test #1: the uncensored C=8 gap, order-swapped ──────────────────
+  # az-standard runs first AND last: if uncensored is slow only in the middle
+  # slot, it is thermal/host drift, not the unfused indexer.
+  - name: abba-1
+    recipe: recipes/az-standard.yaml
+    suite_profile: quick
+    suite:
+      concurrency: [1, 8]
+      long_smoke: false
+
+  - name: uncensored-standard
+    recipe: recipes/uncensored-standard.yaml
+    suite_profile: quick
+    suite:
+      concurrency: [1, 8]
+      long_smoke: false
+
+  - name: abba-2
+    recipe: recipes/az-standard.yaml
+    suite_profile: quick
+    suite:
+      concurrency: [1, 8]
+      long_smoke: false
+
+  # ── open test #2: 524k TTFT attribution ──────────────────────────────────
+  # One variable: prefix-match-unit 64 -> 32 (legal at 3520). Compare TTFT
+  # p50 at C=1 against az-524k-single in BASELINE.md (266/287 ms).
+  - name: 524k-pmu32
+    recipe: recipes/tests/524k-pmu32.yaml
+    suite:
+      concurrency: [1]
+      long_smoke: false
+
+  # ── open test #6: two long seats ─────────────────────────────────────────
+  # C=1 is the shipped-config sanity number; C=2 is the answer: per-seat
+  # decode and TTFT with two long sessions sharing the 767k pool.
+  - name: 524k-dual
+    recipe: recipes/tests/524k-dual.yaml
+    suite:
+      concurrency: [1, 2]
+      long_smoke: false
+
+  # ── open test #6b: fp8 KV on 524k ───────────────────────────────────────
+  # The answer is in the boot log (GPU KV cache size) + the decode delta at
+  # C=1 vs BASELINE.md's 55.6. Expect ~1.4-1.5M tokens, -8..-15 % decode.
+  - name: 524k-fp8kv
+    recipe: recipes/tests/524k-fp8kv.yaml
+    suite:
+      concurrency: [1]
+      long_smoke: false
+
+  # ── open test #7: 520k prefill ceiling ──────────────────────────────────
+  # The only entry that runs the full needle: 520k prompt, compare
+  # prefill_tok_s against 2,216 (az) / 2,318 (uncensored) in BASELINE.md.
+  - name: 524k-batched64k
+    recipe: recipes/tests/524k-batched64k.yaml
+    suite:
+      concurrency: [1]
+      long_target_tokens: 520000

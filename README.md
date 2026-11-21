@@ -17,6 +17,17 @@ Everything here was measured on this box with the harness in [`bench/`](bench/RE
 gate in [`quality/`](quality/). The full study — 30+ configurations, controlled A/B/A runs, quality
 validation, and the negative results — is in **[BENCHMARK-REPORT.md](BENCHMARK-REPORT.md)**.
 
+**Built on the work of others.** The checkpoints are
+[azampatti/Qwen3.8-Flash-Next-FP4-Local-AZ](https://huggingface.co/azampatti/Qwen3.8-Flash-Next-FP4-Local-AZ)
+and [myllmbox/Qwen3.8-Flash-Next-hibrid48-uncensored](https://huggingface.co/myllmbox/Qwen3.8-Flash-Next-hibrid48-uncensored);
+the serving image, the recipe format and the tuned defaults come from
+[myllmbox/qwen38-flash-next-recipe](https://github.com/myllmbox/qwen38-flash-next-recipe); the
+setup/check discipline and the alternative b12x lineage from
+[azampatti/Qwen3.8-Flash-Next-Int4-FAST](https://github.com/azampatti/Qwen3.8-Flash-Next-Int4-FAST);
+the b12x stack itself from [eugr/spark-vllm-docker](https://github.com/eugr/spark-vllm-docker).
+This repository adds the measurements, the harness, the 524k configuration and the reasoning —
+full attribution in [Credits](#credits-and-licensing).
+
 ---
 
 ## Table of contents
@@ -214,6 +225,11 @@ recipes/
   az-524k-single.yaml              524k context, one stream
   uncensored-standard.yaml         abliterated checkpoint, shipped settings
   uncensored-524k-single.yaml      abliterated checkpoint, 524k single stream
+  tests/                           candidate variants, one knob each — see below
+    524k-pmu32.yaml                  open test #2: is the 524k TTFT the prefix unit?
+    524k-dual.yaml                   open test #6: two long seats on one box
+    524k-fp8kv.yaml                  open test #6b: fp8 KV, two full 524k streams
+    524k-batched64k.yaml             open test #7: 520k prefill ceiling
 presets/
   run_az_standard.sh  run_az_524k.sh
   run_uncensored_standard.sh  run_uncensored_524k.sh
@@ -227,11 +243,14 @@ bench/                       the reproducible benchmark harness (stdlib only)
   aggregate.py             results -> RESULTS.md + summary.csv + ranking
   check_recipes.py         static preflight, no GPU
   matrix.yaml              the four shipped configs, ready to measure
+  matrix-tests.yaml        the open questions as a run (the recipes/tests/ variants + A/B/A)
 quality/                     deterministic capability + long-context gate (133 offline tests)
 tools/                       mtp_drafter_check.sh, verify_cache.py
 eugr-b12x/                   the alternative eugr b12x launcher (plain docker run)
 eugr-stack/                  git submodule -> github.com/eugr/spark-vllm-docker (keep at upstream tip)
-BENCHMARK-REPORT.md          the previous study: methodology, results, constraints, negative results
+BASELINE.md                  the current numbers, all four configs, pasteable
+BENCHMARK-REPORT.md          the study behind the shipped configs: methodology, constraints, negative results
+LICENSE                      MIT for this code; model weights and images keep their own terms
 ```
 
 ## Recipes and overrides
@@ -316,19 +335,34 @@ extra drafts nearly free.
 
 ## Open questions and next tests
 
-Ranked by expected value, all expressible as `bench/matrix.yaml` overrides — no new code:
+## Open questions and next tests
+
+Ranked by expected value. **All of them are already wired**: the candidate configurations are
+in `recipes/tests/` (one knob changed each, hypothesis in the header) and the run plan —
+including the order-swapped A/B/A for the uncensored gap — is `bench/matrix-tests.yaml`:
+
+```bash
+python3 bench/run_matrix.py --matrix bench/matrix-tests.yaml            # all seven
+python3 bench/run_matrix.py --matrix bench/matrix-tests.yaml --only abba-1   # or one
+python3 bench/aggregate.py --results-dir bench/results/tests-20261121   # compare
+```
+
+Quality is off in the test matrix (capability equivalence is established; only speed, latency
+and capacity are in question) and the profile is quick: the whole file is ~7 boots, ~50 minutes.
+Compare the numbers against `BASELINE.md` — same harness, same box, same day.
 
 1. **The uncensored C=8 gap (−19 %, 140.3 vs 172.4) is the biggest unexplained number in the
    baseline** and exceeds the ±10–15 % band. Decode at C=1 is identical (63.9 vs 64.1) and
    acceptance is *higher* (18.3 vs 17.4), so it smells like batch-scaling, not drafting:
    `MBX_QSA_UNFUSE_INDEXER=1` unfuses the indexer projection, i.e. more kernel launches per
    step, which only bites at high batch. The 2026-11-12 study saw only 5 % — but it ran
-   uncensored second of two, this run had it third of four. Test: order-swapped A/B/A
-   (`az-standard`, `uncensored-standard`, `az-standard`) at C=8 sustained, 60 s each.
+   uncensored second of two, this run had it third of four. Test: the `abba-1 /
+   uncensored-standard / abba-2` block in `matrix-tests.yaml` — az-standard runs first AND
+   last, so drift shows up as abba-1 ≈ abba-2 ≠ middle.
 2. **The 524k TTFT penalty (+136 ms at C=1, 266 vs 130) is unattributed.** Three candidate
    causes changed together: `prefix-match-unit` 32→64, `block-size` 860→3520, run order.
-   Test: `az-524k-single` with `set: vllm.prefix-match-unit: 32` (legal at 3520), measured
-   twice back-to-back against the shipped one.
+   Test: `524k-pmu32` (prefix-match-unit 32, legal at 3520, one variable) vs the shipped
+   number in `BASELINE.md`.
 3. **The 1k prefill sample is a cold-start artifact** (475/263/344/1108/1267 across runs of
    configs that should be identical; a single sample, TTFT up to 3 s). Fix the harness:
    warm-up request before the prefill phase, then median of 3. Until then, read the 1k column
@@ -342,10 +376,12 @@ Ranked by expected value, all expressible as `bench/matrix.yaml` overrides — n
 5. **`presence_penalty` via `--override-generation-config` may be a no-op** on stock vLLM
    (open since the study). Test: repetition probe with and without, compare `repetition` score.
 6. **A second seat on 524k**: the 767k pool is 1.46× a full request, so two ~350k sessions fit.
-   If dual long-context agents are a real use case, measure `set: vllm.max-num-seqs: 2` at
-   C=2 — expect a decode cost; the fp8-KV variant instead buys 2.9× the pool for −8 % decode.
-7. **520k prefill at 65,536 batched tokens**: halves the chunk count (16→8); the needle run
-   says 2,216 tok/s, worth one boot to see if the ceiling is chunking or bandwidth.
+   Tests: `524k-dual` (two seats, depth pinned for both — the C=2 number is the honest
+   per-seat cost) and `524k-fp8kv` (fp8 KV: expect a ~1.5M-token pool, two *full* 524k
+   streams, at some decode cost).
+7. **520k prefill at 65,536 batched tokens** (`524k-batched64k`): halves the chunk count
+   (16→8); the needle run says 2,216 tok/s, one boot tells you whether the ceiling is
+   chunking or bandwidth.
 8. **eugr b12x against the new baseline.** The old comparison used the pre-refactor numbers
    (157 at C=8); the standard config now measures 172.4. Re-run
    `./bench/baseline.py --attach http://127.0.0.1:8000 --only az-standard` against b12x before
