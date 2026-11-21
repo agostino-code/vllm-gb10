@@ -1,0 +1,110 @@
+# ══════════════════════════════════════════════════════════════════════════
+# 256k-quad — TEST: four 256k seats in bf16, the tight shape
+#
+# Goal: a sub-agent fleet where EVERY seat can hold a full 256k session at
+# native quality. 262,144 is the checkpoint's trained context — this family
+# removes YaRN entirely (no hf-overrides), so recall at full depth is as good
+# as it gets on this model. The only question left is KV arithmetic, measured
+# on this box: 23 GB bought 767,013 tokens = 29,986 B/token bf16, fp8 halves it.
+# 
+# Everything else is the shipped standard recipe: K=12, block 3456 (ring 16
+# divides it), the depth ladder keyed on live request count (correct as-is
+# for a 3-5 seat fleet), cpuset, PLE, kernels.
+# 
+# KV: 32 GB bf16 -> ~1.07M tokens = 4.07x a 256k stream. The risk is boot,
+# not recall: weights 73.45 + KV 29.8 + graphs 0.94 leaves only ~7.3 GiB of
+# the 111.5 GiB boot-free pool for prefill activations at 32,768-token chunks.
+# If it OOMs during profile/warmup, that is the answer: 4 seats want fp8.
+# 
+# Diff vs recipes/az-standard.yaml: max-model-len -> 262144, YaRN removed,
+# max-num-seqs 16 -> 4, kv-cache-memory 23 -> 32 GB.
+# ══════════════════════════════════════════════════════════════════════════
+
+server:
+  image: myllmbox/qwen38-flash-next-vllm:v5.4
+  docker_args: --security-opt seccomp=unconfined   # required by the image's PLE table reader
+  cpuset: "5-9,15-19"                              # GB10's 10 Cortex-X925 3.9 GHz cores (+2-3 %)
+  model: azampatti/Qwen3.8-Flash-Next-FP4-Local-AZ
+  port: 8000
+  cache_dir: ./cache
+
+env:
+  # --- the n-gram (PLE) table, off the GPU and off the critical path -------
+  MBX_PLE_MMAP: "1"
+  MBX_PLE_MMAP_MODE: "nvme"
+  MBX_PLE_MMAP_PREWARM: "0"      # lazy: prewarming costs ~48 GB of page-cache pressure while weights load
+  MBX_PLE_ASYNC: "1"             # table reads stay off the critical path so decode never leaves CUDA graphs
+  MBX_PLE_PREFILL_CKPT: "1"      # resume agent turns from the cache (vLLM #60050)
+
+  # --- speculative decoding -------------------------------------------------
+  MBX_DEPTH_MODE: dynamic        # draft depth follows the live request count
+  MBX_DEPTH_MIN: "3"
+  MBX_DEPTH_WINDOW: "48"
+  MBX_DEPTH_PROMOTE: "60,45"
+  MBX_DEPTH_DEMOTE: "25,15"
+  MBX_DEPTH_CEIL: "[4 -> 8, 6 -> 7, 12 -> 6, 14 -> 5]"
+  MBX_DEPTH_SYNCFREE: "1"        # depth bookkeeping stays on the GPU
+  MBX_DRAFT_HEAD: "1"            # NVFP4 copy of the output head: 0.36 GB read per draft instead of 1.27 GB
+
+  # --- kernels / loader -----------------------------------------------------
+  MBX_LOADER_PREPARE: "0"
+  MBX_LOADER_EMPTY_CACHE: "1"
+  MBX_MARLIN_CSF: "1"            # NVFP4 expert scales stay compressed on the GPU
+  MBX_CSF_VISUAL_BF16: "0"
+  MBX_MXFP8_A16: "0"
+  VLLM_DISABLED_KERNELS: FlashInferCutedslMxfp8LinearKernel,FlashInferTrtllmMxfp8LinearKernel,DeepGemmMxfp8BmmLinearKernel,HummingMxfp8LinearKernel
+  VLLM_USE_BREAKABLE_CUDAGRAPH: "1"
+  VLLM_MARLIN_USE_ATOMIC_ADD: "1"
+  TORCH_CUDA_ARCH_LIST: "12.1a"
+  FLASHINFER_CUDA_ARCH_LIST: "12.1a"
+  TRITON_CACHE_DIR: /cache/triton
+  PYTORCH_CUDA_ALLOC_CONF: expandable_segments:True
+  MALLOC_MMAP_THRESHOLD_: "65536"
+  MALLOC_TRIM_THRESHOLD_: "131072"
+  PYTHONUNBUFFERED: "1"
+
+vllm:
+  served-model-name: azampatti/Qwen3.8-Flash-Next-FP4-Local-AZ-256k4
+  load-format: mbx
+  distributed-executor-backend: mp
+  moe-backend: marlin
+  kernel-config: '{"linear_backend_per_quant":{"mxfp8":"b12x"}}'
+  engram-config: '{"cpu_offload": false}'
+
+  # --- memory ---------------------------------------------------------------
+  gpu-memory-utilization: 0.88
+  kv-cache-memory: "32000000000"    # 32 GB bf16 = ~1.07M tokens = 4.07x a 256k stream
+  kv-cache-dtype: auto              # bf16: fp8 KV doubles the pool but costs ~8 % decode
+  mamba-ssm-cache-dtype: bfloat16   # GDN recurrent state in bf16 (+10 % pool)
+
+  # --- context --------------------------------------------------------------
+  max-model-len: 262144
+  # no hf-overrides: 262,144 is the checkpoint's NATIVE context — no YaRN, no
+  # extrapolation. This is the whole point of the 256k fleet: full-quality recall.
+
+
+  # --- scheduling -----------------------------------------------------------
+  max-num-seqs: 4
+  max-num-batched-tokens: 8192
+  block-size: 3456                  # QSA ring = K+4 = 16 must divide it (it does, 216x), and 64 (prefill checkpoints) too
+  prefix-match-unit: 64
+  enable-prefix-caching: true
+  enable-prompt-tokens-details: true
+  async-scheduling: true
+  use-replayssm: true               # RecoverSSM (vLLM #58863)
+  compilation-config: '{"cudagraph_mode":"FULL_AND_PIECEWISE","cudagraph_capture_sizes":[1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,18,20,21,24,25,27,30,32,35,39,40,44,48,49,54,60,64,70,75,80,90,96]}'
+
+  # --- tools / reasoning ----------------------------------------------------
+  enable-auto-tool-choice: true
+  tool-call-parser: qwen3_xml
+  reasoning-parser: qwen3
+  override-generation-config: '{"temperature": 0.6, "presence_penalty": 0.1, "top_p": 0.95}'
+  # NOTE: stock vLLM ignores presence_penalty in --override-generation-config
+  # unless the image carries the patch that applies it. Verify with:
+  #   ./check.sh --penalty     before believing this line does anything.
+
+  # --- speculative decoding (exactly one, always) ---------------------------
+  speculative-config: '{"method":"mtp","num_speculative_tokens":12,"rejection_sample_method":"block","draft_sample_method":"probabilistic"}'
+  # Depth <= 3 makes this image fail at CUDA-graph capture ("min bootable
+  # speculative depth is 4"). Static depth must be emulated as MIN=CEIL=K,
+  # PROMOTE=101, DEMOTE=0.

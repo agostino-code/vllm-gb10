@@ -17,6 +17,7 @@
 #   524k-batched64k  520k needle prefill  -> chunking or bandwidth ceiling?
 #   standard-seats8  C=4/C=8 vs shipped   -> 8 seats x 94k: the sub-agent shape?
 #   786k-single      780k needle          -> does YaRN 3.0 recall? boots at all?
+#   256k-tri/quad/quad-fp8  boot + needle -> the sub-agent fleet at native 256k
 #
 # Compare against BASELINE.md (same harness, same box, same day).
 # ══════════════════════════════════════════════════════════════════════════
@@ -109,4 +110,30 @@ configs:
       concurrency: [1]
       long_target_tokens: 780000
       long_timeout: 1200
+
+  # ── 256k fleet: fewer sub-agents, every seat at native full context ─────
+  # 262,144 is the checkpoint's trained context: no YaRN here, so recall is
+  # as good as it gets. The three entries are the same question at three KV
+  # shapes; the boot log's "Maximum concurrency for 262,144 tokens per
+  # request" line is the first answer (expect 3.3x / 4.07x / ~5.5x), the
+  # 260k needle the second (fp8 recall check), C=N decode the third.
+  # quad may OOM at profile time — that is the answer too (4 seats want fp8).
+  - name: 256k-tri
+    recipe: recipes/tests/256k-tri.yaml
+    suite:
+      concurrency: [1, 3]
+      long_target_tokens: 260000
+
+  - name: 256k-quad
+    recipe: recipes/tests/256k-quad.yaml
+    suite:
+      concurrency: [1, 4]
+      long_target_tokens: 260000
+
+  - name: 256k-quad-fp8
+    recipe: recipes/tests/256k-quad-fp8.yaml
+    suite:
+      concurrency: [1, 4]
+      long_target_tokens: 260000
+
 
