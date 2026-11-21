@@ -1,0 +1,51 @@
+{
+  "duration_s": 435.6,
+  "error": null,
+  "exit_codes": {
+    "serve": 0,
+    "suite": 0
+  },
+  "name": "abba-1",
+  "serve_command": [
+    "/usr/bin/python3",
+    "/home/pgx/Documenti/vllm-gb10/bench/serve.py",
+    "up",
+    "--recipe",
+    "recipes/az-standard.yaml",
+    "--name",
+    "bench-abba-1",
+    "--run-id",
+    "abba-1",
+    "--run-dir",
+    "/home/pgx/Documenti/vllm-gb10/bench/baseline/t-today/abba-1",
+    "--config-id",
+    "abba-1",
+    "--port",
+    "8000",
+    "--boot-timeout",
+    "1500"
+  ],
+  "started_at": "2026-11-21T19:45:18.274+00:00",
+  "status": "done",
+  "suite_command": [
+    "/usr/bin/python3",
+    "/home/pgx/Documenti/vllm-gb10/bench/suite.py",
+    "--base-url",
+    "http://127.0.0.1:8000",
+    "--run-dir",
+    "/home/pgx/Documenti/vllm-gb10/bench/baseline/t-today/abba-1",
+    "--config-id",
+    "abba-1",
+    "--profile",
+    "quick",
+    "--tag",
+    "abba-1",
+    "--quality",
+    "off",
+    "--concurrency",
+    "1,8",
+    "--no-long-smoke"
+  ],
+  "summary_path": "/home/pgx/Documenti/vllm-gb10/bench/baseline/t-today/abba-1/summary.json",
+  "updated_at": "2026-11-21T19:52:33.900+00:00"
+}

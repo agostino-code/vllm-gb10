@@ -1,0 +1,849 @@
+{
+  "suite": "quality",
+  "schema_version": 1,
+  "generated_at": "2026-11-21T20:15:19+01:00",
+  "mode": "live",
+  "config": {
+    "suite": "quality",
+    "suite_version": "1.0.0",
+    "schema_version": 1,
+    "generated_at": "2026-11-21T20:15:19+01:00",
+    "mode": "live",
+    "host": "thinkstationpgx-9213",
+    "platform": "Linux-7.0.0-1025-nvidia-aarch64-with-glibc2.39",
+    "python": "3.12.3",
+    "git_revision": "7b47594",
+    "argv": [
+      "--base-url",
+      "http://127.0.0.1:8000",
+      "--model",
+      "azampatti/Qwen3.8-Flash-Next-FP4-Local-AZ-524k",
+      "--mode",
+      "full",
+      "--output",
+      "/home/pgx/Documenti/vllm-gb10/bench/baseline/b-today/az-524k-single/quality.json"
+    ],
+    "base_url": "http://127.0.0.1:8000",
+    "model_requested": "azampatti/Qwen3.8-Flash-Next-FP4-Local-AZ-524k",
+    "model_resolved": "azampatti/Qwen3.8-Flash-Next-FP4-Local-AZ-524k",
+    "served_models": [
+      "azampatti/Qwen3.8-Flash-Next-FP4-Local-AZ-524k"
+    ],
+    "max_model_len": 524288,
+    "thinking": false,
+    "temperature": 0.0,
+    "top_p": 1.0,
+    "seed": 12345,
+    "categories_requested": [
+      "math",
+      "json",
+      "code",
+      "instruction",
+      "tool",
+      "needle",
+      "repetition"
+    ],
+    "mode_arg": "full",
+    "needle_sizes_tokens": [
+      32768,
+      131072,
+      262144
+    ],
+    "needle_depth": 0.5,
+    "needle_chars_per_token": 3.5,
+    "workers": 0,
+    "request_timeout_s": 600.0,
+    "replay_file": null
+  },
+  "runtime_s": 279.13,
+  "overall": {
+    "score": 0.9643,
+    "categories_run": 7,
+    "items_total": 58,
+    "items_passed": 55,
+    "category_scores": {
+      "math": 0.95,
+      "json": 1.0,
+      "code": 1.0,
+      "instruction": 0.8,
+      "tool": 1.0,
+      "needle": 1.0,
+      "repetition": 1.0
+    },
+    "aborted": false
+  },
+  "categories": {
+    "math": {
+      "score": 0.95,
+      "passed": 19,
+      "total": 20,
+      "runtime_s": 59.88,
+      "errors": [],
+      "items": [
+        {
+          "id": "math-01",
+          "score": 1,
+          "extracted": "391",
+          "expected": "391",
+          "mode": "numeric",
+          "has_answer_marker": true,
+          "source": "answer_marker"
+        },
+        {
+          "id": "math-02",
+          "score": 1,
+          "extracted": "49",
+          "expected": "49",
+          "mode": "numeric",
+          "has_answer_marker": true,
+          "source": "answer_marker"
+        },
+        {
+          "id": "math-03",
+          "score": 1,
+          "extracted": "22",
+          "expected": "22",
+          "mode": "numeric",
+          "has_answer_marker": true,
+          "source": "answer_marker"
+        },
+        {
+          "id": "math-04",
+          "score": 1,
+          "extracted": "150",
+          "expected": "150",
+          "mode": "numeric",
+          "has_answer_marker": true,
+          "source": "answer_marker"
+        },
+        {
+          "id": "math-05",
+          "score": 1,
+          "extracted": "60",
+          "expected": "60",
+          "mode": "numeric",
+          "has_answer_marker": true,
+          "source": "answer_marker"
+        },
+        {
+          "id": "math-06",
+          "score": 1,
+          "extracted": "156",
+          "expected": "156",
+          "mode": "numeric",
+          "has_answer_marker": true,
+          "source": "answer_marker"
+        },
+        {
+          "id": "math-07",
+          "score": 1,
+          "extracted": "720",
+          "expected": "720",
+          "mode": "numeric",
+          "has_answer_marker": true,
+          "source": "answer_marker"
+        },
+        {
+          "id": "math-08",
+          "score": 0,
+          "extracted": "Both methods",
+          "expected": "42",
+          "mode": "mismatch",
+          "has_answer_marker": false,
+          "source": "last_line"
+        },
+        {
+          "id": "math-09",
+          "score": 1,
+          "extracted": "36",
+          "expected": "36",
+          "mode": "numeric",
+          "has_answer_marker": true,
+          "source": "answer_marker"
+        },
+        {
+          "id": "math-10",
+          "score": 1,
+          "extracted": "295",
+          "expected": "295",
+          "mode": "numeric",
+          "has_answer_marker": true,
+          "source": "answer_marker"
+        },
+        {
+          "id": "math-11",
+          "score": 1,
+          "extracted": "39",
+          "expected": "39",
+          "mode": "numeric",
+          "has_answer_marker": true,
+          "source": "answer_marker"
+        },
+        {
+          "id": "math-12",
+          "score": 1,
+          "extracted": "5050",
+          "expected": "5050",
+          "mode": "numeric",
+          "has_answer_marker": true,
+          "source": "answer_marker"
+        },
+        {
+          "id": "math-13",
+          "score": 1,
+          "extracted": "1023",
+          "expected": "1023",
+          "mode": "numeric",
+          "has_answer_marker": true,
+          "source": "answer_marker"
+        },
+        {
+          "id": "math-14",
+          "score": 1,
+          "extracted": "923",
+          "expected": "923",
+          "mode": "numeric",
+          "has_answer_marker": true,
+          "source": "answer_marker"
+        },
+        {
+          "id": "math-15",
+          "score": 1,
+          "extracted": "110",
+          "expected": "110",
+          "mode": "numeric",
+          "has_answer_marker": true,
+          "source": "answer_marker"
+        },
+        {
+          "id": "math-16",
+          "score": 1,
+          "extracted": "225",
+          "expected": "225",
+          "mode": "numeric",
+          "has_answer_marker": true,
+          "source": "answer_marker"
+        },
+        {
+          "id": "math-17",
+          "score": 1,
+          "extracted": "42",
+          "expected": "42",
+          "mode": "numeric",
+          "has_answer_marker": true,
+          "source": "answer_marker"
+        },
+        {
+          "id": "math-18",
+          "score": 1,
+          "extracted": "40",
+          "expected": "40",
+          "mode": "numeric",
+          "has_answer_marker": true,
+          "source": "answer_marker"
+        },
+        {
+          "id": "math-19",
+          "score": 1,
+          "extracted": "29",
+          "expected": "29",
+          "mode": "numeric",
+          "has_answer_marker": true,
+          "source": "answer_marker"
+        },
+        {
+          "id": "math-20",
+          "score": 1,
+          "extracted": "90",
+          "expected": "90",
+          "mode": "numeric",
+          "has_answer_marker": true,
+          "source": "answer_marker"
+        }
+      ],
+      "skipped": false
+    },
+    "json": {
+      "score": 1.0,
+      "passed": 10,
+      "total": 10,
+      "runtime_s": 10.24,
+      "errors": [],
+      "items": [
+        {
+          "id": "json-01",
+          "score": 1,
+          "valid_json": true,
+          "schema_errors": [],
+          "parse_error": null,
+          "required_keys": []
+        },
+        {
+          "id": "json-02",
+          "score": 1,
+          "valid_json": true,
+          "schema_errors": [],
+          "parse_error": null,
+          "required_keys": [
+            "title",
+            "author",
+            "year",
+            "genres"
+          ]
+        },
+        {
+          "id": "json-03",
+          "score": 1,
+          "valid_json": true,
+          "schema_errors": [],
+          "parse_error": null,
+          "required_keys": [
+            "user",
+            "roles"
+          ]
+        },
+        {
+          "id": "json-04",
+          "score": 1,
+          "valid_json": true,
+          "schema_errors": [],
+          "parse_error": null,
+          "required_keys": []
+        },
+        {
+          "id": "json-05",
+          "score": 1,
+          "valid_json": true,
+          "schema_errors": [],
+          "parse_error": null,
+          "required_keys": [
+            "summary"
+          ]
+        },
+        {
+          "id": "json-06",
+          "score": 1,
+          "valid_json": true,
+          "schema_errors": [],
+          "parse_error": null,
+          "required_keys": []
+        },
+        {
+          "id": "json-07",
+          "score": 1,
+          "valid_json": true,
+          "schema_errors": [],
+          "parse_error": null,
+          "required_keys": [
+            "items",
+            "total"
+          ]
+        },
+        {
+          "id": "json-08",
+          "score": 1,
+          "valid_json": true,
+          "schema_errors": [],
+          "parse_error": null,
+          "required_keys": [
+            "config",
+            "tags"
+          ]
+        },
+        {
+          "id": "json-09",
+          "score": 1,
+          "valid_json": true,
+          "schema_errors": [],
+          "parse_error": null,
+          "required_keys": []
+        },
+        {
+          "id": "json-10",
+          "score": 1,
+          "valid_json": true,
+          "schema_errors": [],
+          "parse_error": null,
+          "required_keys": [
+            "equation",
+            "root",
+            "steps"
+          ]
+        }
+      ],
+      "valid_json_rate": 1.0,
+      "schema_conformance_rate": 1.0,
+      "valid_json_count": 10,
+      "skipped": false
+    },
+    "code": {
+      "score": 1.0,
+      "passed": 8,
+      "total": 8,
+      "runtime_s": 9.01,
+      "errors": [],
+      "items": [
+        {
+          "id": "code-01",
+          "score": 1,
+          "tests_passed": 8,
+          "tests_total": 8,
+          "tests_ok_fraction": 1.0,
+          "status": "ok",
+          "error": null,
+          "failed_tests": [],
+          "code_chars": 234
+        },
+        {
+          "id": "code-02",
+          "score": 1,
+          "tests_passed": 4,
+          "tests_total": 4,
+          "tests_ok_fraction": 1.0,
+          "status": "ok",
+          "error": null,
+          "failed_tests": [],
+          "code_chars": 59
+        },
+        {
+          "id": "code-03",
+          "score": 1,
+          "tests_passed": 4,
+          "tests_total": 4,
+          "tests_ok_fraction": 1.0,
+          "status": "ok",
+          "error": null,
+          "failed_tests": [],
+          "code_chars": 80
+        },
+        {
+          "id": "code-04",
+          "score": 1,
+          "tests_passed": 5,
+          "tests_total": 5,
+          "tests_ok_fraction": 1.0,
+          "status": "ok",
+          "error": null,
+          "failed_tests": [],
+          "code_chars": 165
+        },
+        {
+          "id": "code-05",
+          "score": 1,
+          "tests_passed": 4,
+          "tests_total": 4,
+          "tests_ok_fraction": 1.0,
+          "status": "ok",
+          "error": null,
+          "failed_tests": [],
+          "code_chars": 195
+        },
+        {
+          "id": "code-06",
+          "score": 1,
+          "tests_passed": 4,
+          "tests_total": 4,
+          "tests_ok_fraction": 1.0,
+          "status": "ok",
+          "error": null,
+          "failed_tests": [],
+          "code_chars": 294
+        },
+        {
+          "id": "code-07",
+          "score": 1,
+          "tests_passed": 4,
+          "tests_total": 4,
+          "tests_ok_fraction": 1.0,
+          "status": "ok",
+          "error": null,
+          "failed_tests": [],
+          "code_chars": 230
+        },
+        {
+          "id": "code-08",
+          "score": 1,
+          "tests_passed": 4,
+          "tests_total": 4,
+          "tests_ok_fraction": 1.0,
+          "status": "ok",
+          "error": null,
+          "failed_tests": [],
+          "code_chars": 405
+        }
+      ],
+      "tests_passed": 37,
+      "tests_total": 37,
+      "assertion_pass_rate": 1.0,
+      "status_counts": {
+        "ok": 8
+      },
+      "skipped": false
+    },
+    "instruction": {
+      "score": 0.8,
+      "passed": 8,
+      "total": 10,
+      "runtime_s": 4.7,
+      "errors": [],
+      "items": [
+        {
+          "id": "instr-01",
+          "score": 0,
+          "checks_passed": 0,
+          "checks_total": 1,
+          "failed_checks": [
+            {
+              "ok": false,
+              "detail": "words=13 want=12"
+            }
+          ]
+        },
+        {
+          "id": "instr-02",
+          "score": 1,
+          "checks_passed": 3,
+          "checks_total": 3,
+          "failed_checks": []
+        },
+        {
+          "id": "instr-03",
+          "score": 1,
+          "checks_passed": 3,
+          "checks_total": 3,
+          "failed_checks": []
+        },
+        {
+          "id": "instr-04",
+          "score": 1,
+          "checks_passed": 2,
+          "checks_total": 2,
+          "failed_checks": []
+        },
+        {
+          "id": "instr-05",
+          "score": 1,
+          "checks_passed": 1,
+          "checks_total": 1,
+          "failed_checks": []
+        },
+        {
+          "id": "instr-06",
+          "score": 1,
+          "checks_passed": 3,
+          "checks_total": 3,
+          "failed_checks": []
+        },
+        {
+          "id": "instr-07",
+          "score": 1,
+          "checks_passed": 3,
+          "checks_total": 3,
+          "failed_checks": []
+        },
+        {
+          "id": "instr-08",
+          "score": 1,
+          "checks_passed": 2,
+          "checks_total": 2,
+          "failed_checks": []
+        },
+        {
+          "id": "instr-09",
+          "score": 0,
+          "checks_passed": 0,
+          "checks_total": 1,
+          "failed_checks": [
+            {
+              "ok": false,
+              "detail": "got='abababababababababab'"
+            }
+          ]
+        },
+        {
+          "id": "instr-10",
+          "score": 1,
+          "checks_passed": 2,
+          "checks_total": 2,
+          "failed_checks": []
+        }
+      ],
+      "checks_passed": 19,
+      "checks_total": 21,
+      "check_pass_rate": 0.9048,
+      "skipped": false
+    },
+    "tool": {
+      "score": 1.0,
+      "passed": 6,
+      "total": 6,
+      "runtime_s": 8.59,
+      "errors": [],
+      "items": [
+        {
+          "id": "tool-01",
+          "score": 1,
+          "reason": "ok",
+          "expected_name": "get_weather",
+          "expected_args": {
+            "city": "Rome",
+            "unit": "celsius"
+          },
+          "observed_args": {
+            "city": "Rome",
+            "unit": "celsius"
+          },
+          "mismatches": [],
+          "extra_args": [],
+          "source": "server_parsed",
+          "n_calls": 1
+        },
+        {
+          "id": "tool-02",
+          "score": 1,
+          "reason": "ok",
+          "expected_name": "add_event",
+          "expected_args": {
+            "title": "Sprint Review",
+            "date": "2025-06-10",
+            "duration_minutes": 45
+          },
+          "observed_args": {
+            "title": "Sprint Review",
+            "date": "2025-06-10",
+            "duration_minutes": 45
+          },
+          "mismatches": [],
+          "extra_args": [],
+          "source": "server_parsed",
+          "n_calls": 1
+        },
+        {
+          "id": "tool-03",
+          "score": 1,
+          "reason": "ok",
+          "expected_name": "search_files",
+          "expected_args": {
+            "path": "/home/user/project",
+            "pattern": "*.py",
+            "max_results": 20
+          },
+          "observed_args": {
+            "path": "/home/user/project",
+            "pattern": "*.py",
+            "max_results": 20
+          },
+          "mismatches": [],
+          "extra_args": [],
+          "source": "server_parsed",
+          "n_calls": 1
+        },
+        {
+          "id": "tool-04",
+          "score": 1,
+          "reason": "ok",
+          "expected_name": "send_email",
+          "expected_args": {
+            "to": "alice@example.com",
+            "subject": "Meeting tomorrow",
+            "body": "Can we meet at 10am?"
+          },
+          "observed_args": {
+            "to": "alice@example.com",
+            "subject": "Meeting tomorrow",
+            "body": "Can we meet at 10am?"
+          },
+          "mismatches": [],
+          "extra_args": [],
+          "source": "server_parsed",
+          "n_calls": 1
+        },
+        {
+          "id": "tool-05",
+          "score": 1,
+          "reason": "ok",
+          "expected_name": "get_stock_price",
+          "expected_args": {
+            "ticker": "NVDA"
+          },
+          "observed_args": {
+            "ticker": "NVDA"
+          },
+          "mismatches": [],
+          "extra_args": [],
+          "source": "server_parsed",
+          "n_calls": 1
+        },
+        {
+          "id": "tool-06",
+          "score": 1,
+          "reason": "ok",
+          "expected_name": "convert_currency",
+          "expected_args": {
+            "amount": 100,
+            "from": "USD",
+            "to": "EUR"
+          },
+          "observed_args": {
+            "amount": 100,
+            "from": "USD",
+            "to": "EUR"
+          },
+          "mismatches": [],
+          "extra_args": [],
+          "source": "server_parsed",
+          "n_calls": 1
+        }
+      ],
+      "reason_counts": {
+        "ok": 6
+      },
+      "server_parsed_count": 6,
+      "fallback_parse_count": 0,
+      "skipped": false
+    },
+    "needle": {
+      "score": 1.0,
+      "passed": 3,
+      "total": 3,
+      "runtime_s": 160.07,
+      "errors": [],
+      "items": [
+        {
+          "id": "needle-32768",
+          "score": 1,
+          "recall": true,
+          "strict": true,
+          "answer": "quasar-4419-zebra",
+          "components": [
+            "quasar",
+            "4419",
+            "zebra"
+          ],
+          "target_tokens": 32768,
+          "prompt_tokens": 31121,
+          "prompt_tokens_ok": true,
+          "chars_per_token_actual": 3.695,
+          "prompt_chars": 114995,
+          "prompt_sha256": "072c1a9fd38d686785e233ccaeb6e14a00f9b73be2a1895ac306ef4be1142cfa",
+          "ttft_s": 11.5681,
+          "latency_s": 12.117,
+          "status": "ok",
+          "error": null
+        },
+        {
+          "id": "needle-131072",
+          "score": 1,
+          "recall": true,
+          "strict": true,
+          "answer": "quasar-4419-zebra",
+          "components": [
+            "quasar",
+            "4419",
+            "zebra"
+          ],
+          "target_tokens": 131072,
+          "prompt_tokens": 124141,
+          "prompt_tokens_ok": true,
+          "chars_per_token_actual": 3.698,
+          "prompt_chars": 459059,
+          "prompt_sha256": "b7f484b6c1f461d444fbf32c6e39ee8d3d72dd6717c26ab103ef48784e9a1b0a",
+          "ttft_s": 48.5255,
+          "latency_s": 48.9254,
+          "status": "ok",
+          "error": null
+        },
+        {
+          "id": "needle-262144",
+          "score": 1,
+          "recall": true,
+          "strict": true,
+          "answer": "quasar-4419-zebra",
+          "components": [
+            "quasar",
+            "4419",
+            "zebra"
+          ],
+          "target_tokens": 262144,
+          "prompt_tokens": 248102,
+          "prompt_tokens_ok": true,
+          "chars_per_token_actual": 3.699,
+          "prompt_chars": 917811,
+          "prompt_sha256": "861e44943fb068eba99623b0fe2fc221ab3a0d3b68e22d25ba20050fcd6d3e49",
+          "ttft_s": 98.7839,
+          "latency_s": 98.9918,
+          "status": "ok",
+          "error": null
+        }
+      ],
+      "recall_rate": 1.0,
+      "strict_recall_rate": 1.0,
+      "ttft_s": 52.9592,
+      "prompt_tokens": [
+        31121,
+        124141,
+        248102
+      ],
+      "prompt_tokens_ok": [
+        true,
+        true,
+        true
+      ],
+      "chars_per_token_actual": [
+        3.695,
+        3.698,
+        3.699
+      ],
+      "target_tokens": [
+        32768,
+        131072,
+        262144
+      ],
+      "skipped": false
+    },
+    "repetition": {
+      "score": 1.0,
+      "passed": 1,
+      "total": 1,
+      "runtime_s": 26.62,
+      "errors": [],
+      "items": [
+        {
+          "id": "repetition-01",
+          "score": 1,
+          "n_tokens": 1703,
+          "n_chars": 8663,
+          "unique_token_ratio": 0.138,
+          "distinct_2": 0.436,
+          "max_ngram_repeat": 2,
+          "ngram_n": 20,
+          "worst_ngram": "child index of a given node . args : index : the index of the parent node . returns :",
+          "longest_identical_line_run": 0,
+          "degenerate": false,
+          "reasons": [],
+          "finish_reason": "length"
+        }
+      ],
+      "metrics": {
+        "n_tokens": 1703,
+        "unique_token_ratio": 0.138,
+        "distinct_2": 0.436,
+        "max_ngram_repeat": 2,
+        "longest_identical_line_run": 0,
+        "degenerate": false,
+        "reasons": [],
+        "finish_reason": "length"
+      },
+      "skipped": false
+    }
+  },
+  "limitations": [
+    "Scores are deterministic, rule-based proxies for capability; they are not a substitute for human review.",
+    "temperature=0 and a fixed seed are requested, but server-side batching can still make sampled tokens differ run-to-run.",
+    "Code batteries execute model-written Python in a subprocess with CPU/temp limits and a timeout; this is a robustness guard, not a security sandbox.",
+    "Long-context prompts are synthetic English filler; real-world retrieval difficulty varies, so recall here is an upper-ish bound for a given size.",
+    "TTFT is measured client-side and includes queueing/batching latency of the moment, so long-context TTFT is indicative, not a benchmark.",
+    "Tool-calling checks verify tool name + expected argument values; extra optional arguments are tolerated and reported.",
+    "Thinking mode (--thinking) needs generous max_tokens; an empty-content item usually means the CoT consumed the budget."
+  ]
+}

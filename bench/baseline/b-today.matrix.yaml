@@ -1,0 +1,43 @@
+defaults:
+  results_dir: /home/pgx/Documenti/vllm-gb10/bench/baseline/b-today
+  port: 8000
+  boot_timeout_s: 1500
+  per_config_timeout_s: 2400
+  stop_server: true
+  suite_profile: full
+  suite:
+    request_timeout: 300
+    retries: 1
+    quality: full
+  env: {}
+configs:
+- name: az-standard
+  recipe: recipes/az-standard.yaml
+  priority: 10
+  suite_profile: full
+  notes: shipped myllmbox v5.4 recipe, K=12 dynamic depth — the measured best
+- name: az-524k-single
+  recipe: recipes/az-524k-single.yaml
+  priority: 20
+  suite_profile: full
+  suite:
+    concurrency:
+    - 1
+    include_16: false
+    long_target_tokens: 520000
+  notes: 524k context, single stream, K=16 with the ceiling pinned to one request
+- name: uncensored-standard
+  recipe: recipes/uncensored-standard.yaml
+  priority: 30
+  suite_profile: full
+  notes: abliterated checkpoint on the shipped settings — compare against az-standard
+- name: uncensored-524k-single
+  recipe: recipes/uncensored-524k-single.yaml
+  priority: 40
+  suite_profile: full
+  suite:
+    concurrency:
+    - 1
+    include_16: false
+    long_target_tokens: 520000
+  notes: abliterated checkpoint at 524k single stream

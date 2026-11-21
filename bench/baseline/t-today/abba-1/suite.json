@@ -1,0 +1,10 @@
+{
+  "base_url": "http://127.0.0.1:8000",
+  "command": "suite.py --base-url http://127.0.0.1:8000 --run-dir /home/pgx/Documenti/vllm-gb10/bench/baseline/t-today/abba-1 --config-id abba-1 --profile quick --tag abba-1 --quality off --concurrency 1,8 --no-long-smoke",
+  "finished_at": "2026-11-21T19:52:33.879+00:00",
+  "model": "azampatti/Qwen3.8-Flash-Next-FP4-Local-AZ",
+  "profile": "quick",
+  "run_id": "abba-1",
+  "started_at": "2026-11-21T19:51:49.560+00:00",
+  "suite_version": "1.0"
+}

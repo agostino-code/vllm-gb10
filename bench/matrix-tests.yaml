@@ -14,7 +14,7 @@
 #   524k-pmu32    vs az-524k-single       -> is the TTFT penalty the prefix unit?
 #   524k-dual     C=1 vs C=2              -> cost of the second long seat
 #   524k-fp8kv    boot log + decode       -> pool ~1.5M? decode delta at K=16?
-#   524k-batched64k  520k needle prefill  -> chunking or bandwidth ceiling?
+#   524k-batched48k-fp8 520k needle prefill -> largest feasible chunk (64k OOM'd)
 #   standard-seats8  C=4/C=8 vs shipped   -> 8 seats x 94k: the sub-agent shape?
 #   786k-single      780k needle          -> does YaRN 3.0 recall? boots at all?
 #   256k-tri/quad/quad-fp8  boot + needle -> the sub-agent fleet at native 256k
@@ -82,11 +82,13 @@ configs:
       concurrency: [1]
       long_smoke: false
 
-  # ── open test #7: 520k prefill ceiling ──────────────────────────────────
-  # The only entry that runs the full needle: 520k prompt, compare
-  # prefill_tok_s against 2,216 (az) / 2,318 (uncensored) in BASELINE.md.
-  - name: 524k-batched64k
-    recipe: recipes/tests/524k-batched64k.yaml
+  # ── open test #7: 520k prefill ceiling (revised by the 64k OOM) ──────────
+  # The 64k chunk OOM-froze the box on 2026-11-21: 32 GB of activations does
+  # not fit beside a full 524k KV pool. This is the largest feasible chunk
+  # (49152) on fp8 KV (16 GB) to free the room. Runs the full 520k needle;
+  # compare prefill_tok_s against 2,216 (az) / 2,318 (uncensored) in BASELINE.md.
+  - name: 524k-batched48k-fp8
+    recipe: recipes/tests/524k-batched48k-fp8.yaml
     suite:
       concurrency: [1]
       long_target_tokens: 520000

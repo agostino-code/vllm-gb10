@@ -1,0 +1,51 @@
+{
+  "duration_s": 430.2,
+  "error": null,
+  "exit_codes": {
+    "serve": 0,
+    "suite": 0
+  },
+  "name": "524k-fp8kv",
+  "serve_command": [
+    "/usr/bin/python3",
+    "/home/pgx/Documenti/vllm-gb10/bench/serve.py",
+    "up",
+    "--recipe",
+    "recipes/tests/524k-fp8kv.yaml",
+    "--name",
+    "bench-524k-fp8kv",
+    "--run-id",
+    "524k-fp8kv",
+    "--run-dir",
+    "/home/pgx/Documenti/vllm-gb10/bench/baseline/t-today/524k-fp8kv",
+    "--config-id",
+    "524k-fp8kv",
+    "--port",
+    "8000",
+    "--boot-timeout",
+    "1500"
+  ],
+  "started_at": "2026-11-21T20:19:19.984+00:00",
+  "status": "done",
+  "suite_command": [
+    "/usr/bin/python3",
+    "/home/pgx/Documenti/vllm-gb10/bench/suite.py",
+    "--base-url",
+    "http://127.0.0.1:8000",
+    "--run-dir",
+    "/home/pgx/Documenti/vllm-gb10/bench/baseline/t-today/524k-fp8kv",
+    "--config-id",
+    "524k-fp8kv",
+    "--profile",
+    "quick",
+    "--tag",
+    "524k-fp8kv",
+    "--quality",
+    "off",
+    "--concurrency",
+    "1",
+    "--no-long-smoke"
+  ],
+  "summary_path": "/home/pgx/Documenti/vllm-gb10/bench/baseline/t-today/524k-fp8kv/summary.json",
+  "updated_at": "2026-11-21T20:26:30.220+00:00"
+}

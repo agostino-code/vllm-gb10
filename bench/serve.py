@@ -269,6 +269,15 @@ def build_launch(args, recipe: dict) -> dict:
 
     # ── docker argv ─────────────────────────────────────────────────────────
     docker_argv = ["docker", "run", "-d", "--name", name, "--gpus", "all", "--ipc=host"]
+    # Unified-memory insurance. Without a cgroup limit an over-subscribed boot
+    # swap-thrashes the whole box before the kernel acts — 524k-batched64k
+    # froze the host for minutes on 2026-11-21. A hard limit (no swap for the
+    # container) turns that into a clean container OOM-kill (exit 137) in
+    # seconds, and the oom-score bias makes the container — not the desktop —
+    # the victim even if the limit is somehow outmanoeuvred. 116 GiB of the
+    # 122 GiB total: every shipped recipe peaks ~110 GiB resident and fits.
+    # A recipe can override via server.docker_args (last -m wins).
+    docker_argv += ["--memory", "116g", "--memory-swap", "116g", "--oom-score-adj", "700"]
     if cpuset:
         docker_argv += ["--cpuset-cpus", str(cpuset)]
     docker_argv += docker_args
@@ -384,13 +393,21 @@ def estimate_boot_memory_gb(meta: dict) -> tuple[float, str]:
     On the GB10 there is no separate VRAM: weights, KV pool and activations all
     come out of the same 128 GB, and an over-subscribed boot dies 4 minutes in
     (or wakes the OOM killer) instead of failing here. The estimate, anchored on
-    the 2026-11-21 boot logs (weights 73.45 GiB resident, graphs 0.94 GiB,
-    activation peak unmeasured so padded to 8 GB):
+    the 2026-11-21 boot logs (weights 73.45 GiB resident, graphs 0.94 GiB):
 
-        weights(74) + KV reservation + graphs(1) + activations(8)
+        weights(74) + KV reservation + graphs(1) + activations
 
     The KV reservation is --kv-cache-memory when set (all shipped recipes set
     it, which makes the number exact); otherwise gpu-memory-utilization × total.
+    The activation term is the one that bites, and it scales with the PREFILL
+    CHUNK TIMES THE CONTEXT: the QSA indexer scores every query token of the
+    chunk against the whole context, so the peak grows with both. Calibrated on
+    four 2026-11-21 data points (free-after-load = available - weights - KV -
+    graphs, compared to what the boot survived):
+        8k chunk x 409k context  standard      survived, slack ~19 GB
+        32k chunk x 524k context az-524k       survived a 518k needle, slack ~19 GB
+        64k chunk x 524k context batched64k   OOM-froze the box, slack ~19 GB
+        => 8 GB at (32768, 262144), linear in chunk, linear in context, floor 8.
     Returns (needed_gb, explanation).
     """
     argv = meta["vllm"]["argv"]
@@ -405,7 +422,17 @@ def estimate_boot_memory_gb(meta: dict) -> tuple[float, str]:
         util = float(C.get_flag_value(argv, "gpu-memory-utilization") or 0.88)
         kv_gb = 24.0
         how = f"no --kv-cache-memory: assumed 24 GB (util {util})"
-    return 74.0 + kv_gb + 1.0 + 8.0, how
+    def _int(flag, default):
+        try:
+            return int(C.get_flag_value(argv, flag) or default)
+        except ValueError:
+            return default
+    batched = _int("max-num-batched-tokens", 8192)
+    context = _int("max-model-len", 262144)
+    act_gb = max(8.0, 8.0 * (batched / 32768.0) * (context / 262144.0))
+    how += (f", {batched}-token chunk x {context} context "
+            f"-> ~{act_gb:.0f} GB activation peak")
+    return 74.0 + kv_gb + 1.0 + act_gb, how
 
 
 def mem_available_gb() -> float:
@@ -456,12 +483,17 @@ def preflight(meta: dict, *, force: bool, quiet: bool = False, port_wait: float 
     # GB10 unified memory: the honest preflight is a RAM check, not a GPU one.
     need_gb, how = estimate_boot_memory_gb(meta)
     avail_gb = mem_available_gb()
+    if avail_gb < 100 and not force:
+        raise SystemExit(
+            f"only {avail_gb:.0f} GB available: no configuration of this model fits below "
+            "~100 GB (74 GB weights alone). Stop the running server and close memory-heavy "
+            "applications first, or pass --force.")
     if avail_gb < need_gb:
         msg = (f"insufficient host memory to boot this recipe: {avail_gb:.0f} GB available, "
-               f"~{need_gb:.0f} GB needed ({how} + 74 weights + 9 slack). "
-               "The boot would likely die in the KV reservation or wake the OOM killer.")
+               f"~{need_gb:.0f} GB needed ({how}). This recipe OOM-froze the box on "
+               "2026-11-21 when the estimate missed the activation peak.")
         if not force:
-            raise SystemExit(msg + " Free memory, or pass --force to try anyway.")
+            raise SystemExit(msg + " Shrink the KV pool or the prefill chunk, or pass --force.")
         C.log(f"WARNING: {msg}")
     if not quiet:
         C.log(f"preflight ok: port {port} free, no other model server, "

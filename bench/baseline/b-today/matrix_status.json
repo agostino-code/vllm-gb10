@@ -1,0 +1,65 @@
+{
+  "configs": [
+    {
+      "duration_s": 825.1,
+      "error": null,
+      "exit_codes": {
+        "serve": 0,
+        "suite": 0
+      },
+      "name": "az-standard",
+      "priority": 10,
+      "recipe": "recipes/az-standard.yaml",
+      "run_dir": "/home/pgx/Documenti/vllm-gb10/bench/baseline/b-today/az-standard",
+      "started_at": "2026-11-21T18:44:29.807+00:00",
+      "status": "done"
+    },
+    {
+      "duration_s": 1022.1,
+      "error": null,
+      "exit_codes": {
+        "serve": 0,
+        "suite": 0
+      },
+      "name": "az-524k-single",
+      "priority": 20,
+      "recipe": "recipes/az-524k-single.yaml",
+      "run_dir": "/home/pgx/Documenti/vllm-gb10/bench/baseline/b-today/az-524k-single",
+      "started_at": "2026-11-21T18:58:17.010+00:00",
+      "status": "done"
+    },
+    {
+      "duration_s": 804.5,
+      "error": null,
+      "exit_codes": {
+        "serve": 0,
+        "suite": 0
+      },
+      "name": "uncensored-standard",
+      "priority": 30,
+      "recipe": "recipes/uncensored-standard.yaml",
+      "run_dir": "/home/pgx/Documenti/vllm-gb10/bench/baseline/b-today/uncensored-standard",
+      "started_at": "2026-11-21T19:15:22.078+00:00",
+      "status": "done"
+    },
+    {
+      "duration_s": 985.6,
+      "error": null,
+      "exit_codes": {
+        "serve": 0,
+        "suite": 0
+      },
+      "name": "uncensored-524k-single",
+      "priority": 40,
+      "recipe": "recipes/uncensored-524k-single.yaml",
+      "run_dir": "/home/pgx/Documenti/vllm-gb10/bench/baseline/b-today/uncensored-524k-single",
+      "started_at": "2026-11-21T19:28:48.822+00:00",
+      "status": "done"
+    }
+  ],
+  "finished_at": "2026-11-21T19:45:17.292+00:00",
+  "matrix": "bench/baseline/b-today.matrix.yaml",
+  "results_dir": "/home/pgx/Documenti/vllm-gb10/bench/baseline/b-today",
+  "started_at": "2026-11-21T18:44:29.779+00:00",
+  "updated_at": "2026-11-21T19:45:17.292+00:00"
+}

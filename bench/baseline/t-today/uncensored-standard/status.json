@@ -1,0 +1,51 @@
+{
+  "duration_s": 373.4,
+  "error": null,
+  "exit_codes": {
+    "serve": 0,
+    "suite": 0
+  },
+  "name": "uncensored-standard",
+  "serve_command": [
+    "/usr/bin/python3",
+    "/home/pgx/Documenti/vllm-gb10/bench/serve.py",
+    "up",
+    "--recipe",
+    "recipes/uncensored-standard.yaml",
+    "--name",
+    "bench-uncensored-standard",
+    "--run-id",
+    "uncensored-standard",
+    "--run-dir",
+    "/home/pgx/Documenti/vllm-gb10/bench/baseline/t-today/uncensored-standard",
+    "--config-id",
+    "uncensored-standard",
+    "--port",
+    "8000",
+    "--boot-timeout",
+    "1500"
+  ],
+  "started_at": "2026-11-21T19:52:36.091+00:00",
+  "status": "done",
+  "suite_command": [
+    "/usr/bin/python3",
+    "/home/pgx/Documenti/vllm-gb10/bench/suite.py",
+    "--base-url",
+    "http://127.0.0.1:8000",
+    "--run-dir",
+    "/home/pgx/Documenti/vllm-gb10/bench/baseline/t-today/uncensored-standard",
+    "--config-id",
+    "uncensored-standard",
+    "--profile",
+    "quick",
+    "--tag",
+    "uncensored-standard",
+    "--quality",
+    "off",
+    "--concurrency",
+    "1,8",
+    "--no-long-smoke"
+  ],
+  "summary_path": "/home/pgx/Documenti/vllm-gb10/bench/baseline/t-today/uncensored-standard/summary.json",
+  "updated_at": "2026-11-21T19:58:49.478+00:00"
+}

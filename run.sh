@@ -129,7 +129,12 @@ avail=$(free -g | awk '/^Mem:/{print $7}')
 echo "  · memory available: ${avail}G   (weights + KV live in the unified pool)"
 
 # --- launch ----------------------------------------------------------------
-RUN=(docker run -d --name "$CONTAINER" --gpus all --ipc=host --shm-size 16g)
+# Unified-memory insurance (same as bench/serve.py): a hard cgroup cap with no
+# container swap turns an over-subscribed KV/chunk into a clean container OOM-
+# kill instead of a host-wide freeze; the oom-score bias protects the desktop.
+# Override by appending your own -m to DOCKER_EXTRA_ARGS (last flag wins).
+RUN=(docker run -d --name "$CONTAINER" --gpus all --ipc=host --shm-size 16g \
+     --memory 116g --memory-swap 116g --oom-score-adj 700)
 [ -n "$CPUSET" ] && RUN+=(--cpuset-cpus "$CPUSET")
 [ -n "$DOCKER_ARGS" ] && RUN+=($DOCKER_ARGS)
 [ -n "$DOCKER_EXTRA_ARGS" ] && RUN+=($DOCKER_EXTRA_ARGS)

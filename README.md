@@ -234,7 +234,7 @@ recipes/
     524k-pmu32.yaml                  open test #2: is the 524k TTFT the prefix unit?
     524k-dual.yaml                   open test #6: two long seats on one box
     524k-fp8kv.yaml                  open test #6b: fp8 KV, two full 524k streams
-    524k-batched64k.yaml             open test #7: 520k prefill ceiling
+    524k-batched48k-fp8.yaml         open test #7: largest feasible chunk (64k OOM'd)
     standard-seats8.yaml             sub-agent fleet shape: 8 seats x 94k KV each
     256k-tri.yaml                    3 seats x 262,144 native, 26 GB bf16
     256k-quad.yaml                   4 seats x 262,144 native, 32 GB bf16 (tight)
@@ -345,14 +345,13 @@ extra drafts nearly free.
 
 ## Open questions and next tests
 
-## Open questions and next tests
-
-Ranked by expected value. **All of them are already wired**: the candidate configurations are
-in `recipes/tests/` (one knob changed each, hypothesis in the header) and the run plan —
-including the order-swapped A/B/A for the uncensored gap — is `bench/matrix-tests.yaml`:
+Four are now **answered** (marked below) by the `t-today` candidate run; the rest are wired and
+ready. The candidates are in `recipes/tests/` (one knob changed each, hypothesis in the header)
+and the run plan — including the order-swapped A/B/A that settled the uncensored gap — is
+`bench/matrix-tests.yaml`:
 
 ```bash
-python3 bench/run_matrix.py --matrix bench/matrix-tests.yaml            # all seven
+python3 bench/run_matrix.py --matrix bench/matrix-tests.yaml            # all twelve
 python3 bench/run_matrix.py --matrix bench/matrix-tests.yaml --only abba-1   # or one
 python3 bench/aggregate.py --results-dir bench/results/tests-20261121   # compare
 ```
@@ -361,18 +360,24 @@ Quality is off in the test matrix (capability equivalence is established; only s
 and capacity are in question) and the profile is quick: the whole file is ~12 boots, ~90 minutes.
 Compare the numbers against `BASELINE.md` — same harness, same box, same day.
 
-1. **The uncensored C=8 gap (−19 %, 140.3 vs 172.4) is the biggest unexplained number in the
-   baseline** and exceeds the ±10–15 % band. Decode at C=1 is identical (63.9 vs 64.1) and
-   acceptance is *higher* (18.3 vs 17.4), so it smells like batch-scaling, not drafting:
-   `MBX_QSA_UNFUSE_INDEXER=1` unfuses the indexer projection, i.e. more kernel launches per
-   step, which only bites at high batch. The 2026-11-12 study saw only 5 % — but it ran
-   uncensored second of two, this run had it third of four. Test: the `abba-1 /
-   uncensored-standard / abba-2` block in `matrix-tests.yaml` — az-standard runs first AND
-   last, so drift shows up as abba-1 ≈ abba-2 ≠ middle.
+1. **The uncensored C=8 gap is REAL — the abba block settled it (run t-today).** Same
+   az-standard recipe booted first and last: **C=8 = 177.1 (abba-1) and 177.4 (abba-2)**,
+   within 0.2 % of each other, so there is no thermal/host drift across the window. The
+   uncensored config booted between them measured **C=8 = 132.0** — a 25 % deficit that is a
+   property of the config, not of when it ran. Cause, as suspected: `MBX_QSA_UNFUSE_INDEXER=1`
+   unfuses the indexer projection (more kernel launches per step), which is free at C=1
+   (uncensored decode 61.9 vs az 62.3, identical) and bites only at batch. This is the price
+   of the abliterated checkpoint under concurrency; a single-user uncensored server does not
+   pay it. No fix to test — it is inherent to the checkpoint; the choice is AZ-for-fleet vs
+   uncensored-for-single-stream.
 2. **The 524k TTFT penalty (+136 ms at C=1, 266 vs 130) is unattributed.** Three candidate
-   causes changed together: `prefix-match-unit` 32→64, `block-size` 860→3520, run order.
-   Test: `524k-pmu32` (prefix-match-unit 32, legal at 3520, one variable) vs the shipped
-   number in `BASELINE.md`.
+2. **The 524k TTFT penalty was the 64-unit prefix match — but 32 is not free (run t-today).**
+   `524k-pmu32` (prefix-match-unit 64 → 32, one variable) measured **TTFT 130 ms, exactly the
+   standard recipe's 130** — the 64-unit match was the whole +136 ms. The catch: TPOT rose to
+   22.2 ms (from 18.8) and C=1 fell to 44.7 (from 55.6), because a 32-unit match means more,
+   smaller cache blocks and more per-token bookkeeping. The shipped 64 trades TTFT for decode;
+   32 trades decode for TTFT — neither dominates. The single quick run means the decode delta
+   needs a full-profile confirmation before shipping either way; the TTFT attribution is settled.
 3. **The 1k prefill sample is a cold-start artifact** (475/263/344/1108/1267 across runs of
    configs that should be identical; a single sample, TTFT up to 3 s). Fix the harness:
    warm-up request before the prefill phase, then median of 3. Until then, read the 1k column
@@ -385,13 +390,18 @@ Compare the numbers against `BASELINE.md` — same harness, same box, same day.
    harness bug.
 5. **`presence_penalty` via `--override-generation-config` may be a no-op** on stock vLLM
    (open since the study). Test: repetition probe with and without, compare `repetition` score.
-6. **A second seat on 524k**: the 767k pool is 1.46× a full request, so two ~350k sessions fit.
-   Tests: `524k-dual` (two seats, depth pinned for both — the C=2 number is the honest
-   per-seat cost) and `524k-fp8kv` (fp8 KV: expect a ~1.5M-token pool, two *full* 524k
-   streams, at some decode cost).
-7. **520k prefill at 65,536 batched tokens** (`524k-batched64k`): halves the chunk count
-   (16→8); the needle run says 2,216 tok/s, one boot tells you whether the ceiling is
-   chunking or bandwidth.
+6. **A second seat on 524k — partially answered (run t-today).** `524k-fp8kv` booted and
+   measured exactly as predicted: **pool 1,491,955 tokens = 2.85×** a full 524k request, so
+   two *full* bf16-killer streams fit; decode 57.6 vs the 63.4 of bf16 (−9 %, close to the
+   study's −8 %). `524k-dual` did **not** boot: two seats at K=16 hit a drafter shape bug
+   (`draft buffer 2×16 vs expected 2×17`, hidden 2560). The recipe now drops 2-seat depth to
+   8 (the standard ladder value, compiles clean) — re-run to get the honest C=2 per-seat cost.
+7. **Prefill chunking is memory-bound, not bandwidth-bound (settled by an OOM).** The
+   64k-chunk candidate (`524k-batched64k`) froze the box on 2026-11-21: a 64k chunk × 524k
+   context needs ~32 GB of activations (the QSA indexer scores every query token against the
+   whole context), so 74 weights + 23 KV + 32 act = 129 GB > 128 GB. The largest feasible
+   chunk is ~49k and only on fp8 KV — that is the new `524k-batched48k-fp8`, kept to measure
+   whether a 1.5× chunk still helps the 520k prefill (directional, two variables changed).
 8. **eugr b12x against the new baseline.** The old comparison used the pre-refactor numbers
    (157 at C=8); the standard config now measures 172.4. Re-run
    `./bench/baseline.py --attach http://127.0.0.1:8000 --only az-standard` against b12x before

@@ -1,0 +1,51 @@
+{
+  "duration_s": 418.2,
+  "error": null,
+  "exit_codes": {
+    "serve": 0,
+    "suite": 0
+  },
+  "name": "524k-pmu32",
+  "serve_command": [
+    "/usr/bin/python3",
+    "/home/pgx/Documenti/vllm-gb10/bench/serve.py",
+    "up",
+    "--recipe",
+    "recipes/tests/524k-pmu32.yaml",
+    "--name",
+    "bench-524k-pmu32",
+    "--run-id",
+    "524k-pmu32",
+    "--run-dir",
+    "/home/pgx/Documenti/vllm-gb10/bench/baseline/t-today/524k-pmu32",
+    "--config-id",
+    "524k-pmu32",
+    "--port",
+    "8000",
+    "--boot-timeout",
+    "1500"
+  ],
+  "started_at": "2026-11-21T20:05:56.562+00:00",
+  "status": "done",
+  "suite_command": [
+    "/usr/bin/python3",
+    "/home/pgx/Documenti/vllm-gb10/bench/suite.py",
+    "--base-url",
+    "http://127.0.0.1:8000",
+    "--run-dir",
+    "/home/pgx/Documenti/vllm-gb10/bench/baseline/t-today/524k-pmu32",
+    "--config-id",
+    "524k-pmu32",
+    "--profile",
+    "quick",
+    "--tag",
+    "524k-pmu32",
+    "--quality",
+    "off",
+    "--concurrency",
+    "1",
+    "--no-long-smoke"
+  ],
+  "summary_path": "/home/pgx/Documenti/vllm-gb10/bench/baseline/t-today/524k-pmu32/summary.json",
+  "updated_at": "2026-11-21T20:12:54.737+00:00"
+}

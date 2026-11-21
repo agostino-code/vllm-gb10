@@ -1,0 +1,10 @@
+{
+  "base_url": "http://127.0.0.1:8000",
+  "command": "suite.py --base-url http://127.0.0.1:8000 --run-dir /home/pgx/Documenti/vllm-gb10/bench/baseline/b-today/az-standard --config-id az-standard --profile full --tag az-standard --request-timeout 300 --retries 1 --quality full",
+  "finished_at": "2026-11-21T18:54:36.785+00:00",
+  "model": "azampatti/Qwen3.8-Flash-Next-FP4-Local-AZ",
+  "profile": "full",
+  "run_id": "az-standard",
+  "started_at": "2026-11-21T18:51:05.204+00:00",
+  "suite_version": "1.0"
+}

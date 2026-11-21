@@ -1,0 +1,10 @@
+{
+  "base_url": "http://127.0.0.1:8000",
+  "command": "suite.py --base-url http://127.0.0.1:8000 --run-dir /home/pgx/Documenti/vllm-gb10/bench/baseline/b-today/az-524k-single --config-id az-524k-single --profile full --tag az-524k-single --request-timeout 300 --retries 1 --quality full --concurrency 1 --long-target-tokens 520000",
+  "finished_at": "2026-11-21T19:10:39.880+00:00",
+  "model": "azampatti/Qwen3.8-Flash-Next-FP4-Local-AZ-524k",
+  "profile": "full",
+  "run_id": "az-524k-single",
+  "started_at": "2026-11-21T19:04:36.184+00:00",
+  "suite_version": "1.0"
+}

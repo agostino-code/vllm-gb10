@@ -40,7 +40,9 @@ env:
   MBX_DEPTH_WINDOW: "48"
   MBX_DEPTH_PROMOTE: "60,45"
   MBX_DEPTH_DEMOTE: "25,15"
-  MBX_DEPTH_CEIL: "[1 -> 16, 2 -> 16]"
+  MBX_DEPTH_CEIL: "[1 -> 16, 2 -> 8]"   # 2 seats at K=16 hit a shape bug (draft buffer 2x16 vs
+                                     # expected 2x17, hidden 2560); K=8 at 2 seats is the standard
+                                     # ladder value and compiles clean
   MBX_DEPTH_SYNCFREE: "1"
   MBX_DRAFT_HEAD: "1"
 

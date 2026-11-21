@@ -1,0 +1,10 @@
+{
+  "base_url": "http://127.0.0.1:8000",
+  "command": "suite.py --base-url http://127.0.0.1:8000 --run-dir /home/pgx/Documenti/vllm-gb10/bench/baseline/t-today/524k-pmu32 --config-id 524k-pmu32 --profile quick --tag 524k-pmu32 --quality off --concurrency 1 --no-long-smoke",
+  "finished_at": "2026-11-21T20:12:54.717+00:00",
+  "model": "azampatti/Qwen3.8-Flash-Next-FP4-Local-AZ-524k-pmu32",
+  "profile": "quick",
+  "run_id": "524k-pmu32",
+  "started_at": "2026-11-21T20:12:13.660+00:00",
+  "suite_version": "1.0"
+}
