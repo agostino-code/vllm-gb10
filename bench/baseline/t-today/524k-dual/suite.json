@@ -1,0 +1,10 @@
+{
+  "base_url": "http://127.0.0.1:8000",
+  "command": "suite.py --base-url http://127.0.0.1:8000 --run-dir /home/pgx/Documenti/vllm-gb10/bench/baseline/t-today/524k-dual --config-id 524k-dual --profile quick --tag 524k-dual --quality off --concurrency 1,2 --no-long-smoke",
+  "finished_at": "2026-11-21T21:18:57.023+00:00",
+  "model": "azampatti/Qwen3.8-Flash-Next-FP4-Local-AZ-524k-dual",
+  "profile": "quick",
+  "run_id": "524k-dual",
+  "started_at": "2026-11-21T21:18:13.981+00:00",
+  "suite_version": "1.0"
+}

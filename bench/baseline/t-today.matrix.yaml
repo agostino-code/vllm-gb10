@@ -49,8 +49,8 @@ configs:
     concurrency:
     - 1
     long_smoke: false
-- name: 524k-batched64k
-  recipe: recipes/tests/524k-batched64k.yaml
+- name: 524k-batched48k-fp8
+  recipe: recipes/tests/524k-batched48k-fp8.yaml
   suite:
     concurrency:
     - 1

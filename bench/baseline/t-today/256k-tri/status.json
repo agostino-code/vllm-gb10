@@ -1,0 +1,52 @@
+{
+  "duration_s": 408.5,
+  "error": null,
+  "exit_codes": {
+    "serve": 0,
+    "suite": 0
+  },
+  "name": "256k-tri",
+  "serve_command": [
+    "/usr/bin/python3",
+    "/home/pgx/Documenti/vllm-gb10/bench/serve.py",
+    "up",
+    "--recipe",
+    "recipes/tests/256k-tri.yaml",
+    "--name",
+    "bench-256k-tri",
+    "--run-id",
+    "256k-tri",
+    "--run-dir",
+    "/home/pgx/Documenti/vllm-gb10/bench/baseline/t-today/256k-tri",
+    "--config-id",
+    "256k-tri",
+    "--port",
+    "8000",
+    "--boot-timeout",
+    "1500"
+  ],
+  "started_at": "2026-11-21T21:39:57.807+00:00",
+  "status": "done",
+  "suite_command": [
+    "/usr/bin/python3",
+    "/home/pgx/Documenti/vllm-gb10/bench/suite.py",
+    "--base-url",
+    "http://127.0.0.1:8000",
+    "--run-dir",
+    "/home/pgx/Documenti/vllm-gb10/bench/baseline/t-today/256k-tri",
+    "--config-id",
+    "256k-tri",
+    "--profile",
+    "quick",
+    "--tag",
+    "256k-tri",
+    "--quality",
+    "off",
+    "--concurrency",
+    "1,3",
+    "--long-target-tokens",
+    "260000"
+  ],
+  "summary_path": "/home/pgx/Documenti/vllm-gb10/bench/baseline/t-today/256k-tri/summary.json",
+  "updated_at": "2026-11-21T21:46:46.317+00:00"
+}

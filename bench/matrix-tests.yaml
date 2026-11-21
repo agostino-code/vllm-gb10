@@ -91,6 +91,7 @@ configs:
     recipe: recipes/tests/524k-batched48k-fp8.yaml
     suite:
       concurrency: [1]
+      long_smoke: true
       long_target_tokens: 520000
 
   # ── sub-agent fleet shape ────────────────────────────────────────────────
@@ -110,6 +111,7 @@ configs:
     recipe: recipes/tests/786k-single.yaml
     suite:
       concurrency: [1]
+      long_smoke: true
       long_target_tokens: 780000
       long_timeout: 1200
 
@@ -124,18 +126,21 @@ configs:
     recipe: recipes/tests/256k-tri.yaml
     suite:
       concurrency: [1, 3]
+      long_smoke: true
       long_target_tokens: 260000
 
   - name: 256k-quad
     recipe: recipes/tests/256k-quad.yaml
     suite:
       concurrency: [1, 4]
+      long_smoke: true
       long_target_tokens: 260000
 
   - name: 256k-quad-fp8
     recipe: recipes/tests/256k-quad-fp8.yaml
     suite:
       concurrency: [1, 4]
+      long_smoke: true
       long_target_tokens: 260000
 
 

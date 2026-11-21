@@ -1,0 +1,52 @@
+{
+  "duration_s": 397.0,
+  "error": null,
+  "exit_codes": {
+    "serve": 0,
+    "suite": 0
+  },
+  "name": "256k-quad",
+  "serve_command": [
+    "/usr/bin/python3",
+    "/home/pgx/Documenti/vllm-gb10/bench/serve.py",
+    "up",
+    "--recipe",
+    "recipes/tests/256k-quad.yaml",
+    "--name",
+    "bench-256k-quad",
+    "--run-id",
+    "256k-quad",
+    "--run-dir",
+    "/home/pgx/Documenti/vllm-gb10/bench/baseline/t-today/256k-quad",
+    "--config-id",
+    "256k-quad",
+    "--port",
+    "8000",
+    "--boot-timeout",
+    "1500"
+  ],
+  "started_at": "2026-11-21T21:46:48.430+00:00",
+  "status": "done",
+  "suite_command": [
+    "/usr/bin/python3",
+    "/home/pgx/Documenti/vllm-gb10/bench/suite.py",
+    "--base-url",
+    "http://127.0.0.1:8000",
+    "--run-dir",
+    "/home/pgx/Documenti/vllm-gb10/bench/baseline/t-today/256k-quad",
+    "--config-id",
+    "256k-quad",
+    "--profile",
+    "quick",
+    "--tag",
+    "256k-quad",
+    "--quality",
+    "off",
+    "--concurrency",
+    "1,4",
+    "--long-target-tokens",
+    "260000"
+  ],
+  "summary_path": "/home/pgx/Documenti/vllm-gb10/bench/baseline/t-today/256k-quad/summary.json",
+  "updated_at": "2026-11-21T21:53:25.425+00:00"
+}

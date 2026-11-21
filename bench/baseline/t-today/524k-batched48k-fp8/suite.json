@@ -1,0 +1,10 @@
+{
+  "base_url": "http://127.0.0.1:8000",
+  "command": "suite.py --base-url http://127.0.0.1:8000 --run-dir /home/pgx/Documenti/vllm-gb10/bench/baseline/t-today/524k-batched48k-fp8 --config-id 524k-batched48k-fp8 --profile quick --tag 524k-batched48k-fp8 --quality off --concurrency 1 --long-target-tokens 520000",
+  "finished_at": "2026-11-21T21:26:17.807+00:00",
+  "model": "azampatti/Qwen3.8-Flash-Next-FP4-Local-AZ-524k-b48k-fp8",
+  "profile": "quick",
+  "run_id": "524k-batched48k-fp8",
+  "started_at": "2026-11-21T21:25:38.359+00:00",
+  "suite_version": "1.0"
+}

@@ -1,0 +1,51 @@
+{
+  "duration_s": 414.7,
+  "error": null,
+  "exit_codes": {
+    "serve": 0,
+    "suite": 0
+  },
+  "name": "standard-seats8",
+  "serve_command": [
+    "/usr/bin/python3",
+    "/home/pgx/Documenti/vllm-gb10/bench/serve.py",
+    "up",
+    "--recipe",
+    "recipes/tests/standard-seats8.yaml",
+    "--name",
+    "bench-standard-seats8",
+    "--run-id",
+    "standard-seats8",
+    "--run-dir",
+    "/home/pgx/Documenti/vllm-gb10/bench/baseline/t-today/standard-seats8",
+    "--config-id",
+    "standard-seats8",
+    "--port",
+    "8000",
+    "--boot-timeout",
+    "1500"
+  ],
+  "started_at": "2026-11-21T21:26:19.916+00:00",
+  "status": "done",
+  "suite_command": [
+    "/usr/bin/python3",
+    "/home/pgx/Documenti/vllm-gb10/bench/suite.py",
+    "--base-url",
+    "http://127.0.0.1:8000",
+    "--run-dir",
+    "/home/pgx/Documenti/vllm-gb10/bench/baseline/t-today/standard-seats8",
+    "--config-id",
+    "standard-seats8",
+    "--profile",
+    "quick",
+    "--tag",
+    "standard-seats8",
+    "--quality",
+    "off",
+    "--concurrency",
+    "1,4,8",
+    "--no-long-smoke"
+  ],
+  "summary_path": "/home/pgx/Documenti/vllm-gb10/bench/baseline/t-today/standard-seats8/summary.json",
+  "updated_at": "2026-11-21T21:33:14.575+00:00"
+}

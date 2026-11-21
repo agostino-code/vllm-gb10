@@ -1,0 +1,10 @@
+{
+  "base_url": "http://127.0.0.1:8000",
+  "command": "suite.py --base-url http://127.0.0.1:8000 --run-dir /home/pgx/Documenti/vllm-gb10/bench/baseline/t-today/standard-seats8 --config-id standard-seats8 --profile quick --tag standard-seats8 --quality off --concurrency 1,4,8 --no-long-smoke",
+  "finished_at": "2026-11-21T21:33:14.560+00:00",
+  "model": "azampatti/Qwen3.8-Flash-Next-FP4-Local-AZ-s8",
+  "profile": "quick",
+  "run_id": "standard-seats8",
+  "started_at": "2026-11-21T21:32:24.498+00:00",
+  "suite_version": "1.0"
+}
