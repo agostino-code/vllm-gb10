@@ -175,6 +175,13 @@ def extract(name: str, run_dir: Path) -> dict:
     # prefill
     row["prefill"] = {k: g(v, "prefill_tok_s") for k, v in (pre.get("by_target") or {}).items()}
 
+    # long-context smoke (the needle at full advertised context)
+    lc = ph.get("long_context") or {}
+    if lc:
+        row["needle"] = {k: lc.get(k) for k in
+                         ("target_tokens", "prompt_tokens", "needle_ok",
+                          "prefill_tok_s", "ttft_ms", "duration_s", "status")}
+
     # speculative decoding
     row["accept"] = ov.get("acceptance_rate")
     row["tps"] = ov.get("tokens_per_step")
@@ -246,9 +253,17 @@ def build_report(rows: list[dict], env: dict) -> str:
     a(f"- **image**: `{env['image']}` ({env['image_id']})")
     a(f"- **harness**: suite {env['harness']} · profile {env['profile']} · "
       f"quality {env['quality']}")
-    a(f"- **host**: vm.compaction_proactiveness={env['compaction']}, "
-      f"{env['mem_free']}G free at start, {env['n_configs']} configs")
-    a(f"- **raw**: `{env['results_dir']}/<config>/summary.json`")
+    a(f"- **host at report time**: vm.compaction_proactiveness={env['compaction']}, "
+      f"{env['mem_free']}G free, {env['n_configs']} configs")
+    if len(env.get("sources", [])) > 1:
+        a(f"- **sources**: {env['results_dir']} (later runs override)")
+        by_src: dict[str, list[str]] = {}
+        for cfg, src in env["per_config_source"].items():
+            by_src.setdefault(src, []).append(cfg)
+        for src in env["sources"]:
+            a(f"  - `{src}`: {', '.join(sorted(by_src.get(src, [])))}")
+    else:
+        a(f"- **raw**: `{env['results_dir']}/<config>/summary.json`")
     a("")
     a("## Summary")
     a("")
@@ -325,6 +340,26 @@ def build_report(rows: list[dict], env: dict) -> str:
             a(f"| {r['name']} | " + " | ".join(num(pf.get(t), "{:.0f}") for t in tgts) + " |")
         a("")
 
+        a("## Long-context smoke (needle at full context)")
+        a("")
+        a("| config | target | prompt tokens | needle | prefill tok/s | TTFT s |")
+        a("|---|---|---|---|---|---|")
+        for r in ok:
+            nd = r.get("needle") or {}
+            if not nd:
+                a(f"| {r['name']} | — | — | — | — | — |")
+                continue
+            a(f"| {r['name']} | {num(nd.get('target_tokens'),'{:,.0f}')} | "
+              f"{num(nd.get('prompt_tokens'),'{:,.0f}')} | "
+              f"{'OK' if nd.get('needle_ok') else 'MISS'} | "
+              f"{num(nd.get('prefill_tok_s'),'{:.0f}')} | "
+              f"{num((nd.get('ttft_ms') or 0)/1000 if nd.get('ttft_ms') else None,'{:.0f}')} |")
+        a("")
+        a("*The 524k configs were never actually exercised at their ceiling before the 2026-11-21 "
+          "builder fix: the '524k' smoke was really 384k. These are the first true full-context "
+          "measurements on this stack.*")
+        a("")
+
         a("## Quality gate")
         a("")
         qcats = sorted({c for r in ok for c in (r.get("quality_cats") or {})})
@@ -364,7 +399,7 @@ def build_report(rows: list[dict], env: dict) -> str:
     a("")
     a("```bash")
     a(env["reproduce"])
-    a(f"./bench/baseline.py --report {env['results_dir']}   # rebuild this file from the raw results")
+    a(f"./bench/baseline.py --report {' '.join(env['sources'])}   # rebuild this file from the raw results")
     a("```")
     a("")
     return "\n".join(L)
@@ -444,26 +479,22 @@ def main(argv=None) -> int:
     ap.add_argument("--fail-fast", action="store_true")
     ap.add_argument("--dry-run", action="store_true")
     ap.add_argument("--attach", metavar="URL", help="measure a server already running at URL")
-    ap.add_argument("--report", nargs="?", const="", metavar="DIR",
-                    help="rebuild BASELINE.md from an existing results dir")
+    ap.add_argument("--report", nargs="*", metavar="DIR",
+                    help="rebuild BASELINE.md from existing results dirs; later dirs override "
+                         "configs from earlier ones, so `--report <standard-run> <524k-run>` "
+                         "merges runs measured at different times into one view")
     args = ap.parse_args(argv)
 
     results_dir = BASE / args.run_id
 
     # ---- report only -------------------------------------------------------
-    if args.report is not None and args.report != "":
-        results_dir = Path(args.report)
-        if not results_dir.is_absolute():
-            results_dir = REPO / results_dir
-        return emit(results_dir, results_dir.name, quiet=False)
-
-    if args.report == "":
-        # --report with no argument: newest baseline
-        cands = sorted((p for p in BASE.glob("*") if p.is_dir()), key=lambda p: p.stat().st_mtime)
-        if not cands:
-            print("no baseline results yet — run ./bench/baseline.py first", file=sys.stderr)
-            return 2
-        return emit(cands[-1], cands[-1].name, quiet=False)
+    if args.report is not None:
+        dirs = [Path(d) for d in args.report] or None
+        if dirs is None:
+            # --report with no argument: newest baseline
+            dirs = sorted((p for p in BASE.glob("*") if p.is_dir()),
+                          key=lambda p: p.stat().st_mtime)[-1:]
+        return emit(dirs, "+".join(d.name for d in dirs), quiet=False)
 
     # ---- preflight ---------------------------------------------------------
     servers = running_servers()
@@ -508,20 +539,32 @@ def main(argv=None) -> int:
     return emit(results_dir, args.run_id)
 
 
-def emit(results_dir: Path, run_id: str, quiet: bool = False) -> int:
-    if not results_dir.is_absolute():
-        results_dir = REPO / results_dir
-    if not results_dir.is_dir():
-        print(f"✗ no results at {results_dir}", file=sys.stderr)
-        return 2
+def emit(results_dirs: list[Path] | Path, run_id: str, quiet: bool = False) -> int:
+    """Build BASELINE.md from one or more results dirs; later dirs override configs."""
+    if isinstance(results_dirs, Path):
+        results_dirs = [results_dirs]
+    resolved: list[Path] = []
+    for d in results_dirs:
+        if not d.is_absolute():
+            d = REPO / d
+        if not d.is_dir():
+            print(f"✗ no results at {d}", file=sys.stderr)
+            return 2
+        resolved.append(d)
 
-    names = [p.name for p in sorted(results_dir.iterdir()) if p.is_dir()]
-    names.sort(key=lambda n: ORDER.index(n) if n in ORDER else 99)
-    if not names:
-        print(f"✗ {results_dir} has no config directories", file=sys.stderr)
+    # config -> (dir, row); later dirs win, so a re-measured config replaces its old numbers
+    merged: dict[str, tuple[Path, dict]] = {}
+    for d in resolved:
+        for p in sorted(d.iterdir()):
+            if p.is_dir():
+                merged[p.name] = (d, extract(p.name, p))
+    if not merged:
+        print(f"✗ {resolved[-1]} has no config directories", file=sys.stderr)
         return 2
+    names = sorted(merged, key=lambda n: ORDER.index(n) if n in ORDER else 99)
+    rows = [merged[n][1] for n in names]
+    sources = sorted({str(merged[n][0].relative_to(REPO)) for n in names})
 
-    rows = [extract(n, results_dir / n) for n in names]
     images = sorted({r["image"] for r in rows if r.get("image")})
     profiles = sorted({r["profile"] for r in rows if r.get("profile")})
     qmodes = sorted({r["quality_mode"] for r in rows if r.get("quality_mode")})
@@ -537,8 +580,12 @@ def emit(results_dir: Path, run_id: str, quiet: bool = False) -> int:
         "compaction": host_facts()["compaction"],
         "mem_free": host_facts()["mem_free"],
         "n_configs": len(names),
-        "results_dir": str(results_dir.relative_to(REPO)) if results_dir.is_relative_to(REPO) else str(results_dir),
-        "reproduce": f"./bench/baseline.py --run-id {run_id}   # resume (add --force to re-measure)",
+        "sources": sources,
+        "results_dir": ", ".join(sources),
+        "reproduce": "\n".join(
+            f"./bench/baseline.py --run-id {Path(s).name}   # resume (add --force to re-measure)"
+            for s in sources),
+        "per_config_source": {n: str(merged[n][0].relative_to(REPO)) for n in names},
     }
     text = build_report(rows, env)
     REPORT.write_text(text, encoding="utf-8")

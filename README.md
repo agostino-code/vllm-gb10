@@ -31,6 +31,7 @@ validation, and the negative results — is in **[BENCHMARK-REPORT.md](BENCHMARK
 - [Repository layout](#repository-layout)
 - [Recipes and overrides](#recipes-and-overrides)
 - [Measured results](#measured-results)
+- [Open questions and next tests](#open-questions-and-next-tests)
 - [Benchmark harness](#benchmark-harness-bench)
 - [Quality gate](#quality-gate-quality)
 - [The alternative eugr b12x stack](#the-alternative-eugr-b12x-stack)
@@ -134,16 +135,17 @@ Same image, same kernels, same drafter. They differ only where the goal differs.
 | `cudagraph_capture_sizes` | to 96 | to 96 **+17, 112, 128** |
 | `pass_config` fusions | default | **norm/act/attn quant + rope_kvcache_cat_mla** |
 | speculative depth | K=12, dynamic ladder | **K=16**, ceiling pinned `[1 -> 16]` |
-| KV pool | 750,933 tokens (1.83× a 400k request) | 750,933+ tokens (**1.43× a 524k request**) |
+| KV pool | 750,933 tokens (1.83× a 400k request) | **767,013** tokens (**1.46× a 524k request**, measured) |
 
 `block-size` differs by 64 tokens for a hard reason, not a tuning preference: the QSA drafter
 ring has capacity **K+4** and the engine refuses to boot unless it divides the block size
 (`QSA ring capacity 20 must divide the attention block size 3456`, measured). At K=12 the ring
 is 16 and 3,456 is legal; at K=16 the ring is 20, so 3,520 = 20×176 = 64×55. The first cut of
 the 524k recipe used 860/32 inherited from the container it replaced; the 2026-11-21 baseline
-measured the cost — the engine reserved the same 23 GB and returned 604,947 KV tokens instead
-of 750,933 (each of the 703 small blocks pays a per-block state charge, visible as group pages
-`13760` vs `3456` in the boot log), and TTFT at C=1 was 163 ms vs 130.
+measured the cost — the engine reserved the same 23 GB and returned 604,947 KV tokens, because
+each of the 703 small blocks pays a per-block state charge (visible as group pages `13760` vs
+`3520` in the boot log). With 3,520 the same 23 GB yield **767,013 tokens = 1.46×** a full
+524,288-token request, confirmed in the boot log of both checkpoints.
 
 The 23 GiB bf16 KV pool is what makes the 524k configuration fit at all. Do not lower
 `kv-cache-memory` there.
@@ -162,14 +164,15 @@ Both are the same Qwen4Exp hybrid: 48 layers, gated-delta-net linear attention +
 hyper-connections, 512 routed experts, NVFP4 experts with MXFP8 dense layers, one MTP layer, and a
 PLE n-gram table read from NVMe.
 
-Measured side by side (full detail in the report):
+Measured side by side, standard configuration, 2026-11-21 baseline (refusal study and full
+detail in the report):
 
 | | AZ | uncensored |
 |---|---|---|
 | refusal rate, 50 held-out harmful prompts | 78–82 % | **0 %** |
-| quality gate (quick) | 0.9667 | 0.9667 |
-| decode, single stream | 53.3 tok/s | 52.8 tok/s |
-| C=8 | 142.0 tok/s | 134.5 tok/s |
+| quality gate (full) | 0.9714 | 0.9643 (524k variant: **0.9786**, best of all four) |
+| decode, single stream | 64.1 tok/s | 63.9 tok/s |
+| C=8 | 172.4 tok/s | 140.3 tok/s |
 
 The uncensored preset needs one extra env knob, `MBX_QSA_UNFUSE_INDEXER=1`, which is set in its
 recipe. This checkpoint stores `q/k/v` under mixed schemes (int8 on 12 of 48 layers, bf16 on the
@@ -258,28 +261,30 @@ CHAT_TEMPLATE=/path/to/template.jinja ./presets/run_az_standard.sh   # empty = t
 
 ## Measured results
 
+**The current numbers are in [`BASELINE.md`](BASELINE.md)** — one pasteable view of all four
+configurations, rebuilt from the raw results with `./bench/baseline.py --report <dirs>`. As
+measured 2026-11-21 on this box (image `v5.4`, bc42593a5bbf, full profile + full quality):
+
+| config | decode | C=1 | C=8 | TTFT | KV pool | quality | 524k needle |
+|---|---|---|---|---|---|---|---|
+| az-standard | 64.1 | 56.6 | 172.4 | 130 ms | 750,933 | 0.9714 | 96k OK |
+| az-524k-single | 63.4 | 55.6 | — | 266 ms | 767,013 | 0.9714 | **518k OK** |
+| uncensored-standard | 63.9 | 55.9 | 140.3 | 154 ms | 750,933 | 0.9643 | 96k OK |
+| uncensored-524k-single | 63.3 | 54.6 | — | 287 ms | 767,013 | **0.9786** | **518k OK** |
+
+The two 524k configs cost ~1 % decode versus standard and give 524,288 real context with a
+verified needle at 518k tokens (2,216 tok/s prefill, 234 s to first token). The abliteration
+costs nothing measurable — the uncensored 524k config posted the best quality of the four.
+
 Methodology, in one paragraph: each configuration boots its own container; the harness records the
 image digest, the exact argv/env/mounts, boot seconds, the full server log, per-request JSONL, the
 Prometheus spec-decode counters, and a **client-vs-server token cross-check** (ratio 1.000 = no
 external traffic). Decode numbers are medians at temperature 0, thinking off. The decisive
 comparisons were interleaved A/B/A runs, because single-run rankings swing ±10–15 % on this box.
 
-**`az-standard`, full profile:**
-
-| metric | value |
-|---|---|
-| decode (median) | **53.3 tok/s** — code 54.6 · JSON 59.9 · math 51.6 · QA 41.4 |
-| TTFT / TPOT p50 | 181 ms / 18.8 ms |
-| C=1 / 2 / 4 / 8 / 16 | 49.0 / 67.3 / 103.6 / 142.0 / 198.2 tok/s |
-| sustained C=8 / C=16 (60 s) | **198.5** / 292.4 tok/s |
-| prefill 1k / 8k / 32k | 1108 / 2341 / 2260 tok/s |
-| 96k needle | TTFT 42.5 s, prefill 2266 tok/s, recall OK |
-| spec decode | 17.0 % acceptance, 3.04 tokens/step at depth 12 |
-| quality gate | 0.9667 quick · 3/3 strict needle at 32k / 128k / 262k |
-| boot | 356 s warm |
-
 **Content matters more than any knob.** Single-stream throughput tracks draft acceptance, which
-tracks content: code and JSON accept 5–6 tokens/step, prose ~2.8–3.2. Same preset, same box:
+tracks content: code and JSON accept 5–6 tokens/step, prose ~2.8–3.2. Same preset, same box
+(from the earlier study, still the case):
 
 | content | decode | acceptance | tokens/step |
 |---|---|---|---|
@@ -291,7 +296,8 @@ tracks content: code and JSON accept 5–6 tokens/step, prose ~2.8–3.2. Same p
 That is the whole reconciliation with the 80+ tok/s published elsewhere: those are code-only
 answers on a quiet box.
 
-**Negative results, kept on purpose** — each of these costs you throughput:
+**Negative results, kept on purpose** — each of these costs you throughput (full study with
+methodology and A/B/A tables: [`BENCHMARK-REPORT.md`](BENCHMARK-REPORT.md)):
 
 | change | effect |
 |---|---|
@@ -303,8 +309,47 @@ answers on a quiet box.
 | depth 5 / 6 / 9 | 50.7 / 55.7 / 50.7 — inside noise |
 
 The depth story in one line: **the accepted-token curve dies after position 2 on every drafter
-tested**, so more than ~4 drafts per step only adds compute — and depth 4 and depth 12 are
-throughput-equal because the fused multi-step drafter makes the extra drafts nearly free.
+tested** (confirmed again on all four configs in the 2026-11-21 baseline: p0–p2 carry 93–94 % of
+accepted tokens, p5 and beyond are zero), so more than ~4 drafts per step only adds compute —
+and depth 4 and depth 12 are throughput-equal because the fused multi-step drafter makes the
+extra drafts nearly free.
+
+## Open questions and next tests
+
+Ranked by expected value, all expressible as `bench/matrix.yaml` overrides — no new code:
+
+1. **The uncensored C=8 gap (−19 %, 140.3 vs 172.4) is the biggest unexplained number in the
+   baseline** and exceeds the ±10–15 % band. Decode at C=1 is identical (63.9 vs 64.1) and
+   acceptance is *higher* (18.3 vs 17.4), so it smells like batch-scaling, not drafting:
+   `MBX_QSA_UNFUSE_INDEXER=1` unfuses the indexer projection, i.e. more kernel launches per
+   step, which only bites at high batch. The 2026-11-12 study saw only 5 % — but it ran
+   uncensored second of two, this run had it third of four. Test: order-swapped A/B/A
+   (`az-standard`, `uncensored-standard`, `az-standard`) at C=8 sustained, 60 s each.
+2. **The 524k TTFT penalty (+136 ms at C=1, 266 vs 130) is unattributed.** Three candidate
+   causes changed together: `prefix-match-unit` 32→64, `block-size` 860→3520, run order.
+   Test: `az-524k-single` with `set: vllm.prefix-match-unit: 32` (legal at 3520), measured
+   twice back-to-back against the shipped one.
+3. **The 1k prefill sample is a cold-start artifact** (475/263/344/1108/1267 across runs of
+   configs that should be identical; a single sample, TTFT up to 3 s). Fix the harness:
+   warm-up request before the prefill phase, then median of 3. Until then, read the 1k column
+   as noise.
+4. **~~`instruction` 0.80 — investigated and closed, it is honest.~~** Two of ten tasks fail on
+   every config and every run because the model cannot count: `instr-01` ("exactly 12 words")
+   answers 13, `instr-09` ("repeat 'ab' exactly 20 times") outputs `ab`×10 — both with
+   `finish_reason=stop` and no truncation. Already documented in `quality/README.md` as
+   baseline behaviour identical in M0. Keep the 0.80: it is a real capability signal, not a
+   harness bug.
+5. **`presence_penalty` via `--override-generation-config` may be a no-op** on stock vLLM
+   (open since the study). Test: repetition probe with and without, compare `repetition` score.
+6. **A second seat on 524k**: the 767k pool is 1.46× a full request, so two ~350k sessions fit.
+   If dual long-context agents are a real use case, measure `set: vllm.max-num-seqs: 2` at
+   C=2 — expect a decode cost; the fp8-KV variant instead buys 2.9× the pool for −8 % decode.
+7. **520k prefill at 65,536 batched tokens**: halves the chunk count (16→8); the needle run
+   says 2,216 tok/s, worth one boot to see if the ceiling is chunking or bandwidth.
+8. **eugr b12x against the new baseline.** The old comparison used the pre-refactor numbers
+   (157 at C=8); the standard config now measures 172.4. Re-run
+   `./bench/baseline.py --attach http://127.0.0.1:8000 --only az-standard` against b12x before
+   repeating the "~30 % slower" claim.
 
 ## Benchmark harness (`bench/`)
 
@@ -317,7 +362,10 @@ you can paste straight into a conversation.
 ./bench/baseline.py --profile quick      # fast pass (~10 min total instead of ~40)
 ./bench/baseline.py --only az-standard   # one config (repeatable)
 ./bench/baseline.py --dry-run            # show the plan, change nothing
-./bench/baseline.py --report             # rebuild BASELINE.md from results you already have
+./bench/baseline.py --report             # rebuild BASELINE.md from the newest results
+./bench/baseline.py --report DIR [DIR…]  # …or merge specific runs (later dirs override
+                                         # the same config — how this file combines
+                                         # 033710Z's standards with 161012Z's 524k)
 ```
 
 It refuses to start while another model server is running — this box serves one model at a time
@@ -406,9 +454,11 @@ Two things to know before you trust a b12x number:
   so the 524k single-stream configuration at K=16 cannot be reproduced there — that one is
   myllmbox-only. The standard configuration at K=4/K=7 can.
 
-Measured on this box with `AUTOTUNE=0` (autotune costs ~55–65 min on first boot): quality
-identical at 0.9667, host-RAM pressure lower (no ~31 GB PLE table map), but **~30 % slower at
-C=8** (99.9 vs 142.0 tok/s). Details in [`eugr-b12x/README.md`](eugr-b12x/README.md).
+Measured on this box with `AUTOTUNE=0` (autotune costs ~55–65 min on first boot), during the
+study: quality identical, host-RAM pressure lower (no ~31 GB PLE table map), but **~30 % slower
+at C=8** (99.9 vs 142.0 tok/s). The standard baseline has since measured 172.4 at C=8, so that
+comparison needs a re-run before the number is quoted again — open test #7. Details in
+[`eugr-b12x/README.md`](eugr-b12x/README.md).
 
 ## Troubleshooting
 
@@ -424,15 +474,16 @@ C=8** (99.9 vs 142.0 tok/s). Details in [`eugr-b12x/README.md`](eugr-b12x/README
 | `✗ container exited` | engine failure | `docker logs qwen38-flash-next`; the error maps to one of the rows above |
 | `free -g` shows < 8 GB while serving | 102 GB weights + 23 GB KV in 128 GB unified | expected; close other consumers |
 
-Two open questions worth settling before you trust the tuning:
+One open question left, plus one the baseline settled:
 
-- **`presence_penalty` in `--override-generation-config`.** Stock vLLM ignores it without a patch.
-  `./check.sh --penalty` shows whether the flag reached the engine config; whether it is *applied*
-  needs an A/B at temperature 0.6.
-- **`MBX_DEPTH_CEIL` has no key for 1–3 requests** in the standard recipe
-  (`[4 -> 8, 6 -> 7, 12 -> 6, 14 -> 5]`), while the comment claims 1–3 → 12. Either the default
-  below the first key is the configured K, or the ladder is not doing what the comment says.
-  `./check.sh --spec` and the spec counters in `bench/results/*/meta.json` will tell you.
+- **`presence_penalty` in `--override-generation-config` may be a no-op.** Stock vLLM ignores it
+  without a patch. `./check.sh --penalty` shows whether the flag reached the engine config;
+  whether it is *applied* needs an A/B at temperature 0.6 (repetition probe, open test #4).
+- **Settled: the depth ladder below its first key.** The standard ladder is `[4 -> 8, 6 -> 7,
+  12 -> 6, 14 -> 5]` with no key for 1–3, and the 2026-11-21 baseline measured **average draft
+  depth 12 at C=1** (= the configured K) from the engine's own counters. Below the first key the
+  ceiling defaults to K, which is what the comment claims. The 524k recipe's explicit
+  `[1 -> 16]` measured depth 16 at C=1, consistent.
 
 ## Credits and licensing
 

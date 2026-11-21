@@ -13,20 +13,24 @@ container state is read via `docker inspect`, health via HTTP.
 
 ```
 bench/
+  baseline.py         THE ENTRY POINT: measure all four configs, print one pasteable report
   serve.py            launch/adopt/stop a vLLM container from a recipe, wait /health
   suite.py            standardized measurement suite against a live server
   aggregate.py        merge results/*/summary.json -> summary.csv + RESULTS.md
   run_matrix.py       sequential, resumable matrix runner (boot -> suite -> stop)
-  matrix.yaml         matrix template + example configs (Lead owns the full matrix)
+  watch_matrix.py     live progress view over a running matrix
+  matrix.yaml         the four shipped configs + override examples
   check_recipes.py    static preflight of every recipe / matrix entry (no GPU)
   recompute_metrics.py re-derive spec-decode deltas from saved raw /metrics text
   common.py           shared HTTP/docker/metrics/log/stats helpers
   prompts.py          deterministic prompt sets + long-context/needle generators
-  results/            <run-id>/ outputs (gitignored content, safe to delete manually)
+  baseline/           <run-id>/ outputs of baseline.py (committed: they are the record)
+  results/            <run-id>/ outputs of standalone run_matrix.py runs (safe to delete)
+  tests/              mock_vllm.py — a fake engine for harness self-tests
 ```
 
 Read-only inputs: `run.sh`, `config.env`, `recipes/`. The harness never modifies
-them. Write scope: `bench/` + `tools/benchmark.py` only.
+them. Write scope: `bench/` (+ `BASELINE.md` at the repo root) only.
 
 ---
 

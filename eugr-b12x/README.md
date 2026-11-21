@@ -214,12 +214,11 @@ Pre-GPU evidence (no state change):
   spec0/spec6/spec9/bf16-KV/seqs16/block64 knob checks.
 * `dryrun-run-recipe-base.txt` — `run-recipe.sh --dry-run --solo` for the base
   recipe (generated vLLM command + launch-cluster invocation).
-* `dryrun-run-recipe-variants.txt` — same for all five recipe files.
 
-Real boot evidence is in `runs/` (`<stamp>-boot.log`, `<stamp>-docker-inspect.json`,
-`<stamp>-cmd.txt`, `<stamp>-meta.txt`), bench runs in `bench/results/eugr-b12x-*`
-(adopted manifests + `summary.json`), and the consolidated table in
-`runs/RESULTS.md`.
+Real boot evidence was kept in `runs/` and `bench/results/eugr-b12x-*` during the study; those
+artifacts were removed with the pre-restructure benchmark data and live in git history at
+commit `b4d304f` (`git show b4d304f:eugr-b12x/runs/`). A fresh measurement goes through
+`./bench/baseline.py --attach http://127.0.0.1:8000` and lands in `bench/baseline/<run-id>/`.
 
 GPU window 2026-11-12 (all runs `AUTOTUNE=0`, `--kv-cache-dtype fp8` unless noted,
 `--block-size 16`, `max-num-batched-tokens 4096`, fp8 KV, gpu-mem 0.75,
@@ -259,14 +258,15 @@ shipped K=12 dynamic depth is over-drafting, while eugr's ceiling is fixed depth
    (96 GB) leaves room for host-side weight prep. `PYTORCH_ALLOC_CONF` must match
    the util budget; the launcher keeps them in sync (`ALLOC_FRAC`).
 4. **Boot time** — first boot compiles b12x kernels into
-   `eugr-b12x/cache/b12x/compile` (empty by design; boot wall time is recorded in
-   `runs/<stamp>-meta.txt`). Later boots reuse that cache.
+   `eugr-b12x/cache/b12x/compile` (empty by design; boot wall time was recorded in
+   `runs/<stamp>-meta.txt`, git history at `b4d304f`). Later boots reuse that cache.
 5. **Speculative-depth hard cap.** `num_speculative_tokens >= 9` fails at engine
    start with `ValueError: state_index_columns must be at most 8, got 10` raised by
    the flashinfer b12x **GDN decode** caps (`sequence/gdn_decode/_impl.py`) via
    `qwen_gdn_linear_attn._make_b12x_gdn_caps`. The columns count is
    `num_speculative_tokens + 1`, so this image supports at most **7** speculative
-   tokens for this hybrid GDN model. Evidence: `runs/20261112T140838Z-boot.log`.
+   tokens for this hybrid GDN model. Evidence: `runs/20261112T140838Z-boot.log`
+   (git history at `b4d304f`).
    There is no env/flag workaround in this build; the alternatives are fixed 4
    (fastest measured) or a different stack (myllmbox's MBX depth path).
 6. **KV capacity is under-allocated by the eugr recipe for this box.** At

@@ -41,12 +41,15 @@
 # request (the 2026-11-21 run logged 604,947 = 1.15x with the old 860). That
 # is what makes this configuration fit at all; do not lower kv-cache-memory.
 #
-# Measured 2026-11-21 (run 20261121T033710Z, with the 860 blocks): decode
-# 61.3, C=1 57.9, TTFT 163 ms, prefill 8k 2643, accept 14.1% at 3.25 tok/step
-# (depth 16: +5% tokens/step vs depth 12, the extra positions are free),
-# quality 0.9714, boot 362 s. The 524k ceiling itself was NOT exercised: the
-# harness long-smoke builder was 27% short (384k), fixed in bench/prompts.py —
-# re-run the baseline once to see the real 524k needle and the 750k pool.
+# Measured 2026-11-21 (run 20261121T161012Z, 3520 blocks): KV pool 767,013
+# tokens = 1.46x a full request (boot log, both checkpoints); decode 63.4,
+# C=1 55.6, TTFT 266 ms, prefill 8k 2841, accept 14.2% at 3.27 tok/step
+# (depth 16: +6% tokens/step vs depth 12, the extra positions are free),
+# quality 0.9714, boot 385 s. The ceiling was exercised for the first time:
+# 518,294-token prompt, needle OK, 2216 tok/s prefill, 234 s to first token.
+# TTFT at C=1 is +136 ms vs the standard recipe and is not yet attributed
+# (prefix-match-unit 64 vs the old 32, or 3520 blocks at K=16, or run order)
+# — see the open tests in the README.
 #
 # If you need two streams, use the uncensored-standard preset (16 seats) or
 # set max-num-seqs here and re-measure: the depth ladder assumes one stream.

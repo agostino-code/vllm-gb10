@@ -11,15 +11,19 @@
 # (BENCHMARK-REPORT.md) tested 30+ depth / drafter / KV / template variants and
 # none beat it beyond the ±10-15 % run-to-run noise of a shared host.
 #
-# Measured (full profile, thinking off, temperature 0):
-#   decode single stream  53.3 tok/s median  (70.1 on pure code)
-#   C=8 / C=16            142.0 / 198.2 tok/s  · 198.5 / 292.4 sustained 60 s
-#   prefill 1k/8k/32k     1108 / 2341 / 2260 tok/s
-#   TTFT 1k prompt        181 ms p50
-#   spec decode           17.0 % acceptance, 3.04 tokens/step at depth 12
+# Measured 2026-11-21 baseline (run 20261121T033710Z, quiet host, full profile,
+# thinking off, temperature 0):
+#   decode single stream  64.1 tok/s median  (json 73.3, qa 48.8)
+#   C=1 / 2 / 4 / 8       56.6 / 82.0 / 124.7 / 172.4 tok/s
+#   prefill 1k/8k/32k     475* / 2852 / 2830 tok/s   (*cold single sample)
+#   TTFT / TPOT           130 ms / 18.0 ms p50 at C=1
+#   spec decode           17.4 % acceptance, 3.09 tokens/step at depth 12
 #   KV pool               750,933 tokens (1.83x a 400k request)
-#   quality gate          0.9667 quick · 3/3 strict needle at 32k/128k/262k
-#   boot                  356 s warm
+#   quality gate          0.9714 full · 96k needle OK
+#   boot                  593 s
+# The 2026-11-12 study numbers (53.3 decode, 142.0 at C=8, 0.9667) were ~15 %
+# lower under a loaded desktop host; absolute values track host load, the
+# ranking did not change.
 #
 # Do not "optimise" these without re-measuring. The ones that cost you real
 # throughput if flipped: MBX_DRAFT_HEAD=0 (-19 % decode), a non-stock chat

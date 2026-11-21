@@ -8,6 +8,11 @@ aarch64, DGX OS, driver 580.178.04, CUDA 13.0.
 **Question:** which preset — stack, speculative-draft configuration, KV cache, serving knobs —
 is best for this model on this box?
 
+> **Status.** This is the study behind the shipped configurations: methodology, A/B/A evidence,
+> negative results, boot constraints. Its headline numbers were measured under a loaded host
+> before the 2026-11-21 restructure; **the current numbers for the four shipped configurations
+> are in [`BASELINE.md`](BASELINE.md)**.
+
 ---
 
 ## TL;DR — the shipped preset is already the best one measured
@@ -310,20 +315,18 @@ myllmbox. Never exceed 7 speculative tokens. Launch with `./presets/run_az_b12x.
 
 ## 8. Reproduction
 
-The four shipped configurations are wired into the harness, so the headline numbers are
-reproducible with one command. The study's own variant recipes and A/B scripts are not in the
-working tree any more — they live in git history at commit `b4d304f` (`git show b4d304f:matrix/`).
+This document is the **study** — why the shipped configurations have the shape they do. The
+**current numbers** are in [`BASELINE.md`](BASELINE.md), rebuilt from the raw results under
+`bench/baseline/` with one command. The study's own variant recipes and A/B scripts are not in
+the working tree any more — they live in git history at commit `b4d304f` (`git show b4d304f:matrix/`).
 
 ```bash
+# the four configs, sequentially, with the quality gate, one pasteable report
+./bench/baseline.py
+
 # preflight / dry run (no GPU)
 python3 bench/check_recipes.py bench/matrix.yaml
 python3 bench/run_matrix.py --matrix bench/matrix.yaml --dry-run
-
-# the four configs, sequentially and resumably
-nohup python3 bench/run_matrix.py --matrix bench/matrix.yaml > bench/results/matrix.out 2>&1 &
-
-# aggregate and rank
-python3 bench/aggregate.py --results-dir bench/results      # RESULTS.md + summary.csv
 
 # the quality gate on its own
 python3 quality/run_quality.py --mode full --output /tmp/q.json
@@ -331,8 +334,7 @@ python3 quality/compare.py baseline.json candidate.json --noise 0
 
 # eugr stack
 ./presets/run_az_b12x.sh --wait
-python3 bench/suite.py --base-url http://127.0.0.1:8000 --run-dir bench/results/b12x \
-                       --config-id b12x --profile quick
+./bench/baseline.py --attach http://127.0.0.1:8000
 ```
 
 The controlled A/B/A protocol behind §4.2 was: boot A, boot B, boot A interleaved in the same
@@ -345,11 +347,10 @@ for cfg in az-standard <candidate> az-standard; do
 done
 ```
 
-Raw results: `bench/results/` — 30+ run directories with `summary.json`, `requests.jsonl`,
-`server.log`, `meta.json`; `RESULTS.md` (auto-ranked), `summary.csv`, `summary_all.json`.
-Quality artifacts: `quality/runs/` and `bench/results/*/quality.json`.
-Supporting evidence still in the tree: `eugr-b12x/runs/RESULTS.md`, `bench/README.md`,
-`bench/refs/` (the reference index and boot log used to repair a corrupted snapshot).
+Raw results: `bench/baseline/<run-id>/<config>/` with `summary.json`, `requests.jsonl`,
+`server.log`, `meta.json`, `quality.json`; `BASELINE.md` is the consolidated view.
+Supporting evidence still in the tree: `bench/refs/` (the reference index and boot log used to
+repair a corrupted snapshot).
 
 ## 9. Limitations
 

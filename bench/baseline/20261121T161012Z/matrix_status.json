@@ -1,0 +1,37 @@
+{
+  "configs": [
+    {
+      "duration_s": 1027.6,
+      "error": null,
+      "exit_codes": {
+        "serve": 0,
+        "suite": 0
+      },
+      "name": "az-524k-single",
+      "priority": 20,
+      "recipe": "recipes/az-524k-single.yaml",
+      "run_dir": "/home/pgx/Documenti/vllm-gb10/bench/baseline/20261121T161012Z/az-524k-single",
+      "started_at": "2026-11-21T15:10:12.300+00:00",
+      "status": "done"
+    },
+    {
+      "duration_s": 984.9,
+      "error": null,
+      "exit_codes": {
+        "serve": 0,
+        "suite": 0
+      },
+      "name": "uncensored-524k-single",
+      "priority": 40,
+      "recipe": "recipes/uncensored-524k-single.yaml",
+      "run_dir": "/home/pgx/Documenti/vllm-gb10/bench/baseline/20261121T161012Z/uncensored-524k-single",
+      "started_at": "2026-11-21T15:27:22.659+00:00",
+      "status": "done"
+    }
+  ],
+  "finished_at": "2026-11-21T15:43:50.376+00:00",
+  "matrix": "bench/baseline/20261121T161012Z.matrix.yaml",
+  "results_dir": "/home/pgx/Documenti/vllm-gb10/bench/baseline/20261121T161012Z",
+  "started_at": "2026-11-21T15:10:12.276+00:00",
+  "updated_at": "2026-11-21T15:43:50.376+00:00"
+}

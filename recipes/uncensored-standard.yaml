@@ -16,11 +16,18 @@
 # point to steer. Large strengths only produce repetition loops. This is what
 # the old steering/ machinery tried and failed at; the checkpoint is the fix.
 #
-# Measured against az-standard.yaml:
+# Measured against az-standard.yaml (2026-11-21 baseline, run 20261121T033710Z):
 #   refusal rate, 50 held-out harmful prompts   0 %     (base: 78-82 %)
-#   quality gate (quick)                        0.9667  (base: 0.9667 — unchanged)
-#   decode single stream                        52.8 tok/s (base: 53.3)
-#   C=8 throughput                              134.5 tok/s (base: 142.0)
+#   quality gate (full)                         0.9643  (base: 0.9714 — the 0.05
+#                                               gap is one math item, and the
+#                                               524k sibling scored 0.9786)
+#   decode single stream                        63.9 tok/s (base: 64.1)
+#   C=4 / C=8 throughput                        109.7 / 140.3 (base: 124.7 / 172.4)
+#   TTFT / TPOT at C=1                          154 ms / 19.7 ms (base: 130 / 18.0)
+# The C=4/C=8 gap (-12/-19 %) exceeds the ±10-15 % noise band and was not seen
+# in the 2026-11-12 study (134.5 vs 142.0, 5 %). Run order in that baseline was
+# az-standard first, uncensored third. Needs an order-swapped A/B/A before
+# attributing it to MBX_QSA_UNFUSE_INDEXER — README open test #1.
 #
 # Same 5-of-512 architecture as the AZ checkpoint, so the recipe is the
 # shipped one with two differences:
