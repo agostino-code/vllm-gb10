@@ -1,10 +1,10 @@
 # ══════════════════════════════════════════════════════════════════════════
 # matrix-tests — the open questions from the 2026-11-21 baseline, as a run
 # ══════════════════════════════════════════════════════════════════════════
-# Not the baseline: this file answers the seven open tests in README.md with
-# the minimum GPU time. Quality is off everywhere — capability equivalence is
-# already established for every one of these variants; only speed/latency/
-# capacity are in question. Run:
+# Not the baseline: this file answers the open tests in README.md plus the
+# sub-agent and beyond-524k questions, with the minimum GPU time. Quality is
+# off everywhere — capability equivalence is already established for every
+# variant; only speed/latency/capacity are in question. Run:
 #
 #   python3 bench/run_matrix.py --matrix bench/matrix-tests.yaml
 #   python3 bench/run_matrix.py --matrix bench/matrix-tests.yaml --only uncensored-standard
@@ -15,6 +15,8 @@
 #   524k-dual     C=1 vs C=2              -> cost of the second long seat
 #   524k-fp8kv    boot log + decode       -> pool ~1.5M? decode delta at K=16?
 #   524k-batched64k  520k needle prefill  -> chunking or bandwidth ceiling?
+#   standard-seats8  C=4/C=8 vs shipped   -> 8 seats x 94k: the sub-agent shape?
+#   786k-single      780k needle          -> does YaRN 3.0 recall? boots at all?
 #
 # Compare against BASELINE.md (same harness, same box, same day).
 # ══════════════════════════════════════════════════════════════════════════
@@ -87,3 +89,24 @@ configs:
     suite:
       concurrency: [1]
       long_target_tokens: 520000
+
+  # ── sub-agent fleet shape ────────────────────────────────────────────────
+  # 8 seats x 93,866 KV tokens each vs the shipped 16 x 46,933: does no-eviction
+  # per seat pay for itself at the concurrency a real fleet reaches (C=4, C=8)?
+  - name: standard-seats8
+    recipe: recipes/tests/standard-seats8.yaml
+    suite:
+      concurrency: [1, 4, 8]
+      long_smoke: false
+
+  # ── beyond 524k: YaRN 3.0 ───────────────────────────────────────────────
+  # 786,432 tokens, 26 GB KV, one stream. The 780k needle at 45% depth is the
+  # referee; a boot failure in the first minutes is also an answer. Expect
+  # ~6 min to first token on the needle (780k at ~2,200 tok/s).
+  - name: 786k-single
+    recipe: recipes/tests/786k-single.yaml
+    suite:
+      concurrency: [1]
+      long_target_tokens: 780000
+      long_timeout: 1200
+

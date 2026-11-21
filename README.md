@@ -230,6 +230,8 @@ recipes/
     524k-dual.yaml                   open test #6: two long seats on one box
     524k-fp8kv.yaml                  open test #6b: fp8 KV, two full 524k streams
     524k-batched64k.yaml             open test #7: 520k prefill ceiling
+    standard-seats8.yaml             sub-agent fleet shape: 8 seats x 94k KV each
+    786k-single.yaml                 YaRN 3.0: how far past native does it hold?
 presets/
   run_az_standard.sh  run_az_524k.sh
   run_uncensored_standard.sh  run_uncensored_524k.sh
@@ -348,7 +350,7 @@ python3 bench/aggregate.py --results-dir bench/results/tests-20261121   # compar
 ```
 
 Quality is off in the test matrix (capability equivalence is established; only speed, latency
-and capacity are in question) and the profile is quick: the whole file is ~7 boots, ~50 minutes.
+and capacity are in question) and the profile is quick: the whole file is ~9 boots, ~70 minutes.
 Compare the numbers against `BASELINE.md` — same harness, same box, same day.
 
 1. **The uncensored C=8 gap (−19 %, 140.3 vs 172.4) is the biggest unexplained number in the
@@ -386,6 +388,17 @@ Compare the numbers against `BASELINE.md` — same harness, same box, same day.
    (157 at C=8); the standard config now measures 172.4. Re-run
    `./bench/baseline.py --attach http://127.0.0.1:8000 --only az-standard` against b12x before
    repeating the "~30 % slower" claim.
+9. **Sub-agent fleet shape.** 16 seats is the wrong trade for an agent harness: the 750,933-token
+   pool gives 16 × 46,933, so one long agent turn preempts its siblings and reprefills.
+   `standard-seats8` (8 × 93,866 — every realistic session fits without eviction) tests whether
+   the smaller fleet pays for itself at C=4/C=8, the concurrency a real fleet reaches.
+   `524k-dual` is the same question at the other end: two *long* seats.
+10. **Beyond 524k: YaRN 3.0 (`786k-single`).** Native is 262,144; the shipped 524k is factor 2.0
+    with a verified 518k needle. Factor 3.0 (786,432) fits the memory math — 26 GB KV buys
+    ~867k tokens = 1.10× a full request, and the 524k boot logged ~13 GiB of headroom — but
+    YaRN without fine-tuning degrades past ~2×, so the 780k needle at 45% depth is the referee.
+    A boot failure is also an answer (position tables or the QSA indexer may cap the factor).
+    If it holds, fp8 KV stacks to ~1.7M tokens = two full 786k streams.
 
 ## Benchmark harness (`bench/`)
 

@@ -38,6 +38,7 @@ SUITE_KEY_TO_FLAG = {
     "conc_waves": "--conc-waves",
     "conc_max_tokens": "--conc-max-tokens",
     "long_target_tokens": "--long-target-tokens",
+    "long_timeout": "--long-timeout",
     "prefill_timeout": "--prefill-timeout",
     "request_timeout": "--request-timeout",
     "temperature": "--temperature",
