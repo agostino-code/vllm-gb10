@@ -20,18 +20,26 @@
 #   speculative depth    12     -> 16       one stream, so the whole draft budget is
 #                                           yours; MBX_DEPTH_CEIL pins [1 -> 16]
 #
-# block-size and prefix-match-unit stay at the standard 3456/64. They were
-# 860/32 in the first cut (inherited from the container this recipe replaced)
-# and the 2026-11-21 baseline measured the cost: the engine reserved the same
-# 23 GB and returned 604,947 KV tokens instead of 750,933 (-19%), because the
-# 703 small blocks each pay a per-block GDN/mamba state charge (group pages
-# 13760 vs 3456 in the boot log), and TTFT at C=1 was 163 ms vs 130. 860 was
-# not divisible by 32 either, so the finer prefix unit bought nothing.
+# block-size is 3520, not the standard 3456, and this has teeth: the QSA
+# drafter ring has capacity K+4, and the engine hard-fails the boot unless it
+# divides the block size — "QSA ring capacity 20 must divide the attention
+# block size 3456", measured 2026-11-21. At K=12 the ring is 16 and 3456 is
+# legal (that is the standard recipe); at K=16 the ring is 20, so the block
+# must be a multiple of 20. 3520 = 20x176 = 64x55 also keeps the 64-unit
+# prefill checkpoints and the 64 prefix-match-unit.
 #
-# KV headroom: 23 GiB bf16 = 750,933 tokens = 1.43x a full 524,288-token
-# request (measured with 3456 blocks; the 2026-11-21 run logged 604,947 =
-# 1.15x with the old 860). That is what makes this configuration fit at all;
-# do not lower kv-cache-memory.
+# The first cut of this recipe used 860/32, inherited from the container it
+# replaced, and the 2026-11-21 baseline measured the cost: the engine reserved
+# the same 23 GB and returned 604,947 KV tokens instead of 750,933 (-19%),
+# because the 703 small blocks each pay a per-block GDN/mamba state charge
+# (group pages 13760 vs 3456 in the boot log), and TTFT at C=1 was 163 ms vs
+# 130. 860 was not divisible by 32 either, so the finer prefix unit bought
+# nothing. Fitting the two measured points (860 -> 604,947; big blocks ->
+# 750,933) predicts ~752k tokens at 3520; confirm in the next boot log.
+#
+# KV headroom: 23 GiB bf16 = 750,933+ tokens = 1.43x a full 524,288-token
+# request (the 2026-11-21 run logged 604,947 = 1.15x with the old 860). That
+# is what makes this configuration fit at all; do not lower kv-cache-memory.
 #
 # Measured 2026-11-21 (run 20261121T033710Z, with the 860 blocks): decode
 # 61.3, C=1 57.9, TTFT 163 ms, prefill 8k 2643, accept 14.1% at 3.25 tok/step
@@ -110,7 +118,7 @@ vllm:
   # --- scheduling -----------------------------------------------------------
   max-num-seqs: 1
   max-num-batched-tokens: 32768
-  block-size: 3456
+  block-size: 3520
   prefix-match-unit: 64
   enable-prefix-caching: true
   enable-prompt-tokens-details: true

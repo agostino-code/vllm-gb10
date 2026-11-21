@@ -1,0 +1,11 @@
+{
+  "duration_s": 249.3,
+  "error": "serve.py up failed (rc=2): [14:12:36] preflight ok: port 8000 free, no other model server\n[14:12:36] launching bench-az-524k-single (myllmbox/qwen38-flash-next-vllm:v5.4) on port 8000\n[14:12:42] booting\u2026 2026-11-21T13:12:41.330840310Z (APIServer pid=1) INFO 11-21 13:12:41 [model.py:2152] Using max model len 524288\n[14:12:44] booting\u2026 2026-11-21T13:12:43.233779774Z (APIServer pid=1) INFO 11-21 13:12:43 [compilation.py:317] Enabled custom fusions: norm_quant, act_quant, attn_quant, rope_kvcach\n[14:12:55] booting\u2026 2026-11-21T13:12:53.817231890Z (EngineCore pid=125) INFO 11-21 13:12:53 [multiproc_executor.py:153] DP group leader: node_rank=0, node_rank_within_dp=0, master_\n[14:16:45] boot FAILED: container exited (exit_code=1) before /health\n[14:16:45] removing failed container bench-az-524k-single\n",
+  "exit_codes": {
+    "serve": 2
+  },
+  "name": "az-524k-single",
+  "started_at": "2026-11-21T13:12:36.398+00:00",
+  "status": "failed",
+  "updated_at": "2026-11-21T13:16:45.720+00:00"
+}

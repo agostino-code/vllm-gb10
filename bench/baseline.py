@@ -363,8 +363,8 @@ def build_report(rows: list[dict], env: dict) -> str:
     a("## Reproduce")
     a("")
     a("```bash")
-    a(f"./bench/baseline.py --run-id {env['run_id']}")
-    a("./bench/baseline.py --report          # rebuild this file from the raw results")
+    a(env["reproduce"])
+    a(f"./bench/baseline.py --report {env['results_dir']}   # rebuild this file from the raw results")
     a("```")
     a("")
     return "\n".join(L)
@@ -455,7 +455,7 @@ def main(argv=None) -> int:
         results_dir = Path(args.report)
         if not results_dir.is_absolute():
             results_dir = REPO / results_dir
-        return emit(results_dir, args.run_id, quiet=False)
+        return emit(results_dir, results_dir.name, quiet=False)
 
     if args.report == "":
         # --report with no argument: newest baseline
@@ -538,6 +538,7 @@ def emit(results_dir: Path, run_id: str, quiet: bool = False) -> int:
         "mem_free": host_facts()["mem_free"],
         "n_configs": len(names),
         "results_dir": str(results_dir.relative_to(REPO)) if results_dir.is_relative_to(REPO) else str(results_dir),
+        "reproduce": f"./bench/baseline.py --run-id {run_id}   # resume (add --force to re-measure)",
     }
     text = build_report(rows, env)
     REPORT.write_text(text, encoding="utf-8")

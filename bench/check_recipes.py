@@ -75,6 +75,31 @@ def check_recipe(path: Path, chat_template: str | None = None) -> dict:
         result["errors"].append("HF hub not mounted at its absolute host path")
     if "/models" not in [m_o["container"] for m_o in meta["launch"]["mounts"]]:
         result["errors"].append("/models mount missing")
+    # QSA drafter ring: the engine hard-fails the boot unless the ring capacity
+    # divides the attention block size. Verified twice on v5.4: K=12 -> ring 16
+    # boots with 3456; K=16 -> ring 20 died with "QSA ring capacity 20 must
+    # divide the attention block size 3456". The rule fits both: ring = K+4.
+    def _flag_int(name):
+        for i, a in enumerate(vllm_argv):
+            if a == name and i + 1 < len(vllm_argv):
+                try:
+                    return int(vllm_argv[i + 1])
+                except ValueError:
+                    return None
+            if a.startswith(name + "="):
+                try:
+                    return int(a.split("=", 1)[1])
+                except ValueError:
+                    return None
+        return None
+    block = _flag_int("--block-size")
+    spec_cfg = meta["vllm"]["speculative_config"] or {}
+    depth = spec_cfg.get("num_speculative_tokens") if isinstance(spec_cfg, dict) else None
+    if block and isinstance(depth, int) and depth > 0 and block % (depth + 4):
+        result["errors"].append(
+            f"QSA ring capacity {depth + 4} (K={depth}) does not divide --block-size {block}: "
+            "the engine will fail the boot (use a multiple of the ring, e.g. "
+            f"{block - block % (depth + 4)})")
     result["ok"] = not result["errors"]
     return result
 

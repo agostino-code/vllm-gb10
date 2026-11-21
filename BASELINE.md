@@ -1,11 +1,11 @@
 # Baseline
 
 - **run**: 20261121T033710Z
-- **generated**: 2026-11-21 04:42:06
+- **generated**: 2026-11-21 16:09:23
 - **box**: DGX Spark GB10
 - **image**: `myllmbox/qwen38-flash-next-vllm:v5.4` (sha256:bc42593a5bbf)
 - **harness**: suite 1.0 · profile full · quality full
-- **host**: vm.compaction_proactiveness=0, 116G free at start, 4 configs
+- **host**: vm.compaction_proactiveness=0, 8G free at start, 4 configs
 - **raw**: `bench/baseline/20261121T033710Z/<config>/summary.json`
 
 ## Summary
@@ -80,6 +80,6 @@ The depth curve. On this checkpoint it historically dies after position 2 — an
 ## Reproduce
 
 ```bash
-./bench/baseline.py --run-id 20261121T033710Z
-./bench/baseline.py --report          # rebuild this file from the raw results
+./bench/baseline.py --run-id 20261121T033710Z   # resume (add --force to re-measure)
+./bench/baseline.py --report bench/baseline/20261121T033710Z   # rebuild this file from the raw results
 ```

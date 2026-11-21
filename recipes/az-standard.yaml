@@ -90,7 +90,7 @@ vllm:
   # --- scheduling -----------------------------------------------------------
   max-num-seqs: 16
   max-num-batched-tokens: 8192
-  block-size: 3456                  # multiple of 16 (ring at K=12) and 64 (prefill checkpoints)
+  block-size: 3456                  # QSA ring = K+4 = 16 must divide it (it does, 216x), and 64 (prefill checkpoints) too
   prefix-match-unit: 64
   enable-prefix-caching: true
   enable-prompt-tokens-details: true
