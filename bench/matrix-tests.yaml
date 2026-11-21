@@ -121,4 +121,25 @@ configs:
   # matrix). 256k-tri and 256k-quad stay here as the bf16 variants for the
   # concurrent-admission-barrier investigation (README open test).
 
+  # ── the 256k barrier: is it the native "default" rope path? ──────────────
+  # Run these TWO back to back (same window, airtight control):
+  #   256k-fleet-control = the shipped az-256k-fleet (no rope override) — expect
+  #                        the ~2.6 s C=4 barrier to reproduce.
+  #   256k-fleet-yarn    = same + a factor-1.0 yarn override (context UNCHANGED,
+  #                        only the rope kernel path switches default -> yarn).
+  # If control ~2.6 s and yarn ~0.3 s: the default-rope path is the cause and the
+  # fix is one line folded into az-256k-fleet. If both ~2.6 s: rope is not it.
+  # No needle (recall already verified); just decode + the C=1/C=4 TTFT contrast.
+  - name: 256k-fleet-control
+    recipe: recipes/az-256k-fleet.yaml
+    suite:
+      concurrency: [1, 4]
+      long_smoke: false
+
+  - name: 256k-fleet-yarn
+    recipe: recipes/tests/256k-fleet-yarn.yaml
+    suite:
+      concurrency: [1, 4]
+      long_smoke: false
+
 
