@@ -1,0 +1,51 @@
+{
+  "duration_s": 412.1,
+  "error": null,
+  "exit_codes": {
+    "serve": 0,
+    "suite": 0
+  },
+  "name": "256k-fleet-seats8",
+  "serve_command": [
+    "/usr/bin/python3",
+    "/home/pgx/Documenti/vllm-gb10/bench/serve.py",
+    "up",
+    "--recipe",
+    "recipes/tests/256k-fleet-seats8.yaml",
+    "--name",
+    "bench-256k-fleet-seats8",
+    "--run-id",
+    "256k-fleet-seats8",
+    "--run-dir",
+    "bench/baseline/barrier-fix/256k-fleet-seats8",
+    "--config-id",
+    "256k-fleet-seats8",
+    "--port",
+    "8000",
+    "--boot-timeout",
+    "1500"
+  ],
+  "started_at": "2026-11-22T01:13:20.821+00:00",
+  "status": "done",
+  "suite_command": [
+    "/usr/bin/python3",
+    "/home/pgx/Documenti/vllm-gb10/bench/suite.py",
+    "--base-url",
+    "http://127.0.0.1:8000",
+    "--run-dir",
+    "bench/baseline/barrier-fix/256k-fleet-seats8",
+    "--config-id",
+    "256k-fleet-seats8",
+    "--profile",
+    "quick",
+    "--tag",
+    "256k-fleet-seats8",
+    "--quality",
+    "off",
+    "--concurrency",
+    "1,8",
+    "--no-long-smoke"
+  ],
+  "summary_path": "bench/baseline/barrier-fix/256k-fleet-seats8/summary.json",
+  "updated_at": "2026-11-22T01:20:12.969+00:00"
+}

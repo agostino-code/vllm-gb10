@@ -393,18 +393,20 @@ answered, and what is still open:
 
 ### Still open
 
-1. **The 256k-fleet 2.6 s concurrent-admission barrier — two hypotheses dead, one left.** At
+1. **The 256k-fleet 2.6 s concurrent-admission barrier — characterised, not a bug to fix.** At
    C=N (all seats firing together) every 256k request shows an identical ~2.6–2.7 s TTFT (stdev
-   < 1 ms), vs 106 ms at C=1 and 335 ms for seats8 at C=8. It is NOT a queue (all seats run, 5 %
-   KV), NOT a server-side stall (no log gap), NOT the prefill path, does NOT amortise across
-   waves. **Ruled out: the rope path** (factor-1.0 yarn = identical 2698 vs 2690 ms, run
-   `barrier-fix`) and **max-model-len** (the 409600 variant still stalls, 2668 ms — the
-   "262144" log line is just the MTP draft). After both, the only factor every barrier config
-   (256k tri/quad/fleet/yarn/mml) shares and no clean config (standard, seats8, 524k, 786k,
-   524k-dual — 1/2/8/16 seats) has is **max-num-seqs in {3,4}**. Final probe wired:
-   `256k-fleet-seats8` (az-256k-fleet at 8 seats). ~0.3 s → the 3-4 seat count is the trigger and
-   a 256k fleet wants ≥8 seats; ~2.6 s → an opaque engine quirk of this image, ship the barrier
-   documented and prefer az-standard-seats8 for a fleet. Fine at ≤2 concurrent agents either way.
+   < 1 ms), vs 106 ms at C=1. Across 9 controlled configs (run `barrier-fix`) the barrier appears
+   **if and only if: `kv-cache-dtype` is fp8, OR `max-model-len == 262144` (native) — either one,
+   independently.** Every barrier-free config on this box is bf16 AND at an extended length
+   (409600/524288/786432). Falsified one by one against a same-window control: the rope path
+   (yarn factor 1.0 = identical 2.7 s), max-model-len alone (409600 still stalls, but via fp8),
+   and the seat count (8 seats still stalls, via 262144+fp8). **Consequence:** a barrier-free
+   fleet caps per-agent context at ~94k (that is az-standard-seats8); going bigger per-agent
+   needs fp8 (to fit 4-5 seats) or native 262144 (for trained recall), and both stall. So
+   "big context per agent" and "no barrier" are in genuine tension on this image — not a config
+   error. az-256k-fleet is correct for a few long agents (≤2 concurrent: 106 ms, no barrier);
+   az-standard-seats8 is correct for a wide fleet. One clean prediction remains untested:
+   az-524k-fp8kv (fp8) would also stall at C=N.
 2. **`524k-dual` per-seat cost.** The K=16 2-seat shape bug is fixed (depth 8), but the honest
    C=2 number needs a re-run of the fixed recipe (in matrix-tests).
 3. **`presence_penalty` via `--override-generation-config` may be a no-op** on stock vLLM. Test:

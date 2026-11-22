@@ -1,7 +1,7 @@
 {
   "configs": [
     {
-      "duration_s": 406.6,
+      "duration_s": 408.7,
       "error": null,
       "exit_codes": {
         "serve": 0,
@@ -11,27 +11,27 @@
       "priority": 9,
       "recipe": "recipes/az-256k-fleet.yaml",
       "run_dir": "bench/baseline/barrier-fix/256k-fleet-control",
-      "started_at": "2026-11-22T00:38:46.327+00:00",
+      "started_at": "2026-11-22T01:06:30.104+00:00",
       "status": "done"
     },
     {
-      "duration_s": 387.1,
+      "duration_s": 412.1,
       "error": null,
       "exit_codes": {
         "serve": 0,
         "suite": 0
       },
-      "name": "256k-fleet-mml",
-      "priority": 11,
-      "recipe": "recipes/tests/256k-fleet-mml.yaml",
-      "run_dir": "bench/baseline/barrier-fix/256k-fleet-mml",
-      "started_at": "2026-11-22T00:45:34.926+00:00",
+      "name": "256k-fleet-seats8",
+      "priority": 12,
+      "recipe": "recipes/tests/256k-fleet-seats8.yaml",
+      "run_dir": "bench/baseline/barrier-fix/256k-fleet-seats8",
+      "started_at": "2026-11-22T01:13:20.821+00:00",
       "status": "done"
     }
   ],
-  "finished_at": "2026-11-22T00:52:04.023+00:00",
+  "finished_at": "2026-11-22T01:20:14.999+00:00",
   "matrix": "bench/matrix-tests.yaml",
   "results_dir": "bench/baseline/barrier-fix",
-  "started_at": "2026-11-22T00:38:46.287+00:00",
-  "updated_at": "2026-11-22T00:52:04.023+00:00"
+  "started_at": "2026-11-22T01:06:30.062+00:00",
+  "updated_at": "2026-11-22T01:20:14.999+00:00"
 }

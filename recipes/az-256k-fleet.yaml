@@ -17,22 +17,19 @@
 #   prefill            2,530 tok/s (8192 chunk)
 #   boot               ~358 s
 #
-# KNOWN LIMITATION — the 2.6 s concurrency barrier. At C=N (all seats firing at
-# once) every request shows an identical ~2.6-2.7 s time-to-first-token (stdev
-# < 1 ms), vs 106 ms at C=1 and 335 ms for az-standard-seats8 at C=8. Reproduced
-# on all 256k variants, does NOT amortise across waves, is NOT the prefill path,
-# is NOT a queue (all seats run, 5% KV) and NOT a server-side stall (no log gap).
-# RULED OUT: the rope path — a factor-1.0 yarn override gave the identical 2.7 s
-# (run barrier-fix). The barrier correlates only with max-model-len == 262144
-# (every barrier config is 262144; every clean one is 409600/524288/786432). The
-# decisive test (256k-fleet-mml: same config at 409600) is pending. Fine for a
-# few long-running agents (C<=2: no barrier); a liability when all seats fire at
-# once.
-#
-# fp8 KV is the enabler: it halves KV bytes so 4-5 full 256k seats fit in 23 GB
-# (bf16 would need 32 GB and only reach 3.79x). Cost ~9% decode (measured on
-# 524k fp8). For 8 seats at 94k each with no barrier, use az-standard-seats8.
-# ══════════════════════════════════════════════════════════════════════════
+# KNOWN LIMITATION — the 2.6 s concurrency barrier, fully characterised.
+# At C=N (all seats firing together) every request shows an identical ~2.6-2.7 s
+# TTFT (stdev < 1 ms), vs 106 ms at C=1. Across 9 controlled configs the barrier
+# appears IF AND ONLY IF: kv-cache-dtype is fp8, OR max-model-len == 262144
+# (native) — either one, independently. Ruled out one by one against a same-window
+# control (run barrier-fix): the rope path (yarn factor 1.0 = identical 2.7 s),
+# max-model-len (409600 still stalls, via fp8), the seat count (8 seats still
+# stalls, via 262144+fp8). Every barrier-free config on this box is bf16 AND at
+# an extended length (409600/524288/786432). This config trips BOTH triggers (fp8
+# to fit 4-5 seats, and 262144 for native recall), so it carries the barrier.
+# Consequence: a barrier-free fleet caps per-agent context at ~94k (that is
+# az-standard-seats8: bf16, 409600, 335 ms). Going bigger per-agent needs fp8 or
+# native 262144, both of which stall. Fine at <=2 concurrent agents either way.
 
 server:
   image: myllmbox/qwen38-flash-next-vllm:v5.4

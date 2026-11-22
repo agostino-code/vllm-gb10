@@ -1,0 +1,10 @@
+{
+  "base_url": "http://127.0.0.1:8000",
+  "command": "suite.py --base-url http://127.0.0.1:8000 --run-dir bench/baseline/barrier-fix/256k-fleet-seats8 --config-id 256k-fleet-seats8 --profile quick --tag 256k-fleet-seats8 --quality off --concurrency 1,8 --no-long-smoke",
+  "finished_at": "2026-11-22T01:20:12.950+00:00",
+  "model": "azampatti/Qwen3.8-Flash-Next-FP4-Local-AZ-256k8-fp8",
+  "profile": "quick",
+  "run_id": "256k-fleet-seats8",
+  "started_at": "2026-11-22T01:19:25.602+00:00",
+  "suite_version": "1.0"
+}
