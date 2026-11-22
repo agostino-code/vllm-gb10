@@ -154,5 +154,15 @@ configs:
     suite:
       concurrency: [1, 4]
       long_smoke: false
-
+  # ── barrier, final probe: is it the 3-4 seat count? ─────────────────────
+  # rope and max-model-len both ruled out. Every barrier config is 3-4 seats;
+  # clean ones are 1,2,8,16. This is az-256k-fleet at 8 seats. Run against the
+  # control in the same window:
+  #   ~0.3 s -> 3-4 seats is the trigger; a 256k fleet wants >=8 seats.
+  #   ~2.6 s -> opaque engine quirk; ship with the barrier documented.
+  - name: 256k-fleet-seats8
+    recipe: recipes/tests/256k-fleet-seats8.yaml
+    suite:
+      concurrency: [1, 8]
+      long_smoke: false
 

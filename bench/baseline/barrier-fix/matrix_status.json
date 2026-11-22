@@ -1,7 +1,7 @@
 {
   "configs": [
     {
-      "duration_s": 411.5,
+      "duration_s": 406.6,
       "error": null,
       "exit_codes": {
         "serve": 0,
@@ -11,27 +11,27 @@
       "priority": 9,
       "recipe": "recipes/az-256k-fleet.yaml",
       "run_dir": "bench/baseline/barrier-fix/256k-fleet-control",
-      "started_at": "2026-11-21T23:56:24.781+00:00",
+      "started_at": "2026-11-22T00:38:46.327+00:00",
       "status": "done"
     },
     {
-      "duration_s": 409.4,
+      "duration_s": 387.1,
       "error": null,
       "exit_codes": {
         "serve": 0,
         "suite": 0
       },
-      "name": "256k-fleet-yarn",
-      "priority": 10,
-      "recipe": "recipes/tests/256k-fleet-yarn.yaml",
-      "run_dir": "bench/baseline/barrier-fix/256k-fleet-yarn",
-      "started_at": "2026-11-22T00:03:18.364+00:00",
+      "name": "256k-fleet-mml",
+      "priority": 11,
+      "recipe": "recipes/tests/256k-fleet-mml.yaml",
+      "run_dir": "bench/baseline/barrier-fix/256k-fleet-mml",
+      "started_at": "2026-11-22T00:45:34.926+00:00",
       "status": "done"
     }
   ],
-  "finished_at": "2026-11-22T00:10:09.718+00:00",
+  "finished_at": "2026-11-22T00:52:04.023+00:00",
   "matrix": "bench/matrix-tests.yaml",
   "results_dir": "bench/baseline/barrier-fix",
-  "started_at": "2026-11-21T23:56:24.733+00:00",
-  "updated_at": "2026-11-22T00:10:09.718+00:00"
+  "started_at": "2026-11-22T00:38:46.287+00:00",
+  "updated_at": "2026-11-22T00:52:04.023+00:00"
 }

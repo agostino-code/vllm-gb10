@@ -1,0 +1,51 @@
+{
+  "duration_s": 387.1,
+  "error": null,
+  "exit_codes": {
+    "serve": 0,
+    "suite": 0
+  },
+  "name": "256k-fleet-mml",
+  "serve_command": [
+    "/usr/bin/python3",
+    "/home/pgx/Documenti/vllm-gb10/bench/serve.py",
+    "up",
+    "--recipe",
+    "recipes/tests/256k-fleet-mml.yaml",
+    "--name",
+    "bench-256k-fleet-mml",
+    "--run-id",
+    "256k-fleet-mml",
+    "--run-dir",
+    "bench/baseline/barrier-fix/256k-fleet-mml",
+    "--config-id",
+    "256k-fleet-mml",
+    "--port",
+    "8000",
+    "--boot-timeout",
+    "1500"
+  ],
+  "started_at": "2026-11-22T00:45:34.926+00:00",
+  "status": "done",
+  "suite_command": [
+    "/usr/bin/python3",
+    "/home/pgx/Documenti/vllm-gb10/bench/suite.py",
+    "--base-url",
+    "http://127.0.0.1:8000",
+    "--run-dir",
+    "bench/baseline/barrier-fix/256k-fleet-mml",
+    "--config-id",
+    "256k-fleet-mml",
+    "--profile",
+    "quick",
+    "--tag",
+    "256k-fleet-mml",
+    "--quality",
+    "off",
+    "--concurrency",
+    "1,4",
+    "--no-long-smoke"
+  ],
+  "summary_path": "bench/baseline/barrier-fix/256k-fleet-mml/summary.json",
+  "updated_at": "2026-11-22T00:52:02.059+00:00"
+}

@@ -1,0 +1,10 @@
+{
+  "base_url": "http://127.0.0.1:8000",
+  "command": "suite.py --base-url http://127.0.0.1:8000 --run-dir bench/baseline/barrier-fix/256k-fleet-mml --config-id 256k-fleet-mml --profile quick --tag 256k-fleet-mml --quality off --concurrency 1,4 --no-long-smoke",
+  "finished_at": "2026-11-22T00:52:02.038+00:00",
+  "model": "azampatti/Qwen3.8-Flash-Next-FP4-Local-AZ-256k4-fp8-mml",
+  "profile": "quick",
+  "run_id": "256k-fleet-mml",
+  "started_at": "2026-11-22T00:51:17.373+00:00",
+  "suite_version": "1.0"
+}

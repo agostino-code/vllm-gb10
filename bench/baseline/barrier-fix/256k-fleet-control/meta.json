@@ -4,11 +4,11 @@
     "container_port": 8000,
     "gpu": "all",
     "host_port": 8000,
-    "id": "7510036affc97f760b86673cb963413fefe8d4528c86ac48a3a61c76fcf67c00",
+    "id": "2337a5ffd32c5159405497835bfa41a855472d9aa95dd32e6744450defb72a39",
     "name": "bench-256k-fleet-control",
     "runtime": "docker"
   },
-  "created_at": "2026-11-21T23:56:24.837+00:00",
+  "created_at": "2026-11-22T00:38:46.383+00:00",
   "host": {
     "docker_version": "29.6.2",
     "machine": "aarch64",
@@ -239,7 +239,7 @@
     "server_log": "server.log",
     "startup": {
       "block_size": 3456,
-      "graph_capture_s": 15.0,
+      "graph_capture_s": 16.0,
       "kv_cache_blocks": 400,
       "kv_cache_max_concurrency": 5.28,
       "kv_cache_max_concurrency_tokens": 262144,
@@ -251,8 +251,8 @@
       "ple_table_detail": "128 shards x 2500012 rows, 26.82 GiB, prewarm=0, 0.4s",
       "ple_table_path": "/home/pgx/.cache/huggingface/hub/models--azampatti--Qwen3.8-Flash-Next-FP4-Local-AZ/snapshots/5d927eabd4e4766a69bf12f7a1387b01d936a78f",
       "served_model": "azampatti/Qwen3.8-Flash-Next-FP4-Local-AZ-256k4-fp8",
-      "weights_load_s": 4.7,
-      "weights_load_s_total": 186.36999999999998
+      "weights_load_s": 4.8,
+      "weights_load_s_total": 181.15
     }
   },
   "model": {
@@ -265,7 +265,7 @@
   "recipe": {
     "format": "native",
     "path": "recipes/az-256k-fleet.yaml",
-    "sha256": "fbb24efa212f0f157cdbdae68146c6b2a543e5a1f0176dbf38326c762ff6a5eb"
+    "sha256": "dc6e8b0cee9b9e893b2bfe0de98a053af5716202be74bbf492909bfa73cf0a65"
   },
   "run_id": "256k-fleet-control",
   "schema_version": 1,
@@ -282,12 +282,12 @@
   },
   "status": "running",
   "timing": {
-    "boot_seconds": 362.228,
-    "container_created_at": "2026-11-21T23:56:25.048055171Z",
-    "container_started_at": "2026-11-21T23:56:25.568+00:00",
-    "poll_count": 180,
-    "ready_at": "2026-11-22T00:02:27.884+00:00",
-    "requested_at": "2026-11-21T23:56:24.853+00:00"
+    "boot_seconds": 358.219,
+    "container_created_at": "2026-11-22T00:38:46.595346759Z",
+    "container_started_at": "2026-11-22T00:38:47.083+00:00",
+    "poll_count": 178,
+    "ready_at": "2026-11-22T00:44:45.383+00:00",
+    "requested_at": "2026-11-22T00:38:46.400+00:00"
   },
   "vllm": {
     "arguments": [
