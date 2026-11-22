@@ -99,6 +99,30 @@ configs:
     notes: FLEET at full native 256k — 4-5 seats x 262,144, fp8 KV; KNOWN 2.6 s
       concurrent-admission barrier at C=N (see recipe header); fine at C<=2
 
+  # ── the two uncensored long-context configs (single-stream is their sweet spot) ──
+  - name: uncensored-786k-single
+    recipe: recipes/uncensored-786k-single.yaml
+    priority: 80
+    suite_profile: full
+    suite:
+      concurrency: [1]
+      include_16: false
+      long_smoke: true
+      long_target_tokens: 780000
+      long_timeout: 1200
+    notes: abliterated at 786k, one stream — no batch penalty at C=1, 0 % refusals
+
+  - name: uncensored-256k-fleet
+    recipe: recipes/uncensored-256k-fleet.yaml
+    priority: 90
+    suite_profile: full
+    suite:
+      concurrency: [1, 4]
+      long_smoke: true
+      long_target_tokens: 260000
+    notes: abliterated 256k fleet — carries BOTH the 2.6 s barrier and the ~25 %
+      batch penalty; right for a few long uncensored agents, not a wide fleet
+
   # ── how to run an experiment without adding a file ────────────────────────
   # The knobs live in the recipe, so a variant is an override, not a copy:
   #

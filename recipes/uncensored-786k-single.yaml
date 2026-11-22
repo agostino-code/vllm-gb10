@@ -1,0 +1,108 @@
+# ══════════════════════════════════════════════════════════════════════════
+# uncensored-786k-single — abliterated checkpoint, 786k, single stream
+# ⚠ NO GUARDRAILS. Research / red-team / private local use only.
+# Model   myllmbox/Qwen3.8-Flash-Next-hibrid48-uncensored  (GATED)
+# Stack   myllmbox/qwen38-flash-next-vllm:v5.4
+# Launch  presets/run_uncensored_786k.sh
+#
+# The uncensored twin of az-786k-single: identical YaRN-3.0 tuning, on the
+# abliterated checkpoint. Chosen deliberately for the single-stream case — at
+# C=1 the uncensored checkpoint matches AZ on decode and beats it slightly on
+# quality, and removes refusals; the ~25 % batch penalty it carries is a C=8
+# effect that a one-stream config never pays. The only delta vs az-786k-single
+# is the model, the served name, and MBX_QSA_UNFUSE_INDEXER=1 (a property of
+# this compressed-tensors checkpoint, not of the tuning).
+#
+# Same as az-786k-single: 786,432 context, YaRN 3.0, one stream (26 GB KV =
+# 1.14x a full request), 16,384 prefill chunk so the 24 GB activation peak fits,
+# ~6 min to first token on a full 780k prompt. Not yet measured — a fresh
+# ./bench/baseline.py run will fill its row in BASELINE.md.
+# ══════════════════════════════════════════════════════════════════════════
+
+server:
+  image: myllmbox/qwen38-flash-next-vllm:v5.4
+  docker_args: --security-opt seccomp=unconfined
+  cpuset: "5-9,15-19"
+  model: myllmbox/Qwen3.8-Flash-Next-hibrid48-uncensored
+  port: 8000
+  cache_dir: ./cache
+
+env:
+  MBX_QSA_UNFUSE_INDEXER: "1"      # compressed-tensors checkpoint: unfuse the indexer only
+  # --- the n-gram (PLE) table, off the GPU and off the critical path -------
+  MBX_PLE_MMAP: "1"
+  MBX_PLE_MMAP_MODE: "nvme"
+  MBX_PLE_MMAP_PREWARM: "0"
+  MBX_PLE_ASYNC: "1"
+  MBX_PLE_PREFILL_CKPT: "1"
+
+  # --- speculative decoding -------------------------------------------------
+  # One stream: the ceiling is pinned to the full depth instead of following
+  # the request count, because there is only ever one request.
+  MBX_DEPTH_MODE: dynamic
+  MBX_DEPTH_MIN: "3"
+  MBX_DEPTH_WINDOW: "48"
+  MBX_DEPTH_PROMOTE: "60,45"
+  MBX_DEPTH_DEMOTE: "25,15"
+  MBX_DEPTH_CEIL: "[1 -> 16]"
+  MBX_DEPTH_SYNCFREE: "1"
+  MBX_DRAFT_HEAD: "1"
+
+  # --- kernels / loader -----------------------------------------------------
+  MBX_LOADER_PREPARE: "0"
+  MBX_LOADER_EMPTY_CACHE: "1"
+  MBX_MARLIN_CSF: "1"
+  MBX_CSF_VISUAL_BF16: "0"
+  MBX_MXFP8_A16: "0"
+  VLLM_DISABLED_KERNELS: FlashInferCutedslMxfp8LinearKernel,FlashInferTrtllmMxfp8LinearKernel,DeepGemmMxfp8BmmLinearKernel,HummingMxfp8LinearKernel
+  VLLM_USE_BREAKABLE_CUDAGRAPH: "1"
+  VLLM_MARLIN_USE_ATOMIC_ADD: "1"
+  TORCH_CUDA_ARCH_LIST: "12.1a"
+  FLASHINFER_CUDA_ARCH_LIST: "12.1a"
+  TRITON_CACHE_DIR: /cache/triton
+  PYTORCH_CUDA_ALLOC_CONF: expandable_segments:True
+  MALLOC_MMAP_THRESHOLD_: "65536"
+  MALLOC_TRIM_THRESHOLD_: "131072"
+  PYTHONUNBUFFERED: "1"
+
+vllm:
+  served-model-name: myllmbox/Qwen3.8-Flash-Next-hibrid48-uncensored-786k
+  load-format: mbx
+  distributed-executor-backend: mp
+  moe-backend: marlin
+  kernel-config: '{"linear_backend_per_quant":{"mxfp8":"b12x"}}'
+  engram-config: '{"cpu_offload": false}'
+
+  # --- memory ---------------------------------------------------------------
+  gpu-memory-utilization: 0.90        # single stream: 0.90 is safe, 0.92 needs more free memory
+  kv-cache-memory: "26000000000"      # 26 GB bf16 = ~867k tokens = 1.10x a 786k request
+  kv-cache-dtype: auto                # bf16; fp8 would give ~1.94x the pool at ~8 % less speed
+  mamba-ssm-cache-dtype: bfloat16
+
+  # --- context --------------------------------------------------------------
+  max-model-len: 786432
+  hf-overrides: '{"text_config":{"max_position_embeddings":786432,"rope_parameters":{"rope_type":"yarn","factor":3.0,"original_max_position_embeddings":262144,"rope_theta":10000000,"partial_rotary_factor":0.25,"mrope_section":[11,11,10],"mrope_interleaved":true}}}'
+
+  # --- scheduling -----------------------------------------------------------
+  max-num-seqs: 1
+  max-num-batched-tokens: 16384   # halved from 32768: a 32k chunk x 786k context peaks ~24 GB
+                                        # of activations (74+26+1+24 = 125 GB) and does not fit; 16k -> 12 GB, fits
+  block-size: 3520
+  prefix-match-unit: 64
+  enable-prefix-caching: true
+  enable-prompt-tokens-details: true
+  async-scheduling: true
+  use-replayssm: true
+  compilation-config: '{"cudagraph_mode":"FULL_AND_PIECEWISE","cudagraph_capture_sizes":[1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,20,21,24,25,27,30,32,35,39,40,44,48,49,54,60,64,70,75,80,90,96,112,128],"pass_config":{"fuse_norm_quant":true,"fuse_act_quant":true,"fuse_attn_quant":true,"fuse_rope_kvcache_cat_mla":true}}'
+
+  # --- tools / reasoning ----------------------------------------------------
+  enable-auto-tool-choice: true
+  tool-call-parser: qwen3_xml
+  reasoning-parser: qwen3
+  override-generation-config: '{"temperature": 0.6, "presence_penalty": 0.1, "top_p": 0.95}'
+  # NOTE: stock vLLM ignores presence_penalty in --override-generation-config
+  # unless the image carries the patch that applies it. Verify with:
+  #   ./check.sh --penalty     before believing this line does anything.
+
+  # --- speculative decoding (exactly one, always) ---------------------------
+  speculative-config: '{"method":"mtp","num_speculative_tokens":16,"rejection_sample_method":"block","draft_sample_method":"probabilistic"}'

@@ -1,7 +1,7 @@
 # Qwen3.8-Flash-Next on one DGX Spark (GB10)
 
 A measurement-driven serving stack for two checkpoints of Qwen3.8-Flash-Next on a single
-NVIDIA DGX Spark (GB10, 128 GB unified memory). Seven configurations, each measured on this
+NVIDIA DGX Spark (GB10, 128 GB unified memory). Nine configurations, each measured on this
 box, one recipe each — pick by what you are doing:
 
 | I want | config | context each | how |
@@ -11,13 +11,16 @@ box, one recipe each — pick by what you are doing:
 | **a sub-agent fleet, 256k each** | **az-256k-fleet** | 256k × 4–5 seats | `./run.sh recipes/az-256k-fleet.yaml` |
 | **one agent, maximum context** | **az-786k-single** | 786k × 1 stream | `./presets/run_az_786k.sh` |
 | one long agent, two mid streams | az-524k-single | 524k × 1 (1.46× pool) | `./presets/run_az_524k.sh` |
-| any of the above, no refusals | `uncensored-*` | same | `./presets/run_uncensored_*.sh` ⚠ |
+| **max context, no refusals** | **uncensored-786k-single** | 786k × 1 stream | `./presets/run_uncensored_786k.sh` ⚠ |
+| a few long uncensored agents | uncensored-256k-fleet | 256k × 4–5 | `./presets/run_uncensored_256k_fleet.sh` ⚠ |
+| any of the standard/524k, no refusals | `uncensored-standard` / `-524k` | same | `./presets/run_uncensored_*.sh` ⚠ |
 
 The three fleet/long-context configs were promoted from a 12-candidate measurement run
 (2026-11-21/22); the numbers behind every row are in **[BASELINE.md](BASELINE.md)**. Two caveats
-are documented honestly: `az-256k-fleet` has a ~2.6 s concurrent-admission barrier (fine at
-≤2 agents), and the abliterated checkpoint costs ~25 % at C=8 — use it single-stream, not as a
-fleet. Details in [Which config for what](#which-config-for-what).
+are documented honestly: the 256k-fleet shape (AZ or uncensored) has a ~2.6 s concurrent-admission
+barrier (fp8 OR native-262144, characterised in [open tests](#open-questions-and-next-tests)),
+and the abliterated checkpoint costs ~25 % at C=8 — so it shines single-stream (786k) and is a
+trade-off as a wide fleet. Details in [Which config for what](#which-config-for-what).
 
 Everything here was measured on this box with the harness in [`bench/`](bench/README.md) and the
 gate in [`quality/`](quality/). The full study — 30+ configurations, controlled A/B/A runs, quality
@@ -38,7 +41,7 @@ reasoning — full attribution in [Credits](#credits-and-licensing).
 
 ## Table of contents
 
-- [Why these seven and nothing else](#why-these-seven-and-nothing-else)
+- [Why these nine and nothing else](#why-these-nine-and-nothing-else)
 - [Requirements](#requirements)
 - [Quick start](#quick-start)
 - [Getting the baseline](#getting-the-baseline)
@@ -57,9 +60,9 @@ reasoning — full attribution in [Credits](#credits-and-licensing).
 
 ---
 
-## Why these seven and nothing else
+## Why these nine and nothing else
 
-This repo used to carry ~40 recipes. The study and the 2026-11-21/22 candidate run kept seven,
+This repo used to carry ~40 recipes. The study and the 2026-11-21/22 candidate run kept nine,
 each for a measured reason:
 
 - **az-standard** — the shipped myllmbox v5.4 recipe is the best single config measured.
@@ -73,7 +76,13 @@ each for a measured reason:
 - **az-524k-single** — the middle long-context point; its 1.46× pool is what fits two ~380k
   streams, which 786k (1.14×) cannot.
 - **uncensored-standard / uncensored-524k-single** — the abliterated checkpoint, for when you
-  need 0 % refusals. Costs ~25 % at C=8, so single-stream, not a fleet.
+  need 0 % refusals. Costs ~25 % at C=8, so single-stream, not a wide fleet.
+- **uncensored-786k-single** — the abliterated checkpoint at max context. Single-stream is
+  exactly where uncensored wins: at C=1 it matches AZ on decode, edges it on quality, and the
+  ~25 % batch penalty never applies. 0 % refusals at 786k.
+- **uncensored-256k-fleet** — the abliterated 256k fleet. Provided for completeness, but it is
+  the one config that stacks BOTH penalties (the 2.6 s barrier, since it is fp8 + 262144, and
+  the ~25 % batch cost). Right for a few long uncensored agents (≤2 concurrent), not a fleet.
 
 Dropped by measurement, each still a `set:` override away: **K=4** (not faster than K=12 —
 198.5 tok/s both at C=8, just less draft compute); the **10-expert draft folder** (cost cancels
@@ -116,7 +125,7 @@ or a corrupted index, and it checks for both.
 
 ## Getting the baseline
 
-One command measures all seven configurations and prints a block you can paste back here:
+One command measures all nine configurations and prints a block you can paste back here:
 
 ```bash
 ./bench/baseline.py
@@ -124,7 +133,7 @@ One command measures all seven configurations and prints a block you can paste b
 
 It boots each config in its own container, runs the suite and the quality gate, tears it down,
 moves to the next, and writes `BASELINE.md` at the repo root. Full profile is roughly 40 minutes
-for the seven; `--profile quick` is a fraction of that and is enough to spot a regression.
+for the nine; `--profile quick` is a fraction of that and is enough to spot a regression.
 
 Before you run it:
 
@@ -147,7 +156,7 @@ configuration used — plus a pointer to the raw `summary.json` per config.
 
 ## Which config for what
 
-All seven share the image, kernels and drafter. They differ only in the KV/context/seat trade-off,
+All nine share the image, kernels and drafter. They differ only in the KV/context/seat trade-off,
 so pick by the one number you care about: **context per concurrent agent**.
 
 The KV pool is the budget. Measured on this box: **29,986 bytes/token bf16**, half that in fp8.
@@ -252,6 +261,8 @@ recipes/
   az-786k-single.yaml              MAX CONTEXT: 786k, YaRN 3.0, needle verified
   uncensored-standard.yaml         abliterated checkpoint, shipped settings
   uncensored-524k-single.yaml      abliterated checkpoint, 524k single stream
+  uncensored-786k-single.yaml      abliterated, 786k — single-stream sweet spot (no batch penalty)
+  uncensored-256k-fleet.yaml       abliterated, 256k fleet — barrier + batch penalty, few agents only
   tests/                           still-open candidates, one knob each — see below
     524k-pmu32.yaml                  answered #2: 524k TTFT was the prefix unit
     524k-dual.yaml                   answered #6: two long seats (shape bug at K=16 fixed)
@@ -262,6 +273,7 @@ recipes/
 presets/
   run_az_standard.sh  run_az_seats8.sh  run_az_524k.sh  run_az_786k.sh
   run_uncensored_standard.sh  run_uncensored_524k.sh
+  run_uncensored_786k.sh  run_uncensored_256k_fleet.sh
   run_az_b12x.sh                 the alternative stack
 
 bench/                       the reproducible benchmark harness (stdlib only)
@@ -271,13 +283,13 @@ bench/                       the reproducible benchmark harness (stdlib only)
   run_matrix.py            sequential, resumable matrix runner (what baseline.py drives)
   aggregate.py             results -> RESULTS.md + summary.csv + ranking
   check_recipes.py         static preflight, no GPU
-  matrix.yaml              the seven shipped configs, ready to measure
+  matrix.yaml              the nine shipped configs, ready to measure
   matrix-tests.yaml        the still-open candidates + the A/B/A that settled the uncensored gap
 quality/                     deterministic capability + long-context gate (133 offline tests)
 tools/                       mtp_drafter_check.sh, verify_cache.py
 eugr-b12x/                   the alternative eugr b12x launcher (plain docker run)
 eugr-stack/                  git submodule -> github.com/eugr/spark-vllm-docker (keep at upstream tip)
-BASELINE.md                  the current numbers, all seven configs, pasteable
+BASELINE.md                  the current numbers, all configs, pasteable
 BENCHMARK-REPORT.md          the study behind the shipped configs: methodology, constraints, negative results
 LICENSE                      MIT for this code; model weights and images keep their own terms
 ```
@@ -309,11 +321,12 @@ CHAT_TEMPLATE=/path/to/template.jinja ./presets/run_az_standard.sh   # empty = t
 
 ## Measured results
 
-**The current numbers are in [`BASELINE.md`](BASELINE.md)** — one pasteable view of all seven
+**The current numbers are in [`BASELINE.md`](BASELINE.md)** — one pasteable view of all
 configurations, rebuilt from the raw results with `./bench/baseline.py --report <dirs>`. As
 measured 2026-11-21/22 on this box (image `v5.4`, bc42593a5bbf; the four core at full profile +
 full quality, the three promoted at the candidate run's quick profile — a fresh
-`./bench/baseline.py` now re-measures all seven at full quality):
+`./bench/baseline.py` measures all nine (the two new uncensored long-context configs have no
+row until that run):
 
 | config | decode | C=1 | C=N | TTFT C=1 | KV pool | quality | needle |
 |---|---|---|---|---|---|---|---|
@@ -432,7 +445,7 @@ measurement suite and the quality gate on each, tears it down, and prints one co
 you can paste straight into a conversation.
 
 ```bash
-./bench/baseline.py                      # all seven configs, full profile + full quality
+./bench/baseline.py                      # all nine configs, full profile + full quality
 ./bench/baseline.py --profile quick      # fast pass (~10 min total instead of ~40)
 ./bench/baseline.py --only az-standard   # one config (repeatable)
 ./bench/baseline.py --dry-run            # show the plan, change nothing

@@ -31,6 +31,8 @@
 # az-standard-seats8: bf16, 409600, 335 ms). Going bigger per-agent needs fp8 or
 # native 262144, both of which stall. Fine at <=2 concurrent agents either way.
 
+# ══════════════════════════════════════════════════════════════════════════
+
 server:
   image: myllmbox/qwen38-flash-next-vllm:v5.4
   docker_args: --security-opt seccomp=unconfined   # required by the image's PLE table reader
