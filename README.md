@@ -8,7 +8,7 @@ box, one recipe each — pick by what you are doing:
 |---|---|---|---|
 | the safe default / max throughput | **az-standard** | 47k × 16 seats | `./presets/run_az_standard.sh` |
 | **a sub-agent fleet, low latency** | **az-standard-seats8** | 94k × 8 seats | `./presets/run_az_seats8.sh` |
-| **a sub-agent fleet, 256k each** | **az-256k-fleet** | 256k × 4–5 seats | `./run.sh recipes/az-256k-fleet.yaml` |
+| **a sub-agent fleet, 256k each** | **az-256k-fleet** | 256k × 4–5 seats | `./presets/run_az_256k_fleet.sh` |
 | **one agent, maximum context** | **az-786k-single** | 786k × 1 stream | `./presets/run_az_786k.sh` |
 | one long agent, two mid streams | az-524k-single | 524k × 1 (1.46× pool) | `./presets/run_az_524k.sh` |
 | **max context, no refusals** | **uncensored-786k-single** | 786k × 1 stream | `./presets/run_uncensored_786k.sh` ⚠ |
@@ -271,7 +271,7 @@ recipes/
     256k-tri.yaml                    3 seats x 256k bf16 — barrier investigation
     256k-quad.yaml                   4 seats x 256k bf16 — barrier investigation
 presets/
-  run_az_standard.sh  run_az_seats8.sh  run_az_524k.sh  run_az_786k.sh
+  run_az_standard.sh  run_az_seats8.sh  run_az_524k.sh  run_az_786k.sh  run_az_256k_fleet.sh
   run_uncensored_standard.sh  run_uncensored_524k.sh
   run_uncensored_786k.sh  run_uncensored_256k_fleet.sh
   run_az_b12x.sh                 the alternative stack
