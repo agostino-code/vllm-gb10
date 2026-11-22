@@ -17,15 +17,17 @@
 #   prefill            2,530 tok/s (8192 chunk)
 #   boot               ~358 s
 #
-# KNOWN LIMITATION — the 2.6s concurrency barrier. At C=N (all seats firing at
-# once) every request shows an identical ~2.6-2.7s time-to-first-token, vs 106
-# ms at C=1 and 335 ms for az-standard-seats8 at C=8. Reproduced on all three
-# 256k variants, does NOT amortise across waves, and is NOT the prefill path
-# (prefill TTFT is normal). It is a concurrent-admission stall unique to this
-# family; the only thing that differs from the working configs is the absent
-# rope override. Fine for a few long-running agents (C<=2: no barrier); a
-# liability when all seats fire in lockstep. Next test to clear it: re-add a
-# factor-1.0 rope override to a 256k copy and re-run C=N.
+# KNOWN LIMITATION — the 2.6 s concurrency barrier. At C=N (all seats firing at
+# once) every request shows an identical ~2.6-2.7 s time-to-first-token (stdev
+# < 1 ms), vs 106 ms at C=1 and 335 ms for az-standard-seats8 at C=8. Reproduced
+# on all 256k variants, does NOT amortise across waves, is NOT the prefill path,
+# is NOT a queue (all seats run, 5% KV) and NOT a server-side stall (no log gap).
+# RULED OUT: the rope path — a factor-1.0 yarn override gave the identical 2.7 s
+# (run barrier-fix). The barrier correlates only with max-model-len == 262144
+# (every barrier config is 262144; every clean one is 409600/524288/786432). The
+# decisive test (256k-fleet-mml: same config at 409600) is pending. Fine for a
+# few long-running agents (C<=2: no barrier); a liability when all seats fire at
+# once.
 #
 # fp8 KV is the enabler: it halves KV bytes so 4-5 full 256k seats fit in 23 GB
 # (bf16 would need 32 GB and only reach 3.79x). Cost ~9% decode (measured on

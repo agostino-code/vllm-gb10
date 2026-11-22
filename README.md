@@ -393,12 +393,17 @@ answered, and what is still open:
 
 ### Still open
 
-1. **The 256k-fleet 2.6 s concurrent-admission barrier.** At C=N (all seats firing together)
-   every 256k request shows an identical ~2.6–2.7 s TTFT, vs 106 ms at C=1 and 335 ms for
-   seats8 at C=8. Reproduced on all three 256k variants, does not amortise across waves, is not
-   the prefill path. The only thing unique to the family is the **absent rope override**. Next
-   test: a 256k copy with a factor-1.0 rope override, re-run C=N — if the barrier vanishes, the
-   no-override path is the cause and the fix is one line.
+1. **The 256k-fleet 2.6 s concurrent-admission barrier — rope ruled out.** At C=N (all seats
+   firing together) every 256k request shows an identical ~2.6–2.7 s TTFT (stdev < 1 ms), vs
+   106 ms at C=1 and 335 ms for seats8 at C=8. It is NOT a queue (all seats run, 5 % KV), NOT a
+   server-side stall (no log gap), NOT the prefill path, and does NOT amortise across waves.
+   **Ruled out: the rope path** — a factor-1.0 yarn override gave an identical 2698 ms vs the
+   2690 ms control (run `barrier-fix`). The barrier now correlates with exactly one factor:
+   **max-model-len == 262144** (every barrier config is 262144; every clean one is
+   409600/524288/786432). The decisive test is wired: `256k-fleet-mml` (same 4-seat fp8 config
+   at 409600). If it drops to ~0.3 s, the fix is to run the 256k fleet at a slightly-extended
+   length; if it stays ~2.6 s, it is the 3–4 seat count and the barrier ships as a documented
+   limitation. Fine at ≤2 concurrent agents either way.
 2. **`524k-dual` per-seat cost.** The K=16 2-seat shape bug is fixed (depth 8), but the honest
    C=2 number needs a re-run of the fixed recipe (in matrix-tests).
 3. **`presence_penalty` via `--override-generation-config` may be a no-op** on stock vLLM. Test:

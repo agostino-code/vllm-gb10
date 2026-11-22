@@ -1,5 +1,17 @@
 # ══════════════════════════════════════════════════════════════════════════
-# 256k-fleet-yarn — FIX TEST for the 256k concurrent-admission barrier## The 256k family (az-256k-fleet + its tri/quad siblings) shows a ~2.6 s# time-to-first-token when ALL seats fire at once (C=N), vs 106 ms at C=1 and# 335 ms for az-standard-seats8 at C=8. Reproduced on all three 256k variants,# does not amortise across waves, is not the prefill path. The one thing that# differs from every barrier-free config: the 256k family has NO rope override,# so it runs the checkpoint NATIVE rope path (config.json rope_type="default").# standard/524k/786k all override to rope_type="yarn" and none shows the barrier.## This config = az-256k-fleet + ONE line: a rope override with factor 1.0 at# max_position 262144 — NO context change, NO extrapolation (1.0 x 262144 =# 262144, same rope maths as "default"), but it forces the yarn kernel path.# Single variable: default-rope vs yarn-rope.## Read the C=4 concurrency TTFT (matrix-tests runs C=1 + C=4):#   ~0.3 s -> default-rope was the cause; fix az-256k-fleet by adding this#             factor-1.0 yarn override (context unchanged).#   ~2.6 s -> rope is NOT it; next suspect is max-model-len == native 262144#             itself, and the barrier stays a documented limitation.## TEST ONLY — not a candidate to ship. If it fixes the barrier, the one line is# folded into recipes/az-256k-fleet.yaml and this file is deleted.
+# 256k-fleet-yarn — FIX TEST (NEGATIVE): is the barrier the native rope path?
+#
+# Hypothesis: the 256k family is the only one with NO rope override, so it runs
+# the checkpoint native rope path (config.json rope_type="default"); every
+# barrier-free config overrides to rope_type="yarn". This config adds a
+# factor-1.0 yarn override — context UNCHANGED (1.0 x 262144 = 262144, same
+# rope maths), only the kernel path switches default -> yarn. One variable.
+#
+# RESULT (run barrier-fix, 2026-11-22): NEGATIVE. C=4 TTFT 2698 ms vs the
+# control 2690 ms — identical. The rope path is NOT the cause. The barrier now
+# correlates with exactly one factor: max-model-len == 262144 (every barrier
+# config is 262144; every clean config is 409600/524288/786432). The decisive
+# test is 256k-fleet-mml.yaml. Kept as the record of a ruled-out hypothesis.
 # ══════════════════════════════════════════════════════════════════════════
 
 server:

@@ -142,4 +142,17 @@ configs:
       concurrency: [1, 4]
       long_smoke: false
 
+  # ── barrier, decisive test: is it max-model-len == 262144? ───────────────
+  # rope was ruled out (yarn == control). The only factor left that separates
+  # every barrier config (262144) from every clean one (409600/524288/786432)
+  # is the exact native length. This is 4 seats + fp8 but max-model-len
+  # 409600 (YaRN 1.5625). Run it against the control in the same window:
+  #   ~0.3 s -> 262144 is the trigger; extend the 256k fleet's length to dodge it.
+  #   ~2.6 s -> not the length; it is the 3-4 seat count, barrier stays documented.
+  - name: 256k-fleet-mml
+    recipe: recipes/tests/256k-fleet-mml.yaml
+    suite:
+      concurrency: [1, 4]
+      long_smoke: false
+
 

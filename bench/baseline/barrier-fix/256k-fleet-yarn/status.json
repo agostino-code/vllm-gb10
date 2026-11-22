@@ -1,0 +1,51 @@
+{
+  "duration_s": 409.4,
+  "error": null,
+  "exit_codes": {
+    "serve": 0,
+    "suite": 0
+  },
+  "name": "256k-fleet-yarn",
+  "serve_command": [
+    "/usr/bin/python3",
+    "/home/pgx/Documenti/vllm-gb10/bench/serve.py",
+    "up",
+    "--recipe",
+    "recipes/tests/256k-fleet-yarn.yaml",
+    "--name",
+    "bench-256k-fleet-yarn",
+    "--run-id",
+    "256k-fleet-yarn",
+    "--run-dir",
+    "bench/baseline/barrier-fix/256k-fleet-yarn",
+    "--config-id",
+    "256k-fleet-yarn",
+    "--port",
+    "8000",
+    "--boot-timeout",
+    "1500"
+  ],
+  "started_at": "2026-11-22T00:03:18.364+00:00",
+  "status": "done",
+  "suite_command": [
+    "/usr/bin/python3",
+    "/home/pgx/Documenti/vllm-gb10/bench/suite.py",
+    "--base-url",
+    "http://127.0.0.1:8000",
+    "--run-dir",
+    "bench/baseline/barrier-fix/256k-fleet-yarn",
+    "--config-id",
+    "256k-fleet-yarn",
+    "--profile",
+    "quick",
+    "--tag",
+    "256k-fleet-yarn",
+    "--quality",
+    "off",
+    "--concurrency",
+    "1,4",
+    "--no-long-smoke"
+  ],
+  "summary_path": "bench/baseline/barrier-fix/256k-fleet-yarn/summary.json",
+  "updated_at": "2026-11-22T00:10:07.746+00:00"
+}

@@ -1,0 +1,51 @@
+{
+  "duration_s": 411.5,
+  "error": null,
+  "exit_codes": {
+    "serve": 0,
+    "suite": 0
+  },
+  "name": "256k-fleet-control",
+  "serve_command": [
+    "/usr/bin/python3",
+    "/home/pgx/Documenti/vllm-gb10/bench/serve.py",
+    "up",
+    "--recipe",
+    "recipes/az-256k-fleet.yaml",
+    "--name",
+    "bench-256k-fleet-control",
+    "--run-id",
+    "256k-fleet-control",
+    "--run-dir",
+    "bench/baseline/barrier-fix/256k-fleet-control",
+    "--config-id",
+    "256k-fleet-control",
+    "--port",
+    "8000",
+    "--boot-timeout",
+    "1500"
+  ],
+  "started_at": "2026-11-21T23:56:24.781+00:00",
+  "status": "done",
+  "suite_command": [
+    "/usr/bin/python3",
+    "/home/pgx/Documenti/vllm-gb10/bench/suite.py",
+    "--base-url",
+    "http://127.0.0.1:8000",
+    "--run-dir",
+    "bench/baseline/barrier-fix/256k-fleet-control",
+    "--config-id",
+    "256k-fleet-control",
+    "--profile",
+    "quick",
+    "--tag",
+    "256k-fleet-control",
+    "--quality",
+    "off",
+    "--concurrency",
+    "1,4",
+    "--no-long-smoke"
+  ],
+  "summary_path": "bench/baseline/barrier-fix/256k-fleet-control/summary.json",
+  "updated_at": "2026-11-22T00:03:16.263+00:00"
+}
